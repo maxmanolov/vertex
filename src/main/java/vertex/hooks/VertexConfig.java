@@ -64,8 +64,13 @@ public final class VertexConfig
         {
             if (file == null)
             {
-                File gameDir = Launch.minecraftHome != null ? Launch.minecraftHome : new File(".");
-                file = new File(gameDir, "vertex.properties");
+                if (Launch.minecraftHome == null)
+                {
+                    // No game directory (unit tests, tooling): defaults only, never write files.
+                    return;
+                }
+
+                file = new File(Launch.minecraftHome, "vertex.properties");
             }
 
             if (!file.isFile())
