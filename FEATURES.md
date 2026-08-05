@@ -40,8 +40,8 @@ files). File-format compatibility is an interoperability surface; implementation
 | Custom sky | Pack-defined sky boxes | **in progress** | Design committed (docs/ROADMAP.md #3); ordered after CTM's shared pack-parsing infrastructure. |
 | Custom colors | Pack-defined colormaps | **in progress** | Core merged (0.2.0): colormap sampling (vanilla triangle indexing, clamped), color.properties parser (skip-bad-lines), allocation-free biome blend - all unit-tested. Remaining: colorizer hook + pack loader wiring. |
 | Emissive textures | Glow overlays | **in progress** | Design committed (docs/ROADMAP.md #3). |
-| Random entities | Per-mob texture variants | **in progress** | Design committed (docs/ROADMAP.md #3). |
-| Natural textures | Rotate/flip tiling variants | **in progress** | Design committed (docs/ROADMAP.md #3). |
+| Random entities | Per-mob texture variants | **in progress** | Selection core merged (0.2.0): deterministic entity-hash variant picking with exact weighted proportions, unit-tested. Remaining: texture-resolution hook + numbered-variant discovery. |
+| Natural textures | Rotate/flip tiling variants | **in progress** | Core merged (0.2.0): coordinate-hashed deterministic rotation/flip selection and the natural.properties grammar, unit-tested (uniformity, decode, invalid-spec rejection). Remaining: the UV-transform render hook. |
 | Better grass / better snow | Side-grass and snow-under-fence rendering | **in progress** | Design committed (docs/ROADMAP.md #4); lands only with frame-time numbers. |
 | HD fonts / HD textures | Pre-1.6 McPatcher features | **excluded** | Vanilla's 1.6+ resource pack system already supports arbitrary resolutions and fonts; nothing left to implement for 1.7.10. |
 
