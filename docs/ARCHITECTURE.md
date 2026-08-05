@@ -58,6 +58,15 @@ File-format compatibility (e.g. CTM `.properties` conventions) is treated as an
 interoperability surface: the formats are reimplemented from public documentation and
 sample packs, never from OptiFine's parser.
 
+## Verifying a hook is actually reached
+
+A neutrality soak proves a hook does no harm - it cannot prove the hook runs. An inert
+hook and a correct hook produce identical soaks. Any dispatch point that features will be
+built on therefore ships with a hit counter in the diagnostics line first (see
+VertexIcons.hits/sideHits), and the counter is read in-world before anything is built on
+top of it. This was learned the expensive way: better grass silently never armed on its
+first soak, and only an instrumented run showed the icon dispatch was live all along.
+
 ## Testing and benchmarks
 
 - `./gradlew test`: the transformer layer is unit-tested against synthetic classes built

@@ -42,7 +42,7 @@ files). File-format compatibility is an interoperability surface; implementation
 | Emissive textures | Glow overlays | **in progress** | Convention core merged (0.2.0): suffix detection/mapping with pack override, unit-tested. Remaining: fullbright overlay render hook. |
 | Random entities | Per-mob texture variants | **in progress** | Selection core merged (0.2.0): deterministic entity-hash variant picking with exact weighted proportions, unit-tested. Remaining: texture-resolution hook + numbered-variant discovery. |
 | Natural textures | Rotate/flip tiling variants | **in progress** | Core merged (0.2.0): coordinate-hashed deterministic rotation/flip selection and the natural.properties grammar, unit-tested (uniformity, decode, invalid-spec rejection). Remaining: the UV-transform render hook. |
-| Better grass / better snow | Side-grass and snow-under-fence rendering | **in progress** | Design committed (docs/ROADMAP.md #4); lands only with frame-time numbers. |
+| Better grass / better snow | Side-grass and snow-under-fence rendering | **matched (grass)** (0.2.0) | Grass side faces render the top texture when terrain continues below, dispatched from the icon choke point (measured live: 164k icon resolutions/min, 94k on side faces). Config-gated, default off. Better snow is documented follow-up scope (needs the snow-layer neighbor rule on the same dispatch). |
 | HD fonts / HD textures | Pre-1.6 McPatcher features | **excluded** | Vanilla's 1.6+ resource pack system already supports arbitrary resolutions and fonts; nothing left to implement for 1.7.10. |
 
 ## Platform and infrastructure
