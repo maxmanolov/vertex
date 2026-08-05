@@ -1,0 +1,78 @@
+package vertex.multicore;
+
+import net.minecraft.launchwrapper.LogWrapper;
+
+/**
+ * CPU-only worker pool over a BuildQueue. Workers never touch GL: they run the supplied
+ * task (geometry tessellation, once the renderer split lands) and hand the build back
+ * through the queue for client-thread application. Sized min(cores-2, 6) with a floor of
+ * 2 - chunk building saturates well before high core counts and the client thread must
+ * keep a core.
+ */
+public final class BuildWorkers
+{
+    /** The worker-side unit of work. Implementations must be GL-free. */
+    public interface Task
+    {
+        void build(BuildQueue.Build build) throws Exception;
+    }
+
+    private final Thread[] threads;
+
+    public BuildWorkers(final BuildQueue queue, final Task task, String namePrefix)
+    {
+        int count = Math.max(2, Math.min(Runtime.getRuntime().availableProcessors() - 2, 6));
+        this.threads = new Thread[count];
+
+        for (int i = 0; i < count; ++i)
+        {
+            Thread thread = new Thread(new Runnable()
+            {
+                public void run()
+                {
+                    while (true)
+                    {
+                        BuildQueue.Build build;
+
+                        try
+                        {
+                            build = queue.take();
+                        }
+                        catch (InterruptedException interrupted)
+                        {
+                            return;
+                        }
+
+                        if (build == null)
+                        {
+                            return;
+                        }
+
+                        try
+                        {
+                            task.build(build);
+                        }
+                        catch (Exception e)
+                        {
+                            build.failed = true;
+                            e.printStackTrace();
+                        }
+
+                        queue.complete(build);
+                    }
+                }
+            }, namePrefix + "-" + i);
+            thread.setDaemon(true);
+            thread.setPriority(Thread.NORM_PRIORITY - 2);
+            this.threads[i] = thread;
+            thread.start();
+        }
+
+        LogWrapper.info("[Vertex] Build workers started: " + count);
+    }
+
+    public int size()
+    {
+        return this.threads.length;
+    }
+}
