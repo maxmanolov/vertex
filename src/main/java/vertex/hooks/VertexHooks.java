@@ -42,7 +42,7 @@ public final class VertexHooks
 
     public static void blockChanged(Object renderGlobal, int x, int y, int z)
     {
-        if (!ready(renderGlobal))
+        if (!VertexConfig.enabled("interactiveRenderPriority") || !ready(renderGlobal))
         {
             return;
         }
