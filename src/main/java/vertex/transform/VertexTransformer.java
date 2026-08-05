@@ -70,6 +70,12 @@ public class VertexTransformer implements IClassTransformer
                 LogWrapper.info("[Vertex] Patching RenderBlocks (" + name + ")");
                 result = IconHookPatch.apply(result);
             }
+            else if (Mappings.RENDER_CLASS.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching Render (" + name + ")");
+                result = HeadGuardPatch.apply(result, Mappings.RENDER_BIND_ENTITY_TEXTURE, Mappings.RENDER_BIND_ENTITY_TEXTURE_DESC,
+                    "vertex/hooks/VertexRandomEntities", "interceptBind", HeadGuardPatch.THIS_AND_OBJECT);
+            }
             else if (Mappings.COLORIZER_GRASS.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching ColorizerGrass (" + name + ")");

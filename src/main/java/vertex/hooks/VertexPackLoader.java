@@ -32,6 +32,7 @@ public final class VertexPackLoader
     private static boolean registered = false;
     private static boolean disabled = false;
     private static Method getResource;
+    private static Object lastManager;
     private static Method getStream;
     private static Constructor<?> locationCtor;
 
@@ -89,6 +90,8 @@ public final class VertexPackLoader
 
     static void reload(Object manager)
     {
+        lastManager = manager;
+
         try
         {
             Properties colorProps = readProperties(manager, "mcpatcher/color.properties");
@@ -160,6 +163,20 @@ public final class VertexPackLoader
         finally
         {
             in.close();
+        }
+    }
+
+    /** True when the given ResourceLocation resolves in the active packs. */
+    public static boolean resourceExists(Object location)
+    {
+        try
+        {
+            Object resource = getResource.invoke(lastManager, location);
+            return resource != null;
+        }
+        catch (Exception absent)
+        {
+            return false;
         }
     }
 
