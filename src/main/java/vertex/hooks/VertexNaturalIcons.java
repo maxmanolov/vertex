@@ -79,7 +79,7 @@ public final class VertexNaturalIcons
             cache.put(key, proxy);
             return proxy;
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             broken = true;
             net.minecraft.launchwrapper.LogWrapper.severe("[Vertex] Natural texture proxies disabled after failure");

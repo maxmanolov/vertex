@@ -30,6 +30,7 @@ public final class VertexConfig
         {"dynamicLights", "true", "Dynamic light sources illuminate surroundings"},
         {"customColors", "true", "Resource-pack custom colors (grass and foliage colormaps)"},
         {"betterGrass", "false", "Render grass block sides as grass when the terrain continues below"},
+        {"naturalTextures", "true", "Mirror tile variants from a pack's natural.properties"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };
 

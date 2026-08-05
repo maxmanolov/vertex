@@ -25,6 +25,7 @@ public final class VertexIcons
     /** Diagnostic: proves whether in-world sprite resolution actually flows through here. */
     public static long hits = 0L;
     public static long sideHits = 0L;
+    public static long naturalVariants = 0L;
 
     public static Object adjust(Object icon, Object block, Object world, int x, int y, int z, int side)
     {
@@ -59,7 +60,7 @@ public final class VertexIcons
                     }
                 }
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
                 grassBroken = true;
                 net.minecraft.launchwrapper.LogWrapper.severe("[Vertex] Better grass disabled after failure");
@@ -72,9 +73,54 @@ public final class VertexIcons
             return icon;
         }
 
-        // Further dispatch lands with each ruleset loader: CTM (blob class -> tile),
-        // natural variants, emissive overlay scheduling. Ordering: CTM first.
+        // Natural textures: deterministic mirror variant per position and face.
+        vertex.variants.NaturalProperties natural = VertexPackLoader.naturalProperties;
+
+        if (natural != null && icon != null && VertexConfig.enabled("naturalTextures"))
+        {
+            try
+            {
+                String name = iconName(icon);
+                vertex.variants.NaturalProperties.Spec spec = name != null ? natural.spec(name) : null;
+
+                if (spec != null)
+                {
+                    int count = vertex.natural.NaturalVariants.variantCount(spec.rotations, spec.flip);
+
+                    if (count > 1)
+                    {
+                        int variant = vertex.variants.DeterministicVariants.pick(
+                            vertex.variants.DeterministicVariants.hash(x, y, z, side), count);
+                        Object mirrored = VertexNaturalIcons.variant(icon,
+                            vertex.natural.NaturalVariants.flipU(variant),
+                            vertex.natural.NaturalVariants.flipV(variant));
+
+                        if (mirrored != icon)
+                        {
+                            ++naturalVariants;
+                        }
+
+                        return mirrored;
+                    }
+                }
+            }
+            catch (Throwable e)
+            {
+                active = false;
+                net.minecraft.launchwrapper.LogWrapper.severe("[Vertex] Natural textures disabled after failure");
+                e.printStackTrace();
+            }
+        }
+
+        // CTM and emissive dispatch land with their ruleset loaders.
         return icon;
+    }
+
+    private static String iconName(Object icon) throws Exception
+    {
+        java.lang.reflect.Method method = icon.getClass().getMethod(vertex.Mappings.ICON_NAME);
+        method.setAccessible(true);
+        return (String)method.invoke(icon);
     }
 
     private static void initGrass(Object sampleBlock, Object world) throws Exception
