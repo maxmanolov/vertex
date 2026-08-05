@@ -40,6 +40,14 @@ class-to-atlas-position table is deliberately a calibration seam: it will be fil
 a reference pack when the sprite hook lands, because a guessed order would be
 self-consistent-but-wrong in exactly the way unit tests cannot catch.
 
+**Remaining piece - atlas registration:** CTM tiles live in packs as separate images
+(mcpatcher/ctm/<name>/0.png ... 46.png) and vanilla never registers them, so they have no
+atlas coordinates and no IIcon exists to return. The dispatch therefore cannot be written
+until those sprites are registered during atlas construction, which needs a hook on
+TextureMap's stitch/registration path to inject extra sprites and retain their IIcons.
+That is the single blocking piece; connectivity, parsing, rule indexing and pack scanning
+are all merged and tested.
+
 **Merge gate (unchanged):** a reference CTM pack (glass borders + bookshelves) renders
 correctly on all six faces and at chunk-section boundaries; disabled state is bit-identical
 to vanilla; no measurable frame-time regression with CTM-less packs.
