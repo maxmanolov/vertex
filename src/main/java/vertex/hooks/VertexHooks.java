@@ -127,6 +127,7 @@ public final class VertexHooks
         }
 
         VertexStats.tick();
+        VertexMulticore.drainFinished();
 
         try
         {

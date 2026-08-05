@@ -28,6 +28,12 @@ public class VertexTransformer implements IClassTransformer
             {
                 LogWrapper.info("[Vertex] Patching WorldRenderer (" + name + ")");
                 result = WorldRendererPatch.apply(result);
+                result = HeadGuardPatch.apply(result, Mappings.WR_UPDATE_RENDERER, Mappings.WR_UPDATE_RENDERER_DESC,
+                    "vertex/hooks/VertexMulticore", "interceptUpdate", HeadGuardPatch.THIS_AND_OBJECT);
+                result = HeadGuardPatch.apply(result, Mappings.WR_PRE_RENDER_BLOCKS, Mappings.WR_PRE_RENDER_BLOCKS_DESC,
+                    "vertex/hooks/VertexMulticore", "interceptPreRender", HeadGuardPatch.THIS_AND_INT);
+                result = HeadGuardPatch.apply(result, Mappings.WR_POST_RENDER_BLOCKS, Mappings.WR_POST_RENDER_BLOCKS_DESC,
+                    "vertex/hooks/VertexMulticore", "interceptPostRender", HeadGuardPatch.THIS_AND_INT);
             }
             else if (Mappings.RENDER_GLOBAL.equals(name))
             {

@@ -67,6 +67,9 @@ public final class Mappings
     public static final String RG_RENDER_CHUNKS_DEEP = "y";
 
     public static final String WR_NEEDS_UPDATE = "q";
+    public static final String WR_POS_X = "c";
+    public static final String WR_POS_Y = "d";
+    public static final String WR_POS_Z = "e";
     public static final String WR_SET_POSITION = "a";
     public static final String WR_SET_POSITION_DESC = "(III)V";
     public static final String WR_UPDATE_RENDERER = "a";
@@ -99,6 +102,35 @@ public final class Mappings
 
     /** WorldRenderer caches Tessellator.instance in its own private static; reads must be redirected too. */
     public static final String WR_CACHED_TESSELLATOR = "A";
+
+    /*
+     * Multi-core capture/replay surface:
+     * WorldRenderer.glRenderList         field_78933_?    z
+     * WorldRenderer.bytesDrawn           field_78931_?    D
+     * WorldRenderer.vertexState          -                y
+     * WorldRenderer.tileEntities         -                C
+     * WorldRenderer.tileEntityRenderers  -                x
+     * WorldRenderer.preRenderBlocks      func_78908_a     b (I)V
+     * WorldRenderer.postRenderBlocks     func_78904_a?    a (ILsv;)V
+     * Tessellator.startDrawingQuads      func_78382_b     b ()V
+     * Tessellator.setTranslation         func_78373_b     b (DDD)V
+     * Tessellator.draw                   func_78381_a     a ()I
+     * Tessellator.getVertexState         -                a (FFF)Lbmi;
+     */
+    public static final String WR_GL_RENDER_LIST = "z";
+    public static final String WR_BYTES_DRAWN = "D";
+    public static final String WR_VERTEX_STATE = "y";
+    public static final String WR_TILE_ENTITIES = "C";
+    public static final String WR_TILE_ENTITY_RENDERERS = "x";
+    public static final String WR_PRE_RENDER_BLOCKS = "b";
+    public static final String WR_PRE_RENDER_BLOCKS_DESC = "(I)V";
+    public static final String WR_POST_RENDER_BLOCKS = "a";
+    public static final String WR_POST_RENDER_BLOCKS_DESC = "(ILsv;)V";
+    public static final String WR_SETUP_GL_TRANSLATION = "f";
+    public static final String TESS_START_QUADS = "b";
+    public static final String TESS_SET_TRANSLATION = "b";
+    public static final String TESS_DRAW = "a";
+    public static final String TESS_GET_VERTEX_STATE = "a";
     public static final String ENTITY_RENDERER = "blt";
     public static final String TEXTURE_MAP = "bpz";
     public static final String WORLD_CLIENT = "bjf";
