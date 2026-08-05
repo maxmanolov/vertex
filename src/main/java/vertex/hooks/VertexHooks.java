@@ -163,6 +163,15 @@ public final class VertexHooks
         }
     }
 
+    /** Test-harness entry: gate-free section promotion for synthetic rebuild load. */
+    static void promoteForTest(Object renderGlobal, int x, int y, int z) throws Exception
+    {
+        if (ready(renderGlobal))
+        {
+            promote(renderGlobal, x, y, z);
+        }
+    }
+
     private static void promote(Object renderGlobal, int x, int y, int z) throws Exception
     {
         Object[] grid = (Object[])worldRenderers.get(renderGlobal);

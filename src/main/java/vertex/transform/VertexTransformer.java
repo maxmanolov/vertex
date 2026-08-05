@@ -54,6 +54,11 @@ public class VertexTransformer implements IClassTransformer
                     new SkipMethodPatch.Target(Mappings.TM_UPDATE_ANIMATIONS, Mappings.TM_UPDATE_ANIMATIONS_DESC, "textureAnimations"),
                 });
             }
+            else if (Mappings.MINECRAFT.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching Minecraft (" + name + ")");
+                result = HeadInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC, "vertex/hooks/VertexTestHarness", "tick");
+            }
             else if (Mappings.WORLD_CLIENT.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching WorldClient (" + name + ")");

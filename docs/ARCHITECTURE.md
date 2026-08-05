@@ -60,9 +60,17 @@ sample packs, never from OptiFine's parser.
 
 ## Testing and benchmarks
 
-- Transformers are exercised end-to-end against the real Mojang 1.7.10 jar in CI-less
-  fashion: boot to title screen, assert patch log lines, join world, assert hook init and
-  zero self-disables. (Scripted local run; see README dev notes.)
+- Transformers are exercised end-to-end against the real Mojang 1.7.10 jar. The built-in
+  test harness makes this fully autonomous - no human in the loop:
+
+      java -Dvertex.test.autoJoin=WORLDNAME -Dvertex.test.churn=8 ... (normal launch)
+
+  autoJoin enters the named singleplayer world from the title screen; churn force-promotes
+  ~N sections per second near the player, generating sustained rebuild load through the
+  real promotion/consumption pipeline. A soak passes when the process outlives the window
+  with zero hook self-disables and the per-minute diagnostics counters show balanced
+  promotions and rebuilds. First recorded run: 3+ minutes, ~460 promotions and ~460
+  rebuilds per minute, zero disables, against the official client.
 - Every feature lands with either a regression check or a documented manual verification,
   plus a benchmark when it claims a measurable win. Claims without numbers stay out of
   FEATURES.md status upgrades.
