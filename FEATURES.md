@@ -10,7 +10,7 @@ format documentation, and observable behavior only (see docs/ARCHITECTURE.md for
 | Feature | Purpose | Vertex status | Notes |
 |---|---|---|---|
 | Interactive render priority | Rebuild the chunk section you just edited immediately instead of waiting on the throttled queue | **surpassed** | Not an OptiFine feature at all. Reach-gated, boundary-aware, capped 4/frame. Active since 0.1.0. |
-| Multi-core chunk building | Tessellate chunk geometry on worker threads | **in progress** | Design proven out-of-tree (worker pool tessellates, client thread only compiles display lists - no shared GL context, unlike OptiFine's single Pbuffer thread which is also broken on modern macOS). Needs the transformer-wide `Tessellator.instance` redirect. Flagship item. |
+| Multi-core chunk building | Tessellate chunk geometry on worker threads | **in progress** | Phase 1 landed (0.2.0): the transformer-wide `Tessellator.instance` redirect is live and verified against the official client (78 call sites, identity semantics, class-init side effect preserved). Phase 2 adds the worker pool proven out-of-tree - no shared GL context, unlike OptiFine's single Pbuffer thread. |
 | Smooth (time-sliced) chunk loading | Spread chunk rebuild cost across frames to reduce stutter | missing | Planned after multi-core; the per-frame budget machinery is shared. |
 | Lazy chunk loading | Defer client chunk attach work | missing | Low priority; measure first - vanilla 1.7.10's cost profile here is modest. |
 | Fast Render (GL state batching) | Reduce redundant GL state changes per frame | missing | Medium impact, high regression risk on the fixed-function pipeline; needs its own profiling pass. |
@@ -22,7 +22,7 @@ format documentation, and observable behavior only (see docs/ARCHITECTURE.md for
 | Texture animation control | Stop per-frame texture re-uploads (water/lava/fire/portal) | **matched** (0.2.0) | `textureAnimations=false` skips TextureMap.updateAnimations - one switch today; per-animation granularity planned. |
 | Fog control (off/fast/fancy) | Reduce fog fill cost / visibility preference | **matched** (0.2.0) | `fog=false` disables distance fog via a GL-mode-aware tail hook on setupFog; lava/water/blindness density fog is preserved. Fast/fancy hint control judged not worth it on modern GPUs. |
 | Particles fine control | Finer than vanilla's all/decreased/minimal | missing | Low; vanilla covers the bulk. |
-| Fast Math | Cheaper trig via smaller lookup table | missing | Vanilla MathHelper is already table-based (64k entries); OptiFine shrinks it to 4k for cache behavior. Needs a benchmark before adopting - may be noise on modern CPUs. |
+| Fast Math | Cheaper trig via smaller lookup table | **excluded** | Benchmarked (docs/benchmarks/fastmath.md): vanilla's 64k table costs ~1 ns/op on modern hardware; the 4k variant measured slower and 16x less accurate. Nothing to gain. |
 | Chunk updates per frame | Configurable rebuild budget | missing | Lands with the multi-core port. |
 | Antialiasing (FSAA) | Smoother edges | missing | Requires pixel-format selection at display creation; restart semantics. Low demand. |
 | Anisotropic filtering | Sharper angled textures | **matched by vanilla** | Vanilla 1.7.10 already ships AF in video settings; nothing to add unless bugs surface. |

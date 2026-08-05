@@ -72,7 +72,9 @@ public final class Mappings
      * Render-control targets (all void, patched with config-gated head skips):
      * RenderGlobal.renderSky          func_72714_a     a (F)V
      * RenderGlobal.renderClouds       func_72718_b     b (F)V
-     * EntityRenderer                  -                blt
+     * Tessellator                     -                bmh
+ * Tessellator.instance            field_78398_a    a (public static final)
+ * EntityRenderer                  -                blt
      * EntityRenderer.setupFog         func_78468_a     a (IF)V
  * EntityRenderer.renderRainSnow   func_78474_d     e (F)V
      * EntityRenderer.addRainParticles func_78484_h     l ()V
@@ -81,6 +83,8 @@ public final class Mappings
      * WorldClient                     -                bjf
      * WorldClient.doVoidFogParticles  func_73029_E     C (III)V
      */
+    public static final String TESSELLATOR = "bmh";
+    public static final String TESSELLATOR_INSTANCE = "a";
     public static final String ENTITY_RENDERER = "blt";
     public static final String TEXTURE_MAP = "bpz";
     public static final String WORLD_CLIENT = "bjf";
