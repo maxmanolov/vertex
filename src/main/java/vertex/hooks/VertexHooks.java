@@ -113,6 +113,8 @@ public final class VertexHooks
             return;
         }
 
+        VertexStats.tick();
+
         try
         {
             List<?> queue = (List<?>)worldRenderersToUpdate.get(renderGlobal);
@@ -132,6 +134,7 @@ public final class VertexHooks
                         if (marker.vertex$isDirty())
                         {
                             marker.vertex$rebuild(viewEntity);
+                            VertexStats.rebuild();
                             ++consumed;
                         }
 
@@ -169,6 +172,7 @@ public final class VertexHooks
         if (renderer instanceof ImmediateMarker)
         {
             ((ImmediateMarker)renderer).vertex$markImmediate();
+            VertexStats.promotion();
             List<Object> queue = (List<Object>)worldRenderersToUpdate.get(renderGlobal);
 
             if (!queue.contains(renderer))

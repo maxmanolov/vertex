@@ -26,6 +26,7 @@ public final class VertexConfig
         {"voidParticles", "true", "Spawn void fog depth particles"},
         {"textureAnimations", "true", "Animate block textures (water, lava, fire, portals)"},
         {"interactiveRenderPriority", "true", "Rebuild the chunk section you just edited ahead of the update queue"},
+        {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };
 
     private static final Properties values = new Properties();
