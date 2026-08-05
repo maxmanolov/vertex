@@ -1,110 +1,74 @@
-[14:03:54] [main/INFO]: Loading tweak class name vertex.VertexTweaker
-[14:03:54] [main/INFO]: Using primary tweak class name vertex.VertexTweaker
-[14:03:54] [main/INFO]: Calling tweak class vertex.VertexTweaker
-[14:03:54] [main/INFO]: [Vertex] Registering class transformer
-[14:03:54] [main/INFO]: Launching wrapped minecraft {net.minecraft.client.main.Main}
-[14:03:54] [main/INFO]: [Vertex] Patching Minecraft (bao)
-[14:03:54] [main/INFO]: [Vertex] Patching WorldClient (bjf)
-[14:03:54] [main/INFO]: Setting user: Max
-[14:03:54] [main/INFO]: (Session ID is token:0:Max)
-[14:03:55] [Client thread/INFO]: LWJGL Version: 2.9.4
-[14:03:55] [Client thread/ERROR]: Couldn't initialize twitch stream
-[14:03:55] [Client thread/INFO]: Reloading ResourceManager: Default
-[14:03:55] [Client thread/INFO]: [Vertex] Tessellator redirect active (78 call sites rewritten so far)
-[14:03:55] [Client thread/INFO]: [Vertex] Patching EntityRenderer (blt)
-[14:03:55] [Client thread/INFO]: [Vertex] Patching RenderGlobal (bma)
-[14:03:55] [Client thread/INFO]: [Vertex] Patching TextureMap (bpz)
-[14:03:55] [Client thread/INFO]: Created: 512x256 textures/blocks-atlas
-[14:03:55] [Client thread/INFO]: Created: 256x256 textures/items-atlas
-[14:03:55] [Client thread/INFO]: [Vertex] Test harness armed (autoJoin=New World, churn=8/s)
-[14:03:55] [Client thread/INFO]: [Vertex] Loaded configuration from vertex.properties
-[14:03:55] [Sound Library Loader/INFO]: Sound engine started
-[14:03:55] [Client thread/INFO]: [Vertex] Patching WorldRenderer (blo)
-[14:04:00] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:music.menu
-[14:04:01] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:music.menu
-[14:04:02] [Client thread/INFO]: [Vertex] Test harness: joining world 'New World'
-[14:04:02] [Server thread/INFO]: Starting integrated minecraft server version 1.7.10
-[14:04:02] [Server thread/INFO]: Generating keypair
-[14:04:02] [Server thread/INFO]: Preparing start region for level 0
-[14:04:02] [Server thread/INFO]: Changing view distance to 12, from 10
-[14:04:02] [Server thread/INFO]: Max[local:E:ee8113aa] logged in with entity id 336 at (237.86819039385082, 69.0, 262.91159124130047)
-[14:04:02] [Server thread/INFO]: Max joined the game
-[14:04:02] [Client thread/INFO]: [Vertex] Render-priority hooks initialized
-[14:04:03] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:05] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:11] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:12] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:19] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:21] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:23] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:23] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:music.game
-[14:04:24] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:25] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:27] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:29] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:31] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:32] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:33] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:33] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
-[14:04:34] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:35] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:35] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:36] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:40] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
-[14:04:42] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
-[14:04:43] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:44] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:47] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
-[14:04:51] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:52] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:53] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:54] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:55] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:56] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:57] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:04:58] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:04:58] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
-[14:05:02] [Client thread/INFO]: [Vertex] Last 60s: immediate promotions=461 rebuilds=461 skippedPasses=none
-[14:05:04] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:05] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:05] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:05] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:06] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:06] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:07] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:07] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:08] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:08] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:08] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:09] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:12] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:16] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:20] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:24] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:28] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:33] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:35] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:38] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:39] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:40] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:41] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:41] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:42] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:43] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:43] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:44] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:44] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:46] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:05:51] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:05:58] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:06:02] [Client thread/INFO]: [Vertex] Last 60s: immediate promotions=461 rebuilds=461 skippedPasses=none
-[14:06:07] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:06:15] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:06:15] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:06:16] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:06:17] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:06:18] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:06:20] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
-[14:06:26] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
-[14:06:32] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
-[14:06:34] [Client Shutdown Thread/INFO]: Stopping server
+[14:12:40] [main/INFO]: Loading tweak class name vertex.VertexTweaker
+[14:12:40] [main/INFO]: Using primary tweak class name vertex.VertexTweaker
+[14:12:40] [main/INFO]: Calling tweak class vertex.VertexTweaker
+[14:12:40] [main/INFO]: [Vertex] Registering class transformer
+[14:12:40] [main/INFO]: Launching wrapped minecraft {net.minecraft.client.main.Main}
+[14:12:40] [main/INFO]: [Vertex] Patching Minecraft (bao)
+[14:12:40] [main/INFO]: [Vertex] Patching WorldClient (bjf)
+[14:12:41] [main/INFO]: Setting user: Max
+[14:12:41] [main/INFO]: (Session ID is token:0:Max)
+[14:12:41] [Client thread/INFO]: LWJGL Version: 2.9.4
+[14:12:41] [Client thread/ERROR]: Couldn't initialize twitch stream
+[14:12:41] [Client thread/INFO]: Reloading ResourceManager: Default
+[14:12:41] [Client thread/INFO]: [Vertex] Tessellator redirect active (78 call sites rewritten so far)
+[14:12:41] [Client thread/INFO]: [Vertex] Patching EntityRenderer (blt)
+[14:12:41] [Client thread/INFO]: [Vertex] Patching RenderGlobal (bma)
+[14:12:41] [Client thread/INFO]: [Vertex] Patching TextureMap (bpz)
+[14:12:42] [Client thread/INFO]: Created: 512x256 textures/blocks-atlas
+[14:12:42] [Client thread/INFO]: Created: 256x256 textures/items-atlas
+[14:12:42] [Client thread/INFO]: [Vertex] Test harness armed (autoJoin=New World, churn=8/s)
+[14:12:42] [Client thread/INFO]: [Vertex] Loaded configuration from vertex.properties
+[14:12:42] [Sound Library Loader/INFO]: Sound engine started
+[14:12:42] [Client thread/INFO]: [Vertex] Patching WorldRenderer (blo)
+[14:12:46] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:music.menu
+[14:12:48] [Client thread/INFO]: [Vertex] Test harness: joining world 'New World'
+[14:12:48] [Server thread/INFO]: Starting integrated minecraft server version 1.7.10
+[14:12:48] [Server thread/INFO]: Generating keypair
+[14:12:49] [Server thread/INFO]: Preparing start region for level 0
+[14:12:49] [Server thread/INFO]: Changing view distance to 12, from 10
+[14:12:49] [Server thread/INFO]: Max[local:E:97890ef1] logged in with entity id 351 at (237.86819039385082, 69.0, 262.91159124130047)
+[14:12:49] [Server thread/INFO]: Max joined the game
+[14:12:49] [Client thread/INFO]: [Vertex] Render-priority hooks initialized
+[14:12:51] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:12:58] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:05] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:11] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:12] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:music.game
+[14:13:16] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:17] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:18] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:20] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:21] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:13:28] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:37] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:37] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:38] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:39] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:40] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:41] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:42] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:44] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:44] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:45] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:46] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:47] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:48] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:49] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:49] [Client thread/INFO]: [Vertex] Last 60s: immediate promotions=462 rebuilds=462 skippedPasses=none
+[14:13:51] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:13:51] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:13:52] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:13:52] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.say
+[14:13:57] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:58] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:13:59] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.cow.step
+[14:14:38] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:14:38] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:14:48] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:14:49] [Client thread/INFO]: [Vertex] Last 60s: immediate promotions=462 rebuilds=462 skippedPasses=none
+[14:14:55] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:14:55] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:14:55] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:14:55] [Client thread/WARN]: Unable to play unknown soundEvent: minecraft:mob.bat.takeoff
+[14:15:20] [Client Shutdown Thread/INFO]: Stopping server
+[14:15:20] [Client Shutdown Thread/INFO]: Saving players

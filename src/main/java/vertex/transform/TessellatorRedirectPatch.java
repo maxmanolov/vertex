@@ -45,6 +45,11 @@ public final class TessellatorRedirectPatch implements Opcodes
             return bindInClinit(basicClass);
         }
 
+        if (Mappings.WORLD_RENDERER.equals(name))
+        {
+            basicClass = redirectCachedField(basicClass);
+        }
+
         if (!containsNeedle(basicClass))
         {
             return basicClass;
@@ -98,6 +103,59 @@ public final class TessellatorRedirectPatch implements Opcodes
 
         sites.addAndGet(rewritten);
         classes.incrementAndGet();
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cls.accept(writer);
+        return writer.toByteArray();
+    }
+
+    /**
+     * WorldRenderer snapshots Tessellator.instance into a private static of its own
+     * (blo.A, assigned once in its <clinit>), which would let worker-thread tessellation
+     * bypass the per-thread lookup entirely. Reads are rewritten to VertexTessellator.get();
+     * the original GETSTATIC is not preserved here because these are self-class reads -
+     * the class is necessarily initialized before any of its methods can run.
+     */
+    private static byte[] redirectCachedField(byte[] basicClass)
+    {
+        ClassNode cls = new ClassNode();
+        new ClassReader(basicClass).accept(cls, 0);
+        int rewritten = 0;
+
+        for (MethodNode method : cls.methods)
+        {
+            if (method.name.equals("<clinit>"))
+            {
+                continue;
+            }
+
+            for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
+            {
+                if (insn.getOpcode() == GETSTATIC)
+                {
+                    FieldInsnNode field = (FieldInsnNode)insn;
+
+                    if (field.owner.equals(Mappings.WORLD_RENDERER) && field.name.equals(Mappings.WR_CACHED_TESSELLATOR)
+                        && field.desc.equals("L" + Mappings.TESSELLATOR + ";"))
+                    {
+                        InsnList replacement = new InsnList();
+                        replacement.add(new MethodInsnNode(INVOKESTATIC, "vertex/hooks/VertexTessellator", "get", "()Ljava/lang/Object;", false));
+                        replacement.add(new TypeInsnNode(CHECKCAST, Mappings.TESSELLATOR));
+                        AbstractInsnNode next = insn.getNext();
+                        method.instructions.insertBefore(insn, replacement);
+                        method.instructions.remove(insn);
+                        insn = next.getPrevious();
+                        ++rewritten;
+                    }
+                }
+            }
+        }
+
+        if (rewritten == 0)
+        {
+            throw new IllegalStateException("WorldRenderer cached-tessellator redirect matched nothing");
+        }
+
+        sites.addAndGet(rewritten);
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cls.accept(writer);
         return writer.toByteArray();

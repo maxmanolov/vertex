@@ -139,6 +139,33 @@ public final class TransformerHarness implements Opcodes
         return cw.toByteArray();
     }
 
+    /**
+     * Mimics WorldRenderer's cached-tessellator pattern: a class with its own
+     * private static <tess> A assigned in <clinit> from the tessellator's field, and a
+     * static readCache()Ljava/lang/Object; returning the cached field.
+     */
+    public static byte[] cachedFieldConsumer(String internalName, String tessName, String cacheField)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        cw.visitField(ACC_PRIVATE | ACC_STATIC, cacheField, "L" + tessName + ";", null, null).visitEnd();
+        MethodVisitor clinit = cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
+        clinit.visitCode();
+        clinit.visitFieldInsn(GETSTATIC, tessName, "a", "L" + tessName + ";");
+        clinit.visitFieldInsn(PUTSTATIC, internalName, cacheField, "L" + tessName + ";");
+        clinit.visitInsn(RETURN);
+        clinit.visitMaxs(0, 0);
+        clinit.visitEnd();
+        MethodVisitor read = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "readCache", "()Ljava/lang/Object;", null, null);
+        read.visitCode();
+        read.visitFieldInsn(GETSTATIC, internalName, cacheField, "L" + tessName + ";");
+        read.visitInsn(ARETURN);
+        read.visitMaxs(0, 0);
+        read.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
     private TransformerHarness()
     {
     }

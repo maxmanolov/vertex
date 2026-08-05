@@ -96,6 +96,9 @@ public final class Mappings
      */
     public static final String TESSELLATOR = "bmh";
     public static final String TESSELLATOR_INSTANCE = "a";
+
+    /** WorldRenderer caches Tessellator.instance in its own private static; reads must be redirected too. */
+    public static final String WR_CACHED_TESSELLATOR = "A";
     public static final String ENTITY_RENDERER = "blt";
     public static final String TEXTURE_MAP = "bpz";
     public static final String WORLD_CLIENT = "bjf";
