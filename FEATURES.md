@@ -36,7 +36,7 @@ files). File-format compatibility is an interoperability surface; implementation
 
 | Feature | Purpose | Vertex status | Notes |
 |---|---|---|---|
-| Connected textures (CTM) | Seamless glass/bookshelves etc. | **in progress** | Core merged (0.2.0): pack-format parser and the 47-class blob connectivity engine, property-tested from first principles. Remaining: the RenderBlocks sprite hook and atlas-order calibration against a reference pack. |
+| Connected textures (CTM) | Seamless glass/bookshelves etc. | **in progress** | Core + icon choke point merged (0.2.0): the world-aware getBlockIcon (all 37 in-world call sites) routes through the shared VertexIcons dispatch, soak-verified neutral. Remaining: ruleset loader + blob-class dispatch + atlas calibration. |
 | Custom sky | Pack-defined sky boxes | **in progress** | Timing core merged (0.2.0): day-clock parsing anchored to the Minecraft day, wrap-aware fade windows, derived fade-out - unit-tested across midnight. Remaining: layer loader + sky-pass render hook. |
 | Custom colors | Pack-defined colormaps | **in progress** | Core merged (0.2.0): colormap sampling (vanilla triangle indexing, clamped), color.properties parser (skip-bad-lines), allocation-free biome blend - all unit-tested. Remaining: colorizer hook + pack loader wiring. |
 | Emissive textures | Glow overlays | **in progress** | Convention core merged (0.2.0): suffix detection/mapping with pack override, unit-tested. Remaining: fullbright overlay render hook. |
