@@ -61,7 +61,10 @@ public final class VertexStats
             }
         }
 
+        long[] gl = VertexGLStats.drain();
+        long redundantPct = gl[0] > 0 ? gl[1] * 100L / gl[0] : 0L;
         LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + promotions + " rebuilds=" + rebuilds
+            + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
         promotions = 0L;
         rebuilds = 0L;

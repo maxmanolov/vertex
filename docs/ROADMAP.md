@@ -55,10 +55,9 @@ frame-time numbers from the diagnostics counters.
 
 ## 5. Fast Render investigation
 
-GL state batching across consecutive draw calls. Profile-first mandate: land a GL
-call-count diagnostic, measure vanilla's redundant state changes per frame, and only then
-decide scope. If redundant changes are <5% of frame time on modern drivers, document as
-excluded with the numbers.
+**Resolved: excluded with data.** The call-count diagnostic landed and measured 38-41%
+redundancy at ~140 redundant calls/frame - microseconds of driver time against the 5%
+frame-time threshold. See docs/benchmarks/fastrender.md.
 
 ## 6. Dynamic lights
 

@@ -76,6 +76,8 @@ public class VertexTransformer implements IClassTransformer
             // Applies to every class, including the ones patched above: rewrite reads of
             // the shared Tessellator through VertexTessellator.
             result = TessellatorRedirectPatch.process(name, result);
+            // Fast Render investigation: count GL state calls and their redundancy.
+            result = GLCallCountPatch.process(result);
         }
         catch (Exception e)
         {
