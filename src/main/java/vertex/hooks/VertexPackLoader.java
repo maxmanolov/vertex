@@ -28,6 +28,7 @@ public final class VertexPackLoader
     public static volatile ColorMap grassMap;
     public static volatile ColorMap foliageMap;
     public static volatile vertex.variants.NaturalProperties naturalProperties;
+    public static volatile java.util.List<vertex.sky.SkyLayer> skyLayers = java.util.Collections.emptyList();
 
     private static boolean registered = false;
     private static boolean disabled = false;
@@ -98,6 +99,36 @@ public final class VertexPackLoader
             colorProperties = colorProps != null ? new ColorProperties(colorProps) : null;
             grassMap = readColorMap(manager, "mcpatcher/colormap/grass.png");
             foliageMap = readColorMap(manager, "mcpatcher/colormap/foliage.png");
+            // Sky layers are numbered by convention, so fixed-path probing suffices:
+            // probe skyN.properties until a gap, capped.
+            java.util.List<vertex.sky.SkyLayer> layers = new java.util.ArrayList<vertex.sky.SkyLayer>();
+
+            for (int index = 1; index <= 16; ++index)
+            {
+                String base = "mcpatcher/sky/world0/sky" + index;
+                Properties layerProps = readProperties(manager, base + ".properties");
+
+                if (layerProps == null)
+                {
+                    break;
+                }
+
+                try
+                {
+                    vertex.sky.SkyLayer layer = vertex.sky.SkyLayer.parse(layerProps, base + ".png");
+
+                    if (layer != null)
+                    {
+                        layers.add(layer);
+                    }
+                }
+                catch (Exception malformed)
+                {
+                    LogWrapper.warning("[Vertex] Skipping sky layer " + index + ": " + malformed);
+                }
+            }
+
+            skyLayers = layers;
             Properties naturalProps = readProperties(manager, "mcpatcher/natural.properties");
             naturalProperties = naturalProps != null ? new vertex.variants.NaturalProperties(naturalProps) : null;
 
@@ -108,7 +139,8 @@ public final class VertexPackLoader
             LogWrapper.info("[Vertex] Pack resources reloaded (colors: "
                 + (colorProperties != null ? colorProperties.size() + " keys" : "none")
                 + ", colormaps: " + (grassMap != null ? "grass " : "") + (foliageMap != null ? "foliage" : "")
-                + ", natural: " + (naturalProperties != null ? naturalProperties.size() + " tiles" : "none") + ")");
+                + ", natural: " + (naturalProperties != null ? naturalProperties.size() + " tiles" : "none")
+                + ", sky layers: " + skyLayers.size() + ")");
         }
         catch (Exception e)
         {

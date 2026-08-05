@@ -8,7 +8,7 @@ package vertex.sky;
  * Pure math, no game types: opacity(tick) is what the sky render hook multiplies into the
  * layer's blend.
  */
-public final class SkyLayerTiming
+public class SkyLayerTiming
 {
     public static final int DAY_TICKS = 24000;
 
