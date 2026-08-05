@@ -44,7 +44,7 @@ self-consistent-but-wrong in exactly the way unit tests cannot catch.
 correctly on all six faces and at chunk-section boundaries; disabled state is bit-identical
 to vanilla; no measurable frame-time regression with CTM-less packs.
 
-## 3. Custom colors / custom sky / emissive textures / random entities / natural textures
+## 3. Custom sky / random entities (custom colors, natural textures done; emissive excluded)
 
 Same shape as CTM: parse documented pack formats into immutable data, hook one narrow
 vanilla decision point each (biome colorizer, sky render pass, sprite emission overlay,
