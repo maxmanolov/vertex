@@ -20,7 +20,7 @@ format documentation, and observable behavior only (see docs/ARCHITECTURE.md for
 | Weather rendering control | Skip rain/snow rendering + splash particles | **matched** (0.2.0) | `weather=false` skips renderRainSnow and rain particle spawning. Server weather state is untouched. |
 | Void fog / depth particles control | Remove void fog particle churn | **matched** (0.2.0) | `voidParticles=false` skips doVoidFogParticles. |
 | Texture animation control | Stop per-frame texture re-uploads (water/lava/fire/portal) | **matched** (0.2.0) | `textureAnimations=false` skips TextureMap.updateAnimations - one switch today; per-animation granularity planned. |
-| Fog control (off/fast/fancy) | Reduce fog fill cost / visibility preference | missing | Next tranche: needs per-call-site fog mode surgery in EntityRenderer, not a head-skip. |
+| Fog control (off/fast/fancy) | Reduce fog fill cost / visibility preference | **matched** (0.2.0) | `fog=false` disables distance fog via a GL-mode-aware tail hook on setupFog; lava/water/blindness density fog is preserved. Fast/fancy hint control judged not worth it on modern GPUs. |
 | Particles fine control | Finer than vanilla's all/decreased/minimal | missing | Low; vanilla covers the bulk. |
 | Fast Math | Cheaper trig via smaller lookup table | missing | Vanilla MathHelper is already table-based (64k entries); OptiFine shrinks it to 4k for cache behavior. Needs a benchmark before adopting - may be noise on modern CPUs. |
 | Chunk updates per frame | Configurable rebuild budget | missing | Lands with the multi-core port. |

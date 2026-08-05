@@ -40,6 +40,19 @@ public final class VertexHooks
     private static Field renderChunksTall;
     private static Field renderChunksDeep;
 
+    /**
+     * Runs after every EntityRenderer.setupFog exit. With fog=false, only linear
+     * (distance) fog is disabled; density fog from lava, water, or blindness uses
+     * EXP/EXP2 modes and is deliberately preserved.
+     */
+    public static void afterFogSetup()
+    {
+        if (!VertexConfig.enabled("fog") && org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_FOG_MODE) == org.lwjgl.opengl.GL11.GL_LINEAR)
+        {
+            org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_FOG);
+        }
+    }
+
     public static void blockChanged(Object renderGlobal, int x, int y, int z)
     {
         if (!VertexConfig.enabled("interactiveRenderPriority") || !ready(renderGlobal))

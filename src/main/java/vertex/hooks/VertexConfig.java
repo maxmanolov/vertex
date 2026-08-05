@@ -25,6 +25,7 @@ public final class VertexConfig
         {"weather", "true", "Render rain and snow, and spawn rain splash particles"},
         {"voidParticles", "true", "Spawn void fog depth particles"},
         {"textureAnimations", "true", "Animate block textures (water, lava, fire, portals)"},
+        {"fog", "true", "Render distance fog (lava, water and blindness fog always stay)"},
         {"interactiveRenderPriority", "true", "Rebuild the chunk section you just edited ahead of the update queue"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };

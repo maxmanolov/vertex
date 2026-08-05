@@ -11,7 +11,7 @@ import net.minecraft.launchwrapper.LogWrapper;
 public final class VertexStats
 {
     private static final long REPORT_INTERVAL_MS = 60000L;
-    private static final String[] SKIP_KEYS = {"sky", "clouds", "weather", "voidParticles", "textureAnimations"};
+    private static final String[] SKIP_KEYS = {"sky", "clouds", "weather", "voidParticles", "textureAnimations", "fog"};
 
     private static long promotions = 0L;
     private static long rebuilds = 0L;
