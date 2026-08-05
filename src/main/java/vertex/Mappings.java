@@ -11,6 +11,11 @@ package vertex;
  * net.minecraft.client.renderer.WorldRenderer -           blo
  * net.minecraft.entity.Entity            -                sa
  * net.minecraft.entity.EntityLivingBase  -                sv
+ * Minecraft.theWorld                     field_71441_e    f
+ * Minecraft.thePlayer                    field_71439_g    h
+ * Minecraft.renderGlobal                 field_71438_f    g
+ * Minecraft.runGameLoop                  func_71411_J     ak ()V
+ * Minecraft.launchIntegratedServer       func_71371_a     a (String,String,Lahj;)V
  * Minecraft.getMinecraft()               func_71410_x     B ()Lbao;
  * Minecraft.renderViewEntity             field_71451_h    i
  * RenderGlobal.markBlockForUpdate        func_147586_a    a (III)V
@@ -38,6 +43,12 @@ public final class Mappings
     public static final String ENTITY = "sa";
     public static final String ENTITY_LIVING_BASE = "sv";
 
+    public static final String MC_THE_WORLD = "f";
+    public static final String MC_THE_PLAYER = "h";
+    public static final String MC_RENDER_GLOBAL = "g";
+    public static final String MC_RUN_GAME_LOOP = "ak";
+    public static final String MC_RUN_GAME_LOOP_DESC = "()V";
+    public static final String MC_LAUNCH_INTEGRATED_SERVER = "a";
     public static final String MINECRAFT_GET_MINECRAFT = "B";
     public static final String MINECRAFT_GET_MINECRAFT_DESC = "()Lbao;";
     public static final String MINECRAFT_RENDER_VIEW_ENTITY = "i";
