@@ -41,6 +41,8 @@ public final class VertexTestHarness
 
     public static void tick(Object minecraft)
     {
+        VertexDynamicLightsCollector.tick(minecraft);
+
         if (disabled || (AUTO_JOIN == null && CHURN <= 0))
         {
             return;

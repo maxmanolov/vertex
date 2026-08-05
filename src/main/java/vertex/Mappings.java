@@ -42,6 +42,11 @@ public final class Mappings
     public static final String WORLD_RENDERER = "blo";
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
+    public static final String WORLD_PLAYER_ENTITIES = "h";
+    public static final String ELB_GET_HELD_ITEM = "be";
+    public static final String STACK_GET_ITEM = "b";
+    public static final String BLOCK_FROM_ITEM = "a";
+    public static final String BLOCK_GET_LIGHT_VALUE = "m";
     public static final String RENDER_BLOCKS = "blm";
     public static final String IICON = "rf";
     public static final String RB_GET_BLOCK_ICON = "a";
