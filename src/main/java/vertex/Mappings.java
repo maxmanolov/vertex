@@ -73,7 +73,8 @@ public final class Mappings
      * RenderGlobal.renderSky          func_72714_a     a (F)V
      * RenderGlobal.renderClouds       func_72718_b     b (F)V
      * EntityRenderer                  -                blt
-     * EntityRenderer.renderRainSnow   func_78474_d     e (F)V
+     * EntityRenderer.setupFog         func_78468_a     a (IF)V
+ * EntityRenderer.renderRainSnow   func_78474_d     e (F)V
      * EntityRenderer.addRainParticles func_78484_h     l ()V
      * TextureMap                      -                bpz
      * TextureMap.updateAnimations     func_94248_c     d ()V
@@ -88,6 +89,8 @@ public final class Mappings
     public static final String RG_RENDER_SKY_DESC = "(F)V";
     public static final String RG_RENDER_CLOUDS = "b";
     public static final String RG_RENDER_CLOUDS_DESC = "(F)V";
+    public static final String ER_SETUP_FOG = "a";
+    public static final String ER_SETUP_FOG_DESC = "(IF)V";
     public static final String ER_RENDER_RAIN_SNOW = "e";
     public static final String ER_RENDER_RAIN_SNOW_DESC = "(F)V";
     public static final String ER_ADD_RAIN_PARTICLES = "l";

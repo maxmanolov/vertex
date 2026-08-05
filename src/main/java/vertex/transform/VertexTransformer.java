@@ -40,10 +40,11 @@ public class VertexTransformer implements IClassTransformer
             if (Mappings.ENTITY_RENDERER.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching EntityRenderer (" + name + ")");
-                return SkipMethodPatch.apply(basicClass, new SkipMethodPatch.Target[] {
+                byte[] patched = SkipMethodPatch.apply(basicClass, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.ER_RENDER_RAIN_SNOW, Mappings.ER_RENDER_RAIN_SNOW_DESC, "weather"),
                     new SkipMethodPatch.Target(Mappings.ER_ADD_RAIN_PARTICLES, Mappings.ER_ADD_RAIN_PARTICLES_DESC, "weather"),
                 });
+                return TailCallPatch.apply(patched, Mappings.ER_SETUP_FOG, Mappings.ER_SETUP_FOG_DESC, "vertex/hooks/VertexHooks", "afterFogSetup");
             }
 
             if (Mappings.TEXTURE_MAP.equals(name))
