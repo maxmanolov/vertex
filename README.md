@@ -18,6 +18,25 @@ The installer clones the vanilla version json into `versions/1.7.10-Vertex/`, re
 
 ## Optimizations
 
+See [FEATURES.md](FEATURES.md) for the living comparison matrix against OptiFine 1.7.10 —
+every feature is tracked as missing, in progress, matched, surpassed, or excluded with
+justification. Architecture and the clean-room policy live in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Configuration (active)
+
+`vertex.properties` is created in the game directory on first run. Every key defaults to
+vanilla behavior; set a key to `false` to skip that work for performance. Edits hot-reload
+within a second — no restart. Current keys: `sky`, `clouds`, `weather`, `voidParticles`,
+`textureAnimations`, `interactiveRenderPriority`.
+
+### Render-pass controls (active)
+
+Config-gated head-skips of whole vanilla render passes: the sky pass (sky color, stars,
+sun and moon), clouds, rain/snow rendering plus rain splash particles, void fog particles,
+and per-frame animated-texture uploads. Each costs a single static call per frame when
+enabled and removes the pass entirely when disabled.
+
 ### Interactive render priority (ported, active)
 
 Vanilla marks a changed block's 3x3x3 chunk-section neighborhood dirty and leaves the rebuild to a distance-sorted, per-frame-budgeted queue. When that queue is busy (chunk loading while moving), the section containing a block you just broke or placed can wait many frames, so the world visibly lags your click.
