@@ -1,7 +1,6 @@
 package vertex.hooks;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
 import net.minecraft.launchwrapper.LogWrapper;
@@ -30,7 +29,7 @@ public final class VertexHooks
     private static boolean initialized = false;
     private static boolean disabled = false;
 
-    private static Method getMinecraft;
+    private static Field mcInstance;
     private static Field renderViewEntity;
     private static Field entityPosX;
     private static Field entityPosY;
@@ -43,14 +42,14 @@ public final class VertexHooks
 
     public static void blockChanged(Object renderGlobal, int x, int y, int z)
     {
-        if (!ready())
+        if (!ready(renderGlobal))
         {
             return;
         }
 
         try
         {
-            Object viewer = viewEntity();
+            Object viewer = viewEntity(renderGlobal);
 
             if (viewer == null)
             {
@@ -109,7 +108,7 @@ public final class VertexHooks
 
     public static void consumeImmediates(Object renderGlobal, Object viewEntity)
     {
-        if (!ready())
+        if (!ready(renderGlobal))
         {
             return;
         }
@@ -185,13 +184,19 @@ public final class VertexHooks
         return wrapped < 0 ? wrapped + size : wrapped;
     }
 
-    private static Object viewEntity() throws Exception
+    private static Object viewEntity(Object renderGlobal) throws Exception
     {
-        Object minecraft = getMinecraft.invoke(null);
+        Object minecraft = mcInstance.get(renderGlobal);
         return minecraft == null ? null : renderViewEntity.get(minecraft);
     }
 
-    private static boolean ready()
+    /**
+     * Resolves every reflective handle from the live RenderGlobal instance. Launch adds the
+     * tweaker's package to the class-loader exclusions, so this class is defined by the app
+     * class loader - a Class.forName here would load a second, untransformed copy of the
+     * obfuscated classes whose Fields reject the game's LaunchClassLoader instances.
+     */
+    private static synchronized boolean ready(Object renderGlobalInstance)
     {
         if (disabled)
         {
@@ -205,19 +210,32 @@ public final class VertexHooks
 
         try
         {
-            Class<?> minecraft = Class.forName(Mappings.MINECRAFT);
-            Class<?> renderGlobal = Class.forName(Mappings.RENDER_GLOBAL);
-            Class<?> entity = Class.forName(Mappings.ENTITY);
-            getMinecraft = minecraft.getMethod(Mappings.MINECRAFT_GET_MINECRAFT);
-            renderViewEntity = accessible(minecraft, Mappings.MINECRAFT_RENDER_VIEW_ENTITY);
-            entityPosX = accessible(entity, Mappings.ENTITY_POS_X);
-            entityPosY = accessible(entity, Mappings.ENTITY_POS_Y);
-            entityPosZ = accessible(entity, Mappings.ENTITY_POS_Z);
+            Class<?> renderGlobal = renderGlobalInstance.getClass();
+            mcInstance = accessible(renderGlobal, Mappings.RG_MC);
             worldRenderers = accessible(renderGlobal, Mappings.RG_WORLD_RENDERERS);
             worldRenderersToUpdate = accessible(renderGlobal, Mappings.RG_WORLD_RENDERERS_TO_UPDATE);
             renderChunksWide = accessible(renderGlobal, Mappings.RG_RENDER_CHUNKS_WIDE);
             renderChunksTall = accessible(renderGlobal, Mappings.RG_RENDER_CHUNKS_TALL);
             renderChunksDeep = accessible(renderGlobal, Mappings.RG_RENDER_CHUNKS_DEEP);
+            renderViewEntity = accessible(mcInstance.getType(), Mappings.MINECRAFT_RENDER_VIEW_ENTITY);
+            // Entity declares the position fields; obfuscated names repeat per class, so walk
+            // up from EntityLivingBase to the class directly under Object before resolving.
+            Class<?> entity = renderViewEntity.getType();
+
+            while (entity.getSuperclass() != Object.class)
+            {
+                entity = entity.getSuperclass();
+            }
+
+            entityPosX = accessible(entity, Mappings.ENTITY_POS_X);
+            entityPosY = accessible(entity, Mappings.ENTITY_POS_Y);
+            entityPosZ = accessible(entity, Mappings.ENTITY_POS_Z);
+
+            if (entityPosX.getType() != double.class)
+            {
+                throw new IllegalStateException("Entity position field has unexpected type " + entityPosX.getType());
+            }
+
             initialized = true;
             LogWrapper.info("[Vertex] Render-priority hooks initialized");
             return true;
