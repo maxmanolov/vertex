@@ -33,9 +33,16 @@ at tessellation time a pure function `(block, side, neighbors) -> sprite` consul
 precomputed lookup keyed by the 8-neighbor bitmask - no allocation on the render path.
 Implemented from public format documentation and sample packs only.
 
-**Merge gate:** a reference CTM pack (glass borders + bookshelves) renders correctly on
-all six faces and at chunk-section boundaries; disabled state is bit-identical to vanilla;
-no measurable frame-time regression with CTM-less packs.
+**Status:** core merged - vertex.ctm.CtmProperties (parser: method aliases, tile ranges,
+faces, connect defaults) and BlobConnectivity (256-mask -> 47-class canonicalization,
+property-tested: exactly 47 classes emerge from the corner-relevance rule alone). The
+class-to-atlas-position table is deliberately a calibration seam: it will be filled against
+a reference pack when the sprite hook lands, because a guessed order would be
+self-consistent-but-wrong in exactly the way unit tests cannot catch.
+
+**Merge gate (unchanged):** a reference CTM pack (glass borders + bookshelves) renders
+correctly on all six faces and at chunk-section boundaries; disabled state is bit-identical
+to vanilla; no measurable frame-time regression with CTM-less packs.
 
 ## 3. Custom colors / custom sky / emissive textures / random entities / natural textures
 
