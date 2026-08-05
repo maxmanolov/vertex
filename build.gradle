@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+}
+
+group = 'vertex'
+version = '0.1.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    maven { url = 'https://libraries.minecraft.net' }
+    mavenCentral()
+}
+
+dependencies {
+    // LaunchWrapper is Mojang's own tweaker loader; provided by the launcher profile at runtime.
+    implementation 'net.minecraft:launchwrapper:1.12'
+    // Matches the gson version vanilla 1.7.10 ships, so the shaded copy cannot conflict.
+    implementation 'com.google.code.gson:gson:2.2.4'
+}
+
+jar {
+    // ASM and gson are shaded so the launcher profile only needs launchwrapper + this jar.
+    // LaunchClassLoader excludes org.objectweb.asm from transformation, so an unrelocated
+    // copy on the game classpath is safe in a vanilla profile.
+    from({
+        configurations.runtimeClasspath.filter {
+            it.name.contains('asm-debug-all') || it.name.contains('gson')
+        }.collect { zipTree(it) }
+    }) {
+        exclude 'META-INF/**'
+    }
+
+    manifest {
+        attributes(
+            'Main-Class': 'vertex.installer.VertexInstaller',
+            'Implementation-Title': 'Vertex',
+            'Implementation-Version': project.version
+        )
+    }
+}
