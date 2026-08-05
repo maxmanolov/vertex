@@ -73,6 +73,26 @@ public final class VertexIcons
             return icon;
         }
 
+        // Connected textures first: a CTM substitution replaces the sprite outright.
+        if (icon != null && VertexConfig.enabled("connectedTextures"))
+        {
+            try
+            {
+                String ctmName = iconName(icon);
+                Object connected = VertexCtm.substitute(icon, ctmName, block, world, x, y, z, side);
+
+                if (connected != null)
+                {
+                    return connected;
+                }
+            }
+            catch (Throwable e)
+            {
+                net.minecraft.launchwrapper.LogWrapper.severe("[Vertex] CTM dispatch failed");
+                e.printStackTrace();
+            }
+        }
+
         // Natural textures: deterministic mirror variant per position and face.
         vertex.variants.NaturalProperties natural = VertexPackLoader.naturalProperties;
 

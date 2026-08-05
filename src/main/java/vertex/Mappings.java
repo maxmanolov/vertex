@@ -190,6 +190,9 @@ public final class Mappings
     public static final String ER_RENDER_RAIN_SNOW_DESC = "(F)V";
     public static final String ER_ADD_RAIN_PARTICLES = "l";
     public static final String ER_ADD_RAIN_PARTICLES_DESC = "()V";
+    public static final String TEXTUREMAP_REGISTER_ICON = "a";
+    public static final String TM_LOAD_ATLAS = "b";
+    public static final String TM_LOAD_ATLAS_DESC = "(Lbqy;)V";
     public static final String TM_UPDATE_ANIMATIONS = "d";
     public static final String TM_UPDATE_ANIMATIONS_DESC = "()V";
     public static final String WC_DO_VOID_FOG_PARTICLES = "C";

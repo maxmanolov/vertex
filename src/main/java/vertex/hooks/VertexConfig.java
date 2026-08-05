@@ -33,6 +33,7 @@ public final class VertexConfig
         {"naturalTextures", "true", "Mirror tile variants from a pack's natural.properties"},
         {"randomEntities", "true", "Per-mob texture variants when a pack supplies numbered siblings"},
         {"customSky", "true", "Draw pack-defined custom sky layers"},
+        {"connectedTextures", "true", "Connected textures from a pack's mcpatcher/ctm rules"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };
 
