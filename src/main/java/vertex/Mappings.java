@@ -48,6 +48,10 @@ public final class Mappings
     public static final String BLOCKS_SNOW_LAYER = "aC";
     public static final String IBA_GET_BLOCK = "a";
     public static final String BLOCK_GET_ICON_META = "a";
+    public static final String MC_GET_TEXTURE_MANAGER = "P";
+    public static final String TEXTURE_BIND = "a";
+    public static final String WORLD_GET_TIME = "J";
+    public static final String WORLD_CELESTIAL_ANGLE = "c";
     public static final String RENDER_CLASS = "bno";
     public static final String RENDER_BIND_ENTITY_TEXTURE = "b";
     public static final String RENDER_BIND_ENTITY_TEXTURE_DESC = "(Lsa;)V";

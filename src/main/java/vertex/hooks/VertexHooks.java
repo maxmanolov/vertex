@@ -127,6 +127,7 @@ public final class VertexHooks
         }
 
         VertexStats.tick();
+        VertexSkyBridge.publish(renderGlobal);
         VertexMulticore.drainFinished();
 
         try
@@ -209,6 +210,25 @@ public final class VertexHooks
     {
         int wrapped = value % size;
         return wrapped < 0 ? wrapped + size : wrapped;
+    }
+
+    /** Shared with other hooks: the Minecraft instance held by a RenderGlobal. */
+    static Object minecraftOf(Object renderGlobal) throws Exception
+    {
+        return ready(renderGlobal) ? mcInstance.get(renderGlobal) : null;
+    }
+
+    /** Shared with other hooks: the client world, or null outside a world. */
+    static Object worldOf(Object minecraft) throws Exception
+    {
+        if (minecraft == null)
+        {
+            return null;
+        }
+
+        java.lang.reflect.Field field = minecraft.getClass().getDeclaredField(Mappings.MC_THE_WORLD);
+        field.setAccessible(true);
+        return field.get(minecraft);
     }
 
     private static Object viewEntity(Object renderGlobal) throws Exception
