@@ -32,6 +32,7 @@ public final class VertexConfig
         {"betterGrass", "false", "Render grass block sides as grass when the terrain continues below"},
         {"naturalTextures", "true", "Mirror tile variants from a pack's natural.properties"},
         {"randomEntities", "true", "Per-mob texture variants when a pack supplies numbered siblings"},
+        {"customSky", "true", "Draw pack-defined custom sky layers"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };
 

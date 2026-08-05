@@ -43,6 +43,8 @@ public class VertexTransformer implements IClassTransformer
                     new SkipMethodPatch.Target(Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC, "sky"),
                     new SkipMethodPatch.Target(Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC, "clouds"),
                 });
+                result = TailCallPatch.apply(result, Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC,
+                    "vertex/hooks/VertexSkyBridge", "afterSky");
             }
             else if (Mappings.ENTITY_RENDERER.equals(name))
             {

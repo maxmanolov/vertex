@@ -65,7 +65,7 @@ public final class VertexStats
         long redundantPct = gl[0] > 0 ? gl[1] * 100L / gl[0] : 0L;
         LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + promotions + " rebuilds=" + rebuilds
             + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
-            + " entityVariants=" + VertexRandomEntities.applied + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
+            + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
         promotions = 0L;
         rebuilds = 0L;
@@ -73,6 +73,7 @@ public final class VertexStats
         VertexIcons.sideHits = 0L;
         VertexIcons.naturalVariants = 0L;
         VertexRandomEntities.applied = 0L;
+        VertexSky.draws = 0L;
     }
 
     private VertexStats()
