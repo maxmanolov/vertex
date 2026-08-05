@@ -41,6 +41,9 @@ public final class Mappings
     public static final String RENDER_GLOBAL = "bma";
     public static final String WORLD_RENDERER = "blo";
     public static final String ENTITY = "sa";
+    public static final String BLOCK = "aji";
+    public static final String BLOCK_MIXED_BRIGHTNESS = "c";
+    public static final String BLOCK_MIXED_BRIGHTNESS_DESC = "(Lahl;III)I";
     public static final String ENTITY_LIVING_BASE = "sv";
 
     public static final String MC_THE_WORLD = "f";
