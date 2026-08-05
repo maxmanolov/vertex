@@ -1,11 +1,3 @@
-[13:34:37] [main/INFO]: Loading tweak class name vertex.VertexTweaker
-[13:34:37] [main/INFO]: Using primary tweak class name vertex.VertexTweaker
-[13:34:37] [main/INFO]: Calling tweak class vertex.VertexTweaker
-[13:34:37] [main/INFO]: [Vertex] Registering class transformer
-[13:34:37] [main/INFO]: Launching wrapped minecraft {net.minecraft.client.main.Main}
-[13:34:37] [main/INFO]: [Vertex] Patching WorldClient (bjf)
-[13:34:37] [main/INFO]: Setting user: Max
-[13:34:37] [main/INFO]: (Session ID is token:0:Max)
-[13:34:37] [Client thread/INFO]: LWJGL Version: 2.9.4
-[13:34:38] [Client thread/ERROR]: Couldn't initialize twitch stream
-[13:34:38] [Client thread/INFO]: Reloading ResourceManager: Default
+[13:55:35] [Test worker/INFO]: [Vertex] Loaded configuration from vertex.properties
+[13:55:35] [Test worker/INFO]: [Vertex] Loaded configuration from vertex.properties
+[13:55:35] [Test worker/INFO]: [Vertex] Tessellator redirect active (1 call sites rewritten so far)
