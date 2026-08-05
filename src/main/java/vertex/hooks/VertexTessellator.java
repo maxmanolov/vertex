@@ -17,6 +17,17 @@ public final class VertexTessellator
 {
     private static volatile Object mainInstance;
 
+    /**
+     * Per-thread resolution (multi-core phase 2 groundwork): chunk-build workers bind their
+     * own instance once; every other thread - including the client thread - falls through
+     * to the main instance captured from Tessellator.<clinit>. Until workers exist nothing
+     * ever binds an alternate instance, so behavior is exactly phase 1's.
+     */
+    // Holds ONLY explicit worker bindings. It must never cache mainInstance: a cached
+    // copy would survive a rebind and hand out a stale instance (and initialValue-style
+    // caching did exactly that under test).
+    private static final ThreadLocal<Object> threadInstance = new ThreadLocal<Object>();
+
     /** Called from the tail of Tessellator.<clinit> with the freshly constructed instance. */
     public static void bind(Object tessellator)
     {
@@ -25,9 +36,15 @@ public final class VertexTessellator
             + " call sites rewritten so far)");
     }
 
+    public static void bindThreadInstance(Object tessellator)
+    {
+        threadInstance.set(tessellator);
+    }
+
     public static Object get()
     {
-        return mainInstance;
+        Object bound = threadInstance.get();
+        return bound != null ? bound : mainInstance;
     }
 
     private VertexTessellator()
