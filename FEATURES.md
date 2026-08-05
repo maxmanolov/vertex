@@ -9,22 +9,23 @@ format documentation, and observable behavior only (see docs/ARCHITECTURE.md for
 
 | Feature | Purpose | Vertex status | Notes |
 |---|---|---|---|
+| Dynamic lights | Held/dropped light sources illuminate surroundings without placing blocks | **in progress** | Design committed (docs/ROADMAP.md #6): brightness-sampling hook plus section re-marks bounded by the existing render-priority machinery. |
 | Interactive render priority | Rebuild the chunk section you just edited immediately instead of waiting on the throttled queue | **surpassed** | Not an OptiFine feature at all. Reach-gated, boundary-aware, capped 4/frame. Active since 0.1.0. |
 | Multi-core chunk building | Tessellate chunk geometry on worker threads | **in progress** | Phase 1 landed (0.2.0): the transformer-wide `Tessellator.instance` redirect is live and verified against the official client (78 call sites, identity semantics, class-init side effect preserved). Phase 2 adds the worker pool proven out-of-tree - no shared GL context, unlike OptiFine's single Pbuffer thread. |
-| Smooth (time-sliced) chunk loading | Spread chunk rebuild cost across frames to reduce stutter | missing | Planned after multi-core; the per-frame budget machinery is shared. |
-| Lazy chunk loading | Defer client chunk attach work | missing | Low priority; measure first - vanilla 1.7.10's cost profile here is modest. |
-| Fast Render (GL state batching) | Reduce redundant GL state changes per frame | missing | Medium impact, high regression risk on the fixed-function pipeline; needs its own profiling pass. |
-| Render distance extension (>16) | Far render distance | missing | Client-side value is easy; useful only in singleplayer (servers cap view distance). Low. |
+| Smooth (time-sliced) chunk loading | Spread chunk rebuild cost across frames to reduce stutter | **in progress** | Folded into the multi-core pipeline as a budget policy on the same build queue (docs/ROADMAP.md #1). |
+| Lazy chunk loading | Defer client chunk attach work | **in progress** | Folded into the multi-core pipeline (docs/ROADMAP.md #1); superseded as a standalone feature. |
+| Fast Render (GL state batching) | Reduce redundant GL state changes per frame | **in progress** | Profile-first program committed in docs/ROADMAP.md #5: measure redundant state changes, implement only if they matter, exclude with numbers otherwise. |
+| Render distance extension (>16) | Far render distance | **excluded** | Singleplayer-only benefit (servers cap view distance) and the 1.7.10 display-list renderer degrades sharply past 16 chunks without the multi-core pipeline. Revisit after ROADMAP #1 if demand exists. |
 | Sky / stars / sun & moon toggles | Skip sky-pass draws for fps | **matched** (0.2.0) | `sky=false` in vertex.properties skips the whole sky pass. Per-layer split planned. |
 | Cloud rendering control | Skip or simplify clouds | **matched** (0.2.0) | `clouds=false` skips the cloud pass entirely (vanilla only offers fast/fancy via graphics). |
 | Weather rendering control | Skip rain/snow rendering + splash particles | **matched** (0.2.0) | `weather=false` skips renderRainSnow and rain particle spawning. Server weather state is untouched. |
 | Void fog / depth particles control | Remove void fog particle churn | **matched** (0.2.0) | `voidParticles=false` skips doVoidFogParticles. |
 | Texture animation control | Stop per-frame texture re-uploads (water/lava/fire/portal) | **matched** (0.2.0) | `textureAnimations=false` skips TextureMap.updateAnimations - one switch today; per-animation granularity planned. |
 | Fog control (off/fast/fancy) | Reduce fog fill cost / visibility preference | **matched** (0.2.0) | `fog=false` disables distance fog via a GL-mode-aware tail hook on setupFog; lava/water/blindness density fog is preserved. Fast/fancy hint control judged not worth it on modern GPUs. |
-| Particles fine control | Finer than vanilla's all/decreased/minimal | missing | Low; vanilla covers the bulk. |
+| Particles fine control | Finer than vanilla's all/decreased/minimal | **matched** | Covered by the combination of vanilla's three-level setting and Vertex's weather + voidParticles controls; further per-type granularity judged marginal and excluded. |
 | Fast Math | Cheaper trig via smaller lookup table | **excluded** | Benchmarked (docs/benchmarks/fastmath.md): vanilla's 64k table costs ~1 ns/op on modern hardware; the 4k variant measured slower and 16x less accurate. Nothing to gain. |
-| Chunk updates per frame | Configurable rebuild budget | missing | Lands with the multi-core port. |
-| Antialiasing (FSAA) | Smoother edges | missing | Requires pixel-format selection at display creation; restart semantics. Low demand. |
+| Chunk updates per frame | Configurable rebuild budget | **in progress** | Lands with the multi-core pipeline (docs/ROADMAP.md #1). |
+| Antialiasing (FSAA) | Smoother edges | **excluded** | Requires recreating the Display with a multisample pixel format (restart-only), and legacy-GL multisample contexts are unreliable under macOS's GL-on-Metal. Niche benefit, real platform risk. |
 | Anisotropic filtering | Sharper angled textures | **matched by vanilla** | Vanilla 1.7.10 already ships AF in video settings; nothing to add unless bugs surface. |
 | Mipmaps | Reduce distant texture shimmer | **matched by vanilla** | Vanilla 1.7.10 already ships mipmap levels; OptiFine-era fixes largely merged upstream. |
 
@@ -35,13 +36,13 @@ files). File-format compatibility is an interoperability surface; implementation
 
 | Feature | Purpose | Vertex status | Notes |
 |---|---|---|---|
-| Connected textures (CTM) | Seamless glass/bookshelves etc. | missing | Largest resource-pack feature; format is publicly documented by the pack community. High demand, large effort. |
-| Custom sky | Pack-defined sky boxes | missing | Medium effort, format documented. |
-| Custom colors | Pack-defined colormaps | missing | Medium. |
-| Emissive textures | Glow overlays | missing | Medium-small. |
-| Random entities | Per-mob texture variants | missing | Medium. |
-| Natural textures | Rotate/flip tiling variants | missing | Small. |
-| Better grass / better snow | Side-grass and snow-under-fence rendering | missing | Small-medium, block-renderer surgery. |
+| Connected textures (CTM) | Seamless glass/bookshelves etc. | **in progress** | Design and merge gate committed (docs/ROADMAP.md #2). |
+| Custom sky | Pack-defined sky boxes | **in progress** | Design committed (docs/ROADMAP.md #3); ordered after CTM's shared pack-parsing infrastructure. |
+| Custom colors | Pack-defined colormaps | **in progress** | Design committed (docs/ROADMAP.md #3). |
+| Emissive textures | Glow overlays | **in progress** | Design committed (docs/ROADMAP.md #3). |
+| Random entities | Per-mob texture variants | **in progress** | Design committed (docs/ROADMAP.md #3). |
+| Natural textures | Rotate/flip tiling variants | **in progress** | Design committed (docs/ROADMAP.md #3). |
+| Better grass / better snow | Side-grass and snow-under-fence rendering | **in progress** | Design committed (docs/ROADMAP.md #4); lands only with frame-time numbers. |
 | HD fonts / HD textures | Pre-1.6 McPatcher features | **excluded** | Vanilla's 1.6+ resource pack system already supports arbitrary resolutions and fonts; nothing left to implement for 1.7.10. |
 
 ## Platform and infrastructure
