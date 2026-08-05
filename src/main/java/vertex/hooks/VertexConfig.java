@@ -27,7 +27,8 @@ public final class VertexConfig
         {"textureAnimations", "true", "Animate block textures (water, lava, fire, portals)"},
         {"fog", "true", "Render distance fog (lava, water and blindness fog always stay)"},
         {"interactiveRenderPriority", "true", "Rebuild the chunk section you just edited ahead of the update queue"},
-        {"dynamicLights", "true", "Dynamic light sources illuminate surroundings (needs the source collector)"},
+        {"dynamicLights", "true", "Dynamic light sources illuminate surroundings"},
+        {"customColors", "true", "Resource-pack custom colors (grass and foliage colormaps)"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };
 

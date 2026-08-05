@@ -43,6 +43,9 @@ public final class Mappings
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
     public static final String MC_RESOURCE_MANAGER = "an";
+    public static final String COLORIZER_GRASS = "aha";
+    public static final String COLORIZER_FOLIAGE = "agx";
+    public static final String COLORIZER_GET = "a";
     public static final String RELOAD_LISTENER_IFACE = "bqz";
     public static final String REGISTER_RELOAD_LISTENER = "a";
     public static final String RESOURCE_LOCATION = "bqx";
