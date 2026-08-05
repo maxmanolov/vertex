@@ -48,6 +48,14 @@ public final class Mappings
     public static final String BLOCKS_SNOW_LAYER = "aC";
     public static final String IBA_GET_BLOCK = "a";
     public static final String BLOCK_GET_ICON_META = "a";
+    public static final String RENDER_CLASS = "bno";
+    public static final String RENDER_BIND_ENTITY_TEXTURE = "b";
+    public static final String RENDER_BIND_ENTITY_TEXTURE_DESC = "(Lsa;)V";
+    public static final String RENDER_GET_ENTITY_TEXTURE = "a";
+    public static final String RENDER_BIND_TEXTURE = "a";
+    public static final String LOCATION_PATH = "a";
+    public static final String LOCATION_DOMAIN = "b";
+    public static final String ENTITY_GET_ID = "y";
     public static final String COLORIZER_GRASS = "aha";
     public static final String COLORIZER_FOLIAGE = "agx";
     public static final String COLORIZER_GET = "a";

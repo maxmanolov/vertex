@@ -65,13 +65,14 @@ public final class VertexStats
         long redundantPct = gl[0] > 0 ? gl[1] * 100L / gl[0] : 0L;
         LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + promotions + " rebuilds=" + rebuilds
             + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
-            + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
+            + " entityVariants=" + VertexRandomEntities.applied + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
         promotions = 0L;
         rebuilds = 0L;
         VertexIcons.hits = 0L;
         VertexIcons.sideHits = 0L;
         VertexIcons.naturalVariants = 0L;
+        VertexRandomEntities.applied = 0L;
     }
 
     private VertexStats()
