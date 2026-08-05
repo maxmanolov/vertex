@@ -78,6 +78,13 @@ final class WorldRendererPatch implements Opcodes
         rebuild.instructions.add(new InsnNode(RETURN));
         cls.methods.add(rebuild);
 
+        // void vertex$setupTranslation() { this.setupGLTranslation(); }
+        MethodNode setup = new MethodNode(ACC_PUBLIC, "vertex$setupTranslation", "()V", null, null);
+        setup.instructions.add(new VarInsnNode(ALOAD, 0));
+        setup.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, cls.name, Mappings.WR_SETUP_GL_TRANSLATION, "()V", false));
+        setup.instructions.add(new InsnNode(RETURN));
+        cls.methods.add(setup);
+
         // setPosition head: this.vertex$immediate = false; recycled grid slots must not
         // carry a pending immediate from their previous section.
         for (MethodNode method : cls.methods)

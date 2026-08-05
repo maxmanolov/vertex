@@ -20,4 +20,7 @@ public interface ImmediateMarker
 
     /** Invokes WorldRenderer.updateRenderer(EntityLivingBase); the argument must be the view entity. */
     void vertex$rebuild(Object viewEntity);
+
+    /** Bridge to the private setupGLTranslation, used by the multi-core replay. */
+    void vertex$setupTranslation();
 }
