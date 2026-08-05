@@ -75,6 +75,9 @@ public final class CtmProperties
     public final int facesMask;
     public final int[] metadata;
 
+    /** Pack-relative directory holding this rule's numbered tile images. */
+    public String directory;
+
     /** Face bits, matching vanilla side ordering: DOWN, UP, NORTH, SOUTH, WEST, EAST. */
     public static final int FACE_BOTTOM = 1;
     public static final int FACE_TOP = 2;

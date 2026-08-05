@@ -83,7 +83,9 @@ public final class CtmPackScanner
                 try
                 {
                     in = new java.io.FileInputStream(file);
-                    rules.add(CtmProperties.load(in));
+                    CtmProperties rule = CtmProperties.load(in);
+                    rule.directory = relativeDir(file.getParentFile());
+                    rules.add(rule);
                 }
                 catch (Exception e)
                 {
@@ -120,7 +122,10 @@ public final class CtmPackScanner
                     try
                     {
                         in = zip.getInputStream(entry);
-                        rules.add(CtmProperties.load(in));
+                        CtmProperties rule = CtmProperties.load(in);
+                        int slash = name.lastIndexOf('/');
+                        rule.directory = slash > 0 ? name.substring("assets/minecraft/".length(), slash) : null;
+                        rules.add(rule);
                     }
                     catch (Exception e)
                     {
@@ -140,6 +145,14 @@ public final class CtmPackScanner
         {
             zip.close();
         }
+    }
+
+    /** Pack-relative directory under assets/minecraft, e.g. mcpatcher/ctm/glass. */
+    private static String relativeDir(File dir)
+    {
+        String path = dir.getPath().replace(File.separatorChar, '/');
+        int marker = path.indexOf("assets/minecraft/");
+        return marker >= 0 ? path.substring(marker + "assets/minecraft/".length()) : null;
     }
 
     private static void close(InputStream in)

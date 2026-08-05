@@ -15,6 +15,7 @@ public final class CtmRuleSet
 {
     private final Map<String, List<CtmProperties>> byBlock = new HashMap<String, List<CtmProperties>>();
     private final Map<String, List<CtmProperties>> byTile = new HashMap<String, List<CtmProperties>>();
+    private final List<CtmProperties> all = new ArrayList<CtmProperties>();
     private int count;
 
     public void add(CtmProperties rule)
@@ -29,6 +30,7 @@ public final class CtmRuleSet
             index(this.byTile, tile, rule);
         }
 
+        this.all.add(rule);
         ++this.count;
     }
 
@@ -54,6 +56,12 @@ public final class CtmRuleSet
     public List<CtmProperties> forBlock(String blockId)
     {
         return this.byBlock.get(blockId);
+    }
+
+    /** All rules in insertion order, for registration passes. */
+    public List<CtmProperties> allRules()
+    {
+        return this.all;
     }
 
     public boolean isEmpty()

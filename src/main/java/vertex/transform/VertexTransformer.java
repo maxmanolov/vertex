@@ -61,6 +61,8 @@ public class VertexTransformer implements IClassTransformer
                 result = SkipMethodPatch.apply(result, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.TM_UPDATE_ANIMATIONS, Mappings.TM_UPDATE_ANIMATIONS_DESC, "textureAnimations"),
                 });
+                result = HeadInstanceCallPatch.apply(result, Mappings.TM_LOAD_ATLAS, Mappings.TM_LOAD_ATLAS_DESC,
+                    "vertex/hooks/VertexCtm", "beforeStitch");
             }
             else if (Mappings.MINECRAFT.equals(name))
             {

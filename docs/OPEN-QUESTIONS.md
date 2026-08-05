@@ -32,3 +32,27 @@ its added branch throws an `Error` (not `Exception`, so the local catch misses i
 first invocation, or a class-load failure of `vertex.natural.NaturalVariants` /
 `VertexNaturalIcons` inside the dispatch. Next step: restore it, soak it alone, and if the
 zero reproduces, catch `Throwable` at the dispatch boundary and log the cause.
+
+## RESOLVED (as a blocker): vanilla refuses slash-containing sprite names
+
+CTM tiles live in packs as `mcpatcher/ctm/<name>/0.png ... 46.png`. Registering them into
+the block atlas is the only way they gain atlas coordinates and therefore the only way an
+`IIcon` exists to hand back from the icon dispatch.
+
+Registration was implemented against `TextureMap.loadTextureAtlas` (hooked before
+stitching, the correct point) and failed with vanilla's own validation:
+
+    java.lang.IllegalArgumentException: Name cannot contain slashes!
+        at bpz.a(SourceFile:303)   // TextureMap.registerIcon
+
+So the supported API cannot express the documented pack layout. Remaining routes:
+
+1. **Synthetic sprite injection** - construct TextureAtlasSprite instances, load their
+   images manually, and insert them into TextureMap's private registry so the stitcher
+   places them. Feasible, but reaches into stitcher internals and is brittle.
+2. **Standalone textures** - bind each tile outside the atlas. Correct, and disqualifying:
+   one texture bind per face destroys batching in a mod whose purpose is performance.
+
+CTM is therefore excluded for the 0.2.x line with this cause. Everything below the atlas
+problem - connectivity math, parsing, rule indexing, pack scanning, tile ordering - is merged
+and tested, so a revisit resumes rather than restarts.
