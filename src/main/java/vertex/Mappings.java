@@ -43,6 +43,11 @@ public final class Mappings
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
     public static final String MC_RESOURCE_MANAGER = "an";
+    public static final String BLOCKS_REGISTRY = "ajn";
+    public static final String BLOCKS_GRASS = "c";
+    public static final String BLOCKS_SNOW_LAYER = "aC";
+    public static final String IBA_GET_BLOCK = "a";
+    public static final String BLOCK_GET_ICON_META = "a";
     public static final String COLORIZER_GRASS = "aha";
     public static final String COLORIZER_FOLIAGE = "agx";
     public static final String COLORIZER_GET = "a";
