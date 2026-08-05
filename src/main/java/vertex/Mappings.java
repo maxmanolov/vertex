@@ -63,6 +63,13 @@ public final class Mappings
     public static final String BLOCK_GET_LIGHT_VALUE = "m";
     public static final String RENDER_BLOCKS = "blm";
     public static final String IICON = "rf";
+    public static final String ICON_MIN_U = "c";
+    public static final String ICON_MAX_U = "d";
+    public static final String ICON_MIN_V = "e";
+    public static final String ICON_MAX_V = "f";
+    public static final String ICON_INTERP_U = "a";
+    public static final String ICON_INTERP_V = "b";
+    public static final String ICON_NAME = "g";
     public static final String RB_GET_BLOCK_ICON = "a";
     public static final String RB_GET_BLOCK_ICON_DESC = "(Laji;Lahl;IIII)Lrf;";
     public static final String BLOCK_MIXED_BRIGHTNESS = "c";

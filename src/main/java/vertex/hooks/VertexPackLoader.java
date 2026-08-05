@@ -27,6 +27,7 @@ public final class VertexPackLoader
     public static volatile ColorProperties colorProperties;
     public static volatile ColorMap grassMap;
     public static volatile ColorMap foliageMap;
+    public static volatile vertex.variants.NaturalProperties naturalProperties;
 
     private static boolean registered = false;
     private static boolean disabled = false;
@@ -94,9 +95,17 @@ public final class VertexPackLoader
             colorProperties = colorProps != null ? new ColorProperties(colorProps) : null;
             grassMap = readColorMap(manager, "mcpatcher/colormap/grass.png");
             foliageMap = readColorMap(manager, "mcpatcher/colormap/foliage.png");
+            Properties naturalProps = readProperties(manager, "mcpatcher/natural.properties");
+            naturalProperties = naturalProps != null ? new vertex.variants.NaturalProperties(naturalProps) : null;
+
+            if (naturalProperties != null)
+            {
+                VertexIcons.activate();
+            }
             LogWrapper.info("[Vertex] Pack resources reloaded (colors: "
                 + (colorProperties != null ? colorProperties.size() + " keys" : "none")
-                + ", colormaps: " + (grassMap != null ? "grass " : "") + (foliageMap != null ? "foliage" : "") + ")");
+                + ", colormaps: " + (grassMap != null ? "grass " : "") + (foliageMap != null ? "foliage" : "")
+                + ", natural: " + (naturalProperties != null ? naturalProperties.size() + " tiles" : "none") + ")");
         }
         catch (Exception e)
         {
