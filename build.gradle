@@ -22,6 +22,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.2.4'
     // Present on the game classpath at runtime; needed only to compile the fog hook.
     compileOnly 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 jar {
@@ -43,4 +44,9 @@ jar {
             'Implementation-Version': project.version
         )
     }
+}
+
+test {
+    useJUnit()
+    testLogging { events 'failed', 'skipped' }
 }

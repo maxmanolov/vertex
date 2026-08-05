@@ -60,6 +60,12 @@ sample packs, never from OptiFine's parser.
 
 ## Testing and benchmarks
 
+- `./gradlew test`: the transformer layer is unit-tested against synthetic classes built
+  with ASM in the tests themselves - patched bytecode is loaded into an isolated class
+  loader and executed, asserting hook delivery, body preservation, config gating, and the
+  Tessellator redirect's class-initialization guarantee (a regression test for a real bug
+  caught during boot verification).
+
 - Transformers are exercised end-to-end against the real Mojang 1.7.10 jar. The built-in
   test harness makes this fully autonomous - no human in the loop:
 
