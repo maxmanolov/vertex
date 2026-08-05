@@ -42,6 +42,12 @@ public final class Mappings
     public static final String WORLD_RENDERER = "blo";
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
+    public static final String MC_RESOURCE_MANAGER = "an";
+    public static final String RELOAD_LISTENER_IFACE = "bqz";
+    public static final String REGISTER_RELOAD_LISTENER = "a";
+    public static final String RESOURCE_LOCATION = "bqx";
+    public static final String GET_RESOURCE = "a";
+    public static final String RESOURCE_GET_STREAM = "b";
     public static final String WORLD_PLAYER_ENTITIES = "h";
     public static final String ELB_GET_HELD_ITEM = "be";
     public static final String STACK_GET_ITEM = "b";
