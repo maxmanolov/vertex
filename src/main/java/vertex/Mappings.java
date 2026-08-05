@@ -1,0 +1,74 @@
+package vertex;
+
+/**
+ * Obfuscated (notch) names for the vanilla 1.7.10 client members Vertex patches or reads,
+ * resolved from the MCP 1.7.10 joined.srg plus the stable-12 name CSVs.
+ *
+ * readable name                          srg              notch
+ * -------------------------------------- ---------------- -----------------
+ * net.minecraft.client.Minecraft         -                bao
+ * net.minecraft.client.renderer.RenderGlobal -            bma
+ * net.minecraft.client.renderer.WorldRenderer -           blo
+ * net.minecraft.entity.Entity            -                sa
+ * net.minecraft.entity.EntityLivingBase  -                sv
+ * Minecraft.getMinecraft()               func_71410_x     B ()Lbao;
+ * Minecraft.renderViewEntity             field_71451_h    i
+ * RenderGlobal.markBlockForUpdate        func_147586_a    a (III)V
+ * RenderGlobal.markBlocksForUpdate       func_72725_b     b (IIIIII)V
+ * RenderGlobal.updateRenderers           func_72716_a     a (Lsv;Z)Z
+ * RenderGlobal.mc                        field_72777_q    A
+ * RenderGlobal.worldRenderers            field_72765_l    v
+ * RenderGlobal.worldRenderersToUpdate    field_72767_j    t
+ * RenderGlobal.renderChunksWide          field_72766_m    w
+ * RenderGlobal.renderChunksTall          field_72763_n    x
+ * RenderGlobal.renderChunksDeep          field_72764_o    y
+ * WorldRenderer.needsUpdate              field_78939_q    q
+ * WorldRenderer.isInFrustum              field_78927_l    l
+ * WorldRenderer.posX/posY/posZ           field_78923_c..  c / d / e
+ * WorldRenderer.setPosition              func_78913_a     a (III)V
+ * WorldRenderer.updateRenderer           func_147892_a    a (Lsv;)V
+ * WorldRenderer.distanceToEntitySquared  func_78912_a     a (Lsa;)F
+ * Entity.posX/posY/posZ                  field_70165_t..  s / t / u
+ */
+public final class Mappings
+{
+    public static final String MINECRAFT = "bao";
+    public static final String RENDER_GLOBAL = "bma";
+    public static final String WORLD_RENDERER = "blo";
+    public static final String ENTITY = "sa";
+    public static final String ENTITY_LIVING_BASE = "sv";
+
+    public static final String MINECRAFT_GET_MINECRAFT = "B";
+    public static final String MINECRAFT_GET_MINECRAFT_DESC = "()Lbao;";
+    public static final String MINECRAFT_RENDER_VIEW_ENTITY = "i";
+
+    public static final String RG_MARK_BLOCK_FOR_UPDATE = "a";
+    public static final String RG_MARK_BLOCK_FOR_UPDATE_DESC = "(III)V";
+    public static final String RG_MARK_BLOCKS_FOR_UPDATE = "b";
+    public static final String RG_MARK_BLOCKS_FOR_UPDATE_DESC = "(IIIIII)V";
+    public static final String RG_UPDATE_RENDERERS = "a";
+    public static final String RG_UPDATE_RENDERERS_DESC = "(Lsv;Z)Z";
+    public static final String RG_MC = "A";
+    public static final String RG_WORLD_RENDERERS = "v";
+    public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
+    public static final String RG_RENDER_CHUNKS_WIDE = "w";
+    public static final String RG_RENDER_CHUNKS_TALL = "x";
+    public static final String RG_RENDER_CHUNKS_DEEP = "y";
+
+    public static final String WR_NEEDS_UPDATE = "q";
+    public static final String WR_SET_POSITION = "a";
+    public static final String WR_SET_POSITION_DESC = "(III)V";
+    public static final String WR_UPDATE_RENDERER = "a";
+    public static final String WR_UPDATE_RENDERER_DESC = "(Lsv;)V";
+
+    public static final String ENTITY_POS_X = "s";
+    public static final String ENTITY_POS_Y = "t";
+    public static final String ENTITY_POS_Z = "u";
+
+    /** Field added to WorldRenderer by the transformer. */
+    public static final String ADDED_IMMEDIATE_FIELD = "vertex$immediate";
+
+    private Mappings()
+    {
+    }
+}
