@@ -36,7 +36,7 @@ files). File-format compatibility is an interoperability surface; implementation
 
 | Feature | Purpose | Vertex status | Notes |
 |---|---|---|---|
-| Connected textures (CTM) | Seamless glass/bookshelves etc. | **in progress** | Design and merge gate committed (docs/ROADMAP.md #2). |
+| Connected textures (CTM) | Seamless glass/bookshelves etc. | **in progress** | Core merged (0.2.0): pack-format parser and the 47-class blob connectivity engine, property-tested from first principles. Remaining: the RenderBlocks sprite hook and atlas-order calibration against a reference pack. |
 | Custom sky | Pack-defined sky boxes | **in progress** | Design committed (docs/ROADMAP.md #3); ordered after CTM's shared pack-parsing infrastructure. |
 | Custom colors | Pack-defined colormaps | **in progress** | Design committed (docs/ROADMAP.md #3). |
 | Emissive textures | Glow overlays | **in progress** | Design committed (docs/ROADMAP.md #3). |
