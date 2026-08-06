@@ -86,6 +86,14 @@ first soak, and only an instrumented run showed the icon dispatch was live all a
   with zero hook self-disables and the per-minute diagnostics counters show balanced
   promotions and rebuilds. First recorded run: 3+ minutes, ~460 promotions and ~460
   rebuilds per minute, zero disables, against the official client.
+
+  Companion flags: `-Dvertex.test.chatSpam=N` prints a fresh chat line every second
+  in-world (keeps chat visible for HUD capture comparisons), `-Dvertex.test.showHud=true`
+  keeps the GUI drawn during frame captures, and `-Dvertex.test.guiProbe=true` (with
+  `-Dvertex.test.shotDir`) runs an autonomous GUI check from the title screen: it opens
+  the Chat Settings screen, screenshots the injected Vertex buttons, clicks Chat
+  Background through the real patched actionPerformed path, screenshots the flipped
+  label, and exits - placement and the toggle/save round trip verified in one run.
 - Every feature lands with either a regression check or a documented manual verification,
   plus a benchmark when it claims a measurable win. Claims without numbers stay out of
   FEATURES.md status upgrades.

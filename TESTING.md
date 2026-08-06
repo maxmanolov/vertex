@@ -25,5 +25,9 @@ future release. It does not block using 0.3.0's default configuration.
   skyN.properties layers render and fade with the day clock (check the 3x2 UV layout
   looks correct - known-unconfirmed item).
 - Better grass: enable, confirm hillside grass sides render as grass.
+- HUD backgrounds: on a server (or via /scoreboard in a world with cheats) display a
+  sidebar objective, toggle Scoreboard BG in Chat Settings; the sidebar's translucent
+  backdrop disappears while its text and score numbers stay. Chat Background is covered
+  by the automated capture diff; a quick eyeball that chat text stays readable is enough.
 - Installer: `java -jar vertex-<v>.jar install` into a fresh .minecraft with vanilla
   1.7.10 present; profile appears and launches.
