@@ -203,6 +203,11 @@ public final class VertexFrameCapture
                 return;
             }
 
+            if (angleIndex == 0)
+            {
+                auditGrid(minecraft);
+            }
+
             capture(angleIndex);
             settleFrames = 0;
 
@@ -218,6 +223,52 @@ public final class VertexFrameCapture
             LogWrapper.severe("[Vertex] Frame capture disabled after failure");
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Per-section build audit: position, bytesDrawn and skip flags for every renderer in
+     * the grid, written beside the shots. Diffing an off-run table against an on-run
+     * table separates quads lost at capture (byte deficit) from quads misdisplayed at
+     * replay (equal bytes, wrong picture).
+     */
+    private static void auditGrid(Object minecraft) throws Exception
+    {
+        Object rg = renderGlobalField.get(minecraft);
+        Field grid = rg.getClass().getDeclaredField(vertex.Mappings.RG_WORLD_RENDERERS);
+        grid.setAccessible(true);
+        Object[] renderers = (Object[])grid.get(rg);
+
+        if (renderers == null || renderers.length == 0)
+        {
+            return;
+        }
+
+        Class<?> wr = renderers[0].getClass();
+        Field px = wr.getDeclaredField(vertex.Mappings.WR_POS_X);
+        Field py = wr.getDeclaredField(vertex.Mappings.WR_POS_Y);
+        Field pz = wr.getDeclaredField(vertex.Mappings.WR_POS_Z);
+        Field bytes = wr.getDeclaredField(vertex.Mappings.WR_BYTES_DRAWN);
+        Field skip = wr.getDeclaredField("m");
+        px.setAccessible(true);
+        py.setAccessible(true);
+        pz.setAccessible(true);
+        bytes.setAccessible(true);
+        skip.setAccessible(true);
+        StringBuilder out = new StringBuilder("x\ty\tz\tbytes\tskip0\tskip1\n");
+
+        for (Object renderer : renderers)
+        {
+            boolean[] skips = (boolean[])skip.get(renderer);
+            out.append(px.getInt(renderer)).append('\t').append(py.getInt(renderer)).append('\t').append(pz.getInt(renderer))
+               .append('\t').append(bytes.getInt(renderer)).append('\t').append(skips[0]).append('\t').append(skips[1]).append('\n');
+        }
+
+        File dir = new File(SHOT_DIR);
+        dir.mkdirs();
+        FileOutputStream auditOut = new FileOutputStream(new File(dir, "build-audit.tsv"));
+        auditOut.write(out.toString().getBytes("UTF-8"));
+        auditOut.close();
+        LogWrapper.info("[Vertex] Build audit written (" + renderers.length + " sections)");
     }
 
     private static void capture(int index) throws Exception
