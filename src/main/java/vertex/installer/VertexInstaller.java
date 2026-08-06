@@ -135,8 +135,16 @@ public final class VertexInstaller
         return version != null ? version : "dev";
     }
 
-    private static void copy(File from, File to) throws Exception
+    static void copy(File from, File to) throws Exception
     {
+        // Running the installer from its installed library path makes from and to the
+        // same file; FileOutputStream would truncate the source to zero bytes before the
+        // first read (kyrofx #29). Same-file copies are already complete.
+        if (from.getCanonicalFile().equals(to.getCanonicalFile()))
+        {
+            return;
+        }
+
         to.getParentFile().mkdirs();
         FileInputStream in = new FileInputStream(from);
         FileOutputStream out = new FileOutputStream(to);
