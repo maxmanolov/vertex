@@ -30,6 +30,7 @@ public final class VertexStats
     /** Called once per frame from consumeImmediates; emits the periodic report when due. */
     public static void tick()
     {
+        VertexFrameStats.frame();
         long now = System.currentTimeMillis();
 
         if (now - lastReport < REPORT_INTERVAL_MS)
@@ -69,6 +70,8 @@ public final class VertexStats
         LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + reportPromotions + " rebuilds=" + reportRebuilds
             + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
             + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
+            + " buildQ=" + VertexMulticore.pendingDepth()
+            + VertexFrameStats.drainReport()
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
         drainAll();
     }
