@@ -75,4 +75,34 @@ public final class BuildWorkers
     {
         return this.threads.length;
     }
+
+    /**
+     * Interrupts every worker and waits briefly for each to exit. Safe from any thread:
+     * a worker calling in (self-disable fired inside a build) skips joining itself.
+     */
+    public void shutdown()
+    {
+        for (Thread thread : this.threads)
+        {
+            thread.interrupt();
+        }
+
+        for (Thread thread : this.threads)
+        {
+            if (thread == Thread.currentThread())
+            {
+                continue;
+            }
+
+            try
+            {
+                thread.join(1000L);
+            }
+            catch (InterruptedException interrupted)
+            {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
 }
