@@ -25,6 +25,15 @@ the same queue, not separate features.
 on, survives 15+ minutes of in-world flight with zero hook self-disables; diagnostics
 counters show worker builds; no visual holes at section boundaries.
 
+**Staleness follow-up (post #75):** builds now carry a per-renderer reposition stamp
+(bumped by the setPosition head hook, checked at worker entry and drain) on top of the
+global generation. The stronger design remains open: workers still execute the vanilla
+body against the *live* WorldRenderer, so a reposition mid-body can tear the block
+snapshot even though the result is then discarded by stamp. Building against an immutable
+section snapshot (copy block/light data on submit, never touch the live renderer off the
+client thread) removes that class of race entirely; it requires replacing the wrapped
+vanilla body with an independent tessellation loop and belongs to this phase-2 item.
+
 ## 2. Connected textures (CTM)
 
 **Design:** parse the community-documented `mcpatcher/ctm` resource-pack format
