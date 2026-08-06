@@ -22,7 +22,12 @@ windows show the pacing above.
 | Path | world-load flood | steady state |
 |---|---|---|
 | Vanilla budgeted path (multicore off) | budget-limited trickle | ~460 rebuilds/min under churn |
-| Worker pool (multicore on, 6 workers) | **~10,400 sections/min** | churn parity, queue drained |
+| Worker pool (multicore on, 6 workers) | RETRACTED | see docs/benchmarks/multicore-status.md |
+
+**Retraction:** the previously reported ~10,400 sections/min counted replays of builds a
+flag race had silenced - the worker bodies never ran, so the number measured empty
+display-list swaps. Real worker throughput will be re-measured only after the replay
+renders correct geometry.
 
 ## Memory and allocation
 

@@ -101,6 +101,12 @@ public final class VertexMulticore
             // capture list so the vanilla reconciliation cannot race the render thread.
             try
             {
+                // Restore the dirty flag the client's loop cleared right after submit:
+                // the vanilla body's own head check is `if (needsUpdate)`, and without
+                // this it no-ops - every worker build was empty display lists, found by
+                // the first capture that actually LOOKED at multicore's output (an empty
+                // sky where a grass field belonged). The body re-clears it itself.
+                wrNeedsUpdate.setBoolean(renderer, true);
                 building.savedTileEntities = wrTileEntities.get(renderer);
                 building.capturedTileEntities = new ArrayList<Object>();
                 building.previousTileEntityRenderers = new ArrayList<Object>((List<?>)wrTileEntityRenderers.get(renderer));
