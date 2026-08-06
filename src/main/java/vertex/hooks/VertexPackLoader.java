@@ -92,6 +92,7 @@ public final class VertexPackLoader
     static void reload(Object manager)
     {
         lastManager = manager;
+        VertexRandomEntities.onResourceReload();
 
         try
         {

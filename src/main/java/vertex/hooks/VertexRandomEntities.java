@@ -30,6 +30,12 @@ public final class VertexRandomEntities
 
     public static long applied = 0L;
 
+    /** Resource reload: variant pools describe the OLD pack's files; rediscover fresh. */
+    public static void onResourceReload()
+    {
+        variants.clear();
+    }
+
     /** Head guard on Render.bindEntityTexture: true = variant bound, skip vanilla. */
     public static boolean interceptBind(Object render, Object entity)
     {
