@@ -121,14 +121,18 @@ public final class VertexMulticore
 
         ImmediateMarker marker = (ImmediateMarker)renderer;
 
-        if (marker.vertex$needsImmediate() || !marker.vertex$isDirty())
-        {
-            return false;
-        }
-
+        // The in-flight check must precede the immediate exemption: an immediate rebuild
+        // on the client while a worker runs the same vanilla body corrupts renderer state
+        // (kyrofx #35). An in-flight renderer skips the client body regardless; its
+        // immediate flag survives and is consumed after the worker result drains.
         if (inFlight.containsKey(renderer))
         {
             return true;
+        }
+
+        if (marker.vertex$needsImmediate() || !marker.vertex$isDirty())
+        {
+            return false;
         }
 
         if (queue.pendingCount() >= workers.size() * 2)
@@ -150,6 +154,12 @@ public final class VertexMulticore
             disable("submit", e);
             return false;
         }
+    }
+
+    /** True while a worker build for this renderer is queued or running (client thread). */
+    public static boolean isInFlight(Object renderer)
+    {
+        return ENABLED && !disabled && inFlight.containsKey(renderer);
     }
 
     /** Head guard on preRenderBlocks(listId): on workers, do the tessellator half only. */
