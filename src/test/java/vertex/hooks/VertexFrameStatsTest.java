@@ -1,6 +1,7 @@
 package vertex.hooks;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,6 +47,18 @@ public class VertexFrameStatsTest
     {
         VertexFrameStats.frame();
         VertexFrameStats.drainReport();
+        String report = VertexFrameStats.drainReport();
+        assertTrue(report, report.contains("frames=0"));
+    }
+
+    @Test
+    public void disabledDiagnosticsDrainResetsTheFrameWindow() throws Exception
+    {
+        VertexFrameStats.frame();
+        VertexFrameStats.frame();
+        Method drainAll = VertexStats.class.getDeclaredMethod("drainAll");
+        drainAll.setAccessible(true);
+        drainAll.invoke(null);
         String report = VertexFrameStats.drainReport();
         assertTrue(report, report.contains("frames=0"));
     }

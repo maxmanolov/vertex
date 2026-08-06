@@ -73,6 +73,13 @@ public final class VertexFrameStats
         lastGcCount = gcCount;
         lastGcMillis = gcMillis;
 
+        reset();
+        return out.toString();
+    }
+
+    /** Clears the current report window without formatting or reading runtime metrics. */
+    static void reset()
+    {
         for (int i = 0; i <= BUCKETS; ++i)
         {
             histogram[i] = 0;
@@ -80,7 +87,6 @@ public final class VertexFrameStats
 
         frames = 0L;
         maxNanos = 0L;
-        return out.toString();
     }
 
     private static long percentile(int pct)
