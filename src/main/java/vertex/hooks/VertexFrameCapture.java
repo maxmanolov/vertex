@@ -174,9 +174,6 @@ public final class VertexFrameCapture
             setPosition.invoke(player, Double.valueOf(anchorX), Double.valueOf(groundY), Double.valueOf(anchorZ));
             rotationYaw.setFloat(player, YAWS[angleIndex]);
             rotationPitch.setFloat(player, 10.0F);
-            // Pin render distance: stress runs leave different values saved in
-            // options.txt, and differing grids photograph different terrain.
-            renderDistanceField.setInt(gameSettings.get(minecraft), 6);
 
             if (now - worldSeenMs < SETTLE_MS)
             {
