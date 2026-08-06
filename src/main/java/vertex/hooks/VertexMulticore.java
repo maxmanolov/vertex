@@ -85,9 +85,9 @@ public final class VertexMulticore
         List<Object> capturedTileEntities;
         List<Object> previousTileEntityRenderers;
 
-        ChunkBuild(Object renderer, int generation, Object entity, int posX, int posY, int posZ)
+        ChunkBuild(Object renderer, int stamp, int generation, Object entity, int posX, int posY, int posZ)
         {
-            super(renderer, 0, generation);
+            super(renderer, stamp, generation);
             this.entity = entity;
             this.posX = posX;
             this.posY = posY;
@@ -162,7 +162,7 @@ public final class VertexMulticore
 
         try
         {
-            ChunkBuild build = new ChunkBuild(renderer, queue.generation(), entity,
+            ChunkBuild build = new ChunkBuild(renderer, stampOf(renderer), queue.generation(), entity,
                 wrPosX.getInt(renderer), wrPosY.getInt(renderer), wrPosZ.getInt(renderer));
             inFlight.put(renderer, build);
             queue.submit(build);
@@ -273,6 +273,15 @@ public final class VertexMulticore
         }
 
         ChunkBuild chunkBuild = (ChunkBuild)build;
+
+        if (chunkBuild.stamp != stampOf(chunkBuild.renderer))
+        {
+            // Repositioned since submit: the section this build was for no longer exists
+            // at this renderer. Skip the body instead of building torn geometry.
+            build.failed = true;
+            return;
+        }
+
         currentBuild.set(chunkBuild);
 
         try
@@ -389,7 +398,11 @@ public final class VertexMulticore
 
             try
             {
-                if (wrPosX.getInt(chunkBuild.renderer) != chunkBuild.posX
+                // Stamp first: it catches A->B->A repositioning, which restores the
+                // original coordinates and would sail through the XYZ comparison. The
+                // XYZ check stays as defense in depth (stamps only cover setPosition).
+                if (chunkBuild.stamp != stampOf(chunkBuild.renderer)
+                    || wrPosX.getInt(chunkBuild.renderer) != chunkBuild.posX
                     || wrPosY.getInt(chunkBuild.renderer) != chunkBuild.posY
                     || wrPosZ.getInt(chunkBuild.renderer) != chunkBuild.posZ)
                 {
