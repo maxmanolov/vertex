@@ -28,6 +28,10 @@ public class GLCallCountPatchTest implements Opcodes
         mv.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glBindTexture", "(II)V", false);
         mv.visitLdcInsn(Integer.valueOf(2929));
         mv.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glDepthFunc", "(I)V", false);
+        mv.visitLdcInsn(Integer.valueOf(33984));
+        mv.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL13", "glActiveTexture", "(I)V", false);
+        mv.visitLdcInsn(Integer.valueOf(33984));
+        mv.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/ARBMultitexture", "glActiveTextureARB", "(I)V", false);
         mv.visitInsn(RETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
@@ -59,7 +63,7 @@ public class GLCallCountPatchTest implements Opcodes
             }
         }
 
-        assertEquals(2, hooked);
+        assertEquals(4, hooked);
         assertEquals(1, untouched);
     }
 }

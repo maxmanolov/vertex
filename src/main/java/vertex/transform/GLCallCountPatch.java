@@ -18,8 +18,10 @@ import org.objectweb.asm.tree.MethodNode;
 public final class GLCallCountPatch implements Opcodes
 {
     private static final String GL11 = "org/lwjgl/opengl/GL11";
+    private static final String GL13 = "org/lwjgl/opengl/GL13";
+    private static final String ARB_MULTI = "org/lwjgl/opengl/ARBMultitexture";
     private static final String HOOK = "vertex/hooks/VertexGLStats";
-    private static final byte[] NEEDLE = needle();
+    private static final byte[][] NEEDLES = {needle(GL11), needle(GL13), needle(ARB_MULTI)};
     private static final AtomicInteger sites = new AtomicInteger();
 
     public static int rewrittenSites()
@@ -29,7 +31,18 @@ public final class GLCallCountPatch implements Opcodes
 
     public static byte[] process(byte[] basicClass)
     {
-        if (!contains(basicClass, NEEDLE))
+        boolean relevant = false;
+
+        for (byte[] needle : NEEDLES)
+        {
+            if (contains(basicClass, needle))
+            {
+                relevant = true;
+                break;
+            }
+        }
+
+        if (!relevant)
         {
             return basicClass;
         }
@@ -46,7 +59,17 @@ public final class GLCallCountPatch implements Opcodes
                 {
                     MethodInsnNode call = (MethodInsnNode)insn;
 
-                    if (call.owner.equals(GL11))
+                    if (call.owner.equals(GL13) && call.name.equals("glActiveTexture") && call.desc.equals("(I)V"))
+                    {
+                        reroute(call, "activeTexture");
+                        ++rewritten;
+                    }
+                    else if (call.owner.equals(ARB_MULTI) && call.name.equals("glActiveTextureARB") && call.desc.equals("(I)V"))
+                    {
+                        reroute(call, "activeTextureArb");
+                        ++rewritten;
+                    }
+                    else if (call.owner.equals(GL11))
                     {
                         if (call.name.equals("glEnable") && call.desc.equals("(I)V"))
                         {
@@ -104,9 +127,9 @@ public final class GLCallCountPatch implements Opcodes
         return false;
     }
 
-    private static byte[] needle()
+    private static byte[] needle(String owner)
     {
-        byte[] name = GL11.getBytes();
+        byte[] name = owner.getBytes();
         byte[] out = new byte[name.length + 2];
         out[0] = (byte)(name.length >> 8);
         out[1] = (byte)name.length;
