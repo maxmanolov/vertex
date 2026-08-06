@@ -56,6 +56,43 @@ public class CtmPackScannerTest
     }
 
     @Test
+    public void ruleWithoutMatchFieldsUsesItsFilename() throws Exception
+    {
+        // kyrofx #43: glass.properties with no matchTiles/matchBlocks matches tile "glass".
+        File root = temp();
+        File ctm = new File(root, "pack/assets/minecraft/mcpatcher/ctm");
+        ctm.mkdirs();
+        write(new File(ctm, "glass.properties"), "method=ctm\ntiles=0-46\n");
+        CtmRuleSet rules = CtmPackScanner.scan(root, new String[] {"pack"}, null);
+        assertEquals(1, rules.size());
+        assertNotNull("filename must become the default tile", rules.forTile("glass"));
+    }
+
+    @Test
+    public void ruleOrderIsFilenameOrderForBothLayouts() throws Exception
+    {
+        // kyrofx #44: zip archive order is reversed on purpose; sorted order must win.
+        File root = temp();
+        File ctm = new File(root, "dirpack/assets/minecraft/mcpatcher/ctm");
+        ctm.mkdirs();
+        write(new File(ctm, "20-second.properties"), "method=ctm\nmatchTiles=stone\ntiles=1\n");
+        write(new File(ctm, "10-first.properties"), "method=ctm\nmatchTiles=stone\ntiles=0\n");
+        java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(
+            new FileOutputStream(new File(root, "zippack.zip")));
+        zip.putNextEntry(new java.util.zip.ZipEntry("assets/minecraft/mcpatcher/ctm/20-second.properties"));
+        zip.write("method=ctm\nmatchTiles=sand\ntiles=1\n".getBytes("UTF-8"));
+        zip.closeEntry();
+        zip.putNextEntry(new java.util.zip.ZipEntry("assets/minecraft/mcpatcher/ctm/10-first.properties"));
+        zip.write("method=ctm\nmatchTiles=sand\ntiles=0\n".getBytes("UTF-8"));
+        zip.closeEntry();
+        zip.close();
+
+        CtmRuleSet rules = CtmPackScanner.scan(root, new String[] {"dirpack", "zippack.zip"}, null);
+        assertEquals(0, rules.forTile("stone").get(0).tiles[0]);
+        assertEquals(0, rules.forTile("sand").get(0).tiles[0]);
+    }
+
+    @Test
     public void missingPacksAndNullsAreHarmless()
     {
         assertTrue(CtmPackScanner.scan(null, new String[] {"x"}, null).isEmpty());
