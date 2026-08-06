@@ -376,6 +376,9 @@ public final class VertexMulticore
             catch (Exception e)
             {
                 disable("replay", e);
+                // The section's display list may hold half-replayed geometry; re-dirty it
+                // so the vanilla path rebuilds it cleanly after the pipeline tears down.
+                discard(build);
                 return false;
             }
         }
@@ -406,14 +409,26 @@ public final class VertexMulticore
 
         for (int slot = 0; slot < build.capturedPasses; ++slot)
         {
+            Object tessellator = build.passTessellators[slot];
+            // An exception between glNewList and glEndList would leave the list open -
+            // every subsequent GL call in the session compiles into it instead of
+            // executing - and an unmatched glPushMatrix corrupts the stack. The reflective
+            // calls in the middle CAN throw (the empty-translucent-pass crash arrived
+            // exactly here), so each GL bracket closes in a finally, tracked separately.
+            boolean listOpen = false;
+            boolean matrixPushed = false;
+            boolean slotReplayed = false;
+
+            try
             {
-                Object tessellator = build.passTessellators[slot];
                 // preRenderBlocks' int argument is the PASS INDEX, not a list id (verified
                 // in blo.a(Lsv;)V bytecode: it is called with the pass loop counter). The
                 // original replay compiled every section into GL lists 0 and 1 - the whole
                 // fragment defect. The real target is the renderer's own list plus pass.
                 GL11.glNewList(wrGlRenderList.getInt(renderer) + build.passListIds[slot], GL11.GL_COMPILE);
+                listOpen = true;
                 GL11.glPushMatrix();
+                matrixPushed = true;
                 setupTranslationBridge.invoke(renderer);
                 GL11.glTranslatef(-8.0F, -8.0F, -8.0F);
                 GL11.glScalef(SECTION_SCALE, SECTION_SCALE, SECTION_SCALE);
@@ -447,10 +462,37 @@ public final class VertexMulticore
                     LogWrapper.info("[VertexAudit] replay build=" + build.posX + "," + build.posY + "," + build.posZ
                         + " slot=" + slot + " listId=" + build.passListIds[slot] + " bytes=" + drawn + " gen=" + build.generation);
                 }
-                GL11.glPopMatrix();
-                GL11.glEndList();
-                tessSetTranslation.invoke(tessellator, Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D));
-                recycleTessellator(tessellator);
+
+                slotReplayed = true;
+            }
+            finally
+            {
+                if (matrixPushed)
+                {
+                    GL11.glPopMatrix();
+                }
+
+                if (listOpen)
+                {
+                    GL11.glEndList();
+                }
+
+                // A tessellator whose draw threw may still be mid-tessellation; pooling it
+                // would hand "Already tesselating!" to the next borrower. Only clean ones
+                // return to the pool - a failed one is dropped for GC. The reset gets its
+                // own catch so a throw here can never mask the original exception.
+                if (slotReplayed)
+                {
+                    try
+                    {
+                        tessSetTranslation.invoke(tessellator, Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D));
+                        recycleTessellator(tessellator);
+                    }
+                    catch (Exception resetFailed)
+                    {
+                        LogWrapper.warning("[Vertex] Dropped a pass tessellator whose reset failed: " + resetFailed);
+                    }
+                }
             }
         }
 
