@@ -32,6 +32,8 @@ public final class VertexTestHarness
     private static final java.util.Random random = new java.util.Random(20260805L);
 
     private static Method launchIntegratedServer;
+    private static Method getHealth;
+    private static Method respawnPlayer;
     private static Field theWorld;
     private static Field thePlayer;
     private static Field renderGlobal;
@@ -70,6 +72,39 @@ public final class VertexTestHarness
                 return;
             }
 
+            if (world != null && (VertexStressDriver.active() || VertexFrameCapture.active()))
+            {
+                Object scriptPlayer = thePlayer.get(minecraft);
+
+                if (scriptPlayer != null)
+                {
+                    // Scripted runs must survive any death (saved corpse state, lava
+                    // teleport): respawn immediately so the scenario keeps its camera.
+                    if (getHealth == null)
+                    {
+                        getHealth = method(scriptPlayer.getClass(), "aS");
+                        respawnPlayer = method(scriptPlayer.getClass(), "bH");
+                    }
+
+                    if (((Float)getHealth.invoke(scriptPlayer)).floatValue() <= 0.0F)
+                    {
+                        LogWrapper.info("[Vertex] Test harness: dead player detected, respawning");
+                        respawnPlayer.invoke(scriptPlayer);
+                        return;
+                    }
+
+                    if (VertexStressDriver.active())
+                    {
+                        VertexStressDriver.tick(minecraft, world, scriptPlayer);
+                    }
+
+                    if (VertexFrameCapture.active())
+                    {
+                        VertexFrameCapture.tick(minecraft, world, scriptPlayer);
+                    }
+                }
+            }
+
             if (CHURN > 0 && world != null)
             {
                 long now = System.currentTimeMillis();
@@ -96,6 +131,50 @@ public final class VertexTestHarness
             LogWrapper.severe("[Vertex] Test harness disabled after failure");
             e.printStackTrace();
         }
+    }
+
+    /** Stress driver: world exit happened; let autoJoin re-enter from the menu. */
+    static void allowRejoin()
+    {
+        joinIssued = false;
+        menuFrames = 0;
+    }
+
+    /** Stress driver: one churn burst of n promotions around the player, right now. */
+    static void churnBurst(Object minecraft, int count) throws Exception
+    {
+        Object player = thePlayer.get(minecraft);
+        Object rg = renderGlobal.get(minecraft);
+
+        if (player == null || rg == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < count; ++i)
+        {
+            int x = (int)posX.getDouble(player) + random.nextInt(33) - 16;
+            int y = Math.max(1, Math.min(254, (int)posY.getDouble(player) + random.nextInt(17) - 8));
+            int z = (int)posZ.getDouble(player) + random.nextInt(33) - 16;
+            VertexHooks.promoteForTest(rg, x, y, z);
+        }
+    }
+
+    private static Method method(Class<?> owner, String name) throws NoSuchMethodException
+    {
+        for (Class<?> cls = owner; cls != null && cls != Object.class; cls = cls.getSuperclass())
+        {
+            for (Method candidate : cls.getDeclaredMethods())
+            {
+                if (candidate.getName().equals(name) && candidate.getParameterTypes().length == 0)
+                {
+                    candidate.setAccessible(true);
+                    return candidate;
+                }
+            }
+        }
+
+        throw new NoSuchMethodException(name + " in hierarchy of " + owner.getName());
     }
 
     private static void initialize(Object minecraft) throws Exception

@@ -39,12 +39,16 @@ public class VertexTransformer implements IClassTransformer
             {
                 LogWrapper.info("[Vertex] Patching RenderGlobal (" + name + ")");
                 result = RenderGlobalPatch.apply(result);
+                // Tail hooks BEFORE head skips: a skip guard adds a synthetic early RETURN,
+                // and a tail call attached to it would run the feature while its pass is
+                // disabled - custom sky layers were observed drawing 5,928/min with the
+                // sky pass skipped (skyDraws counter vs skippedPasses=sky).
+                result = TailCallPatch.apply(result, Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC,
+                    "vertex/hooks/VertexSkyBridge", "afterSky");
                 result = SkipMethodPatch.apply(result, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC, "sky"),
                     new SkipMethodPatch.Target(Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC, "clouds"),
                 });
-                result = TailCallPatch.apply(result, Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC,
-                    "vertex/hooks/VertexSkyBridge", "afterSky");
             }
             else if (Mappings.ENTITY_RENDERER.equals(name))
             {
