@@ -328,7 +328,12 @@ public final class VertexMulticore
             global.addAll(build.capturedTileEntities);
         }
 
-        wrNeedsUpdate.setBoolean(renderer, false);
+        // Deliberately do NOT clear needsUpdate here. The vanilla body already cleared it
+        // when the worker build started; if it is true again now, a block changed after the
+        // snapshot and this replay is already stale - clearing the mark would discard that
+        // newer change and leave stale geometry until an unrelated event re-marks the
+        // section (kyrofx #34). The re-mark also re-queued the renderer, so leaving the
+        // flag alone lets the normal path rebuild with fresh data.
         VertexStats.rebuild();
     }
 
