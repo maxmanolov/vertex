@@ -53,7 +53,16 @@ public final class VertexDynamicLightsCollector
             {
                 try
                 {
+                    // Drain the tracker completely: one publish emits at most MAX_REMARKS
+                    // positions, and with the feature now off no further updates would run,
+                    // so any backlog beyond the cap would leave stale baked light until
+                    // re-enable. The bound is a safety net; each pass drains 8.
                     publish(minecraft, new int[0]);
+
+                    for (int drain = 0; tracker.hasPending() && drain < 64; ++drain)
+                    {
+                        publish(minecraft, new int[0]);
+                    }
                 }
                 catch (Exception e)
                 {

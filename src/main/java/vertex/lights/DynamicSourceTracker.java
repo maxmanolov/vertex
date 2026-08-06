@@ -64,6 +64,12 @@ public final class DynamicSourceTracker
         }
     }
 
+    /** True while capped remarks from earlier updates are still queued. */
+    public boolean hasPending()
+    {
+        return !this.pending.isEmpty();
+    }
+
     /** Adds one position unless the same position is already waiting for a rebuild. */
     private static void addRemark(List<int[]> remarks, int x, int y, int z)
     {
