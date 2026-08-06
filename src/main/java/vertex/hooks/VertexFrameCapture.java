@@ -28,6 +28,14 @@ import vertex.Mappings;
 public final class VertexFrameCapture
 {
     private static final String SHOT_DIR = System.getProperty("vertex.test.shotDir");
+    private static final boolean MOTION = Boolean.getBoolean("vertex.test.motion");
+    private static final int MOTION_SHOTS = 24;
+    private static final int MOTION_FRAME_STRIDE = 40;
+    private static final double MOTION_SPEED = 0.25D;
+    private static int motionFrames = 0;
+    private static int motionCaptured = 0;
+    private static double motionZ = 0.0D;
+    private static final java.util.List<byte[]> motionRaws = new java.util.ArrayList<byte[]>();
     private static final long SETTLE_MS = 45000L;
     private static final int FRAMES_PER_ANGLE = 120;
     private static final float[] YAWS = {0.0F, 120.0F, 240.0F};
@@ -171,9 +179,31 @@ public final class VertexFrameCapture
                 LogWrapper.info("[Vertex] Frame capture anchored at " + (int)anchorX + "," + height + "," + (int)anchorZ);
             }
 
-            setPosition.invoke(player, Double.valueOf(anchorX), Double.valueOf(groundY), Double.valueOf(anchorZ));
-            rotationYaw.setFloat(player, YAWS[angleIndex]);
-            rotationPitch.setFloat(player, 10.0F);
+            if (MOTION)
+            {
+                // Motion mode: fly smoothly along +Z at fixed altitude, capturing a burst
+                // of sequential frames. Temporal artifacts (section flicker, pop-in) show
+                // as consecutive-frame diff spikes that steady parallax never produces.
+                if (motionZ == 0.0D)
+                {
+                    motionZ = anchorZ;
+                }
+
+                if (now - worldSeenMs >= SETTLE_MS)
+                {
+                    motionZ += MOTION_SPEED;
+                }
+
+                setPosition.invoke(player, Double.valueOf(anchorX), Double.valueOf(groundY + 20.0D), Double.valueOf(motionZ));
+                rotationYaw.setFloat(player, 0.0F);
+                rotationPitch.setFloat(player, 25.0F);
+            }
+            else
+            {
+                setPosition.invoke(player, Double.valueOf(anchorX), Double.valueOf(groundY), Double.valueOf(anchorZ));
+                rotationYaw.setFloat(player, YAWS[angleIndex]);
+                rotationPitch.setFloat(player, 10.0F);
+            }
 
             if (now - worldSeenMs < SETTLE_MS)
             {
@@ -185,17 +215,23 @@ public final class VertexFrameCapture
             // (angle 0 matched at 5.8% while later angles diverged 70% - the far field
             // was still popping in). Require an empty build queue for 300 consecutive
             // frames before any capture.
-            int pending = VertexHooks.pendingUpdates(renderGlobalField.get(minecraft));
-
-            if (pending != 0)
+            // Motion mode captures THROUGH chunk streaming - a moving player rebuilds
+            // continuously, so a drain gate would never open, and streaming behavior is
+            // exactly what the temporal comparison exists to observe.
+            if (!MOTION)
             {
-                drainedFrames = 0;
-                return;
-            }
+                int pending = VertexHooks.pendingUpdates(renderGlobalField.get(minecraft));
 
-            if (++drainedFrames < 300)
-            {
-                return;
+                if (pending != 0)
+                {
+                    drainedFrames = 0;
+                    return;
+                }
+
+                if (++drainedFrames < 300)
+                {
+                    return;
+                }
             }
 
             if (++settleFrames < FRAMES_PER_ANGLE)
@@ -271,7 +307,7 @@ public final class VertexFrameCapture
         LogWrapper.info("[Vertex] Build audit written (" + renderers.length + " sections)");
     }
 
-    private static void capture(int index) throws Exception
+    private static byte[] captureRaw()
     {
         int width = Display.getWidth();
         int height = Display.getHeight();
@@ -279,12 +315,9 @@ public final class VertexFrameCapture
         GL11.glReadBuffer(GL11.GL_FRONT);
         GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
         GL11.glReadPixels(0, 0, width, height, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, buffer);
-        File dir = new File(SHOT_DIR);
-        dir.mkdirs();
         byte[] row = new byte[width * 3];
         byte[] raw = new byte[width * height * 3];
 
-        // Flip vertically (GL origin is bottom-left) into the raw comparison artifact.
         for (int y = 0; y < height; ++y)
         {
             buffer.position((height - 1 - y) * width * 3);
@@ -292,9 +325,18 @@ public final class VertexFrameCapture
             System.arraycopy(row, 0, raw, y * width * 3, row.length);
         }
 
-        FileOutputStream rawOut = new FileOutputStream(new File(dir, "shot-" + index + ".rgb"));
-        rawOut.write(raw);
-        rawOut.close();
+        return raw;
+    }
+
+    private static void writeShot(int index, byte[] raw) throws Exception
+    {
+        int width = Display.getWidth();
+        int height = Display.getHeight();
+        File dir = new File(SHOT_DIR);
+        dir.mkdirs();
+        FileOutputStream shotOut = new FileOutputStream(new File(dir, "shot-" + index + ".rgb"));
+        shotOut.write(raw);
+        shotOut.close();
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         for (int y = 0; y < height; ++y)
@@ -307,6 +349,17 @@ public final class VertexFrameCapture
         }
 
         ImageIO.write(image, "png", new File(dir, "shot-" + index + ".png"));
+    }
+
+    private static void capture(int index) throws Exception
+    {
+        byte[] raw = captureRaw();
+        File dir = new File(SHOT_DIR);
+        dir.mkdirs();
+        int width = Display.getWidth();
+        int height = Display.getHeight();
+
+        writeShot(index, raw);
         LogWrapper.info("[Vertex] Captured shot-" + index + " (" + width + "x" + height + ")");
     }
 
