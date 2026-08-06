@@ -36,6 +36,11 @@ public final class VertexMulticore
     private static final ThreadLocal<ChunkBuild> currentBuild = new ThreadLocal<ChunkBuild>();
     private static final ConcurrentLinkedQueue<Object> tessellatorPool = new ConcurrentLinkedQueue<Object>();
     private static final IdentityHashMap<Object, ChunkBuild> inFlight = new IdentityHashMap<Object, ChunkBuild>();
+    // Per-renderer reposition stamps: bumped by the setPosition head hook (client thread),
+    // read by workers and the drain. WorldRenderer doesn't override equals, so the
+    // ConcurrentHashMap keys by identity; concurrency is only needed for visibility.
+    private static final java.util.concurrent.ConcurrentHashMap<Object, Integer> repositionStamps =
+        new java.util.concurrent.ConcurrentHashMap<Object, Integer>();
 
     private static BuildQueue queue;
     private static BuildWorkers workers;
@@ -80,9 +85,9 @@ public final class VertexMulticore
         List<Object> capturedTileEntities;
         List<Object> previousTileEntityRenderers;
 
-        ChunkBuild(Object renderer, int generation, Object entity, int posX, int posY, int posZ)
+        ChunkBuild(Object renderer, int stamp, int generation, Object entity, int posX, int posY, int posZ)
         {
-            super(renderer, 0, generation);
+            super(renderer, stamp, generation);
             this.entity = entity;
             this.posX = posX;
             this.posY = posY;
@@ -157,7 +162,7 @@ public final class VertexMulticore
 
         try
         {
-            ChunkBuild build = new ChunkBuild(renderer, queue.generation(), entity,
+            ChunkBuild build = new ChunkBuild(renderer, stampOf(renderer), queue.generation(), entity,
                 wrPosX.getInt(renderer), wrPosY.getInt(renderer), wrPosZ.getInt(renderer));
             inFlight.put(renderer, build);
             queue.submit(build);
@@ -168,6 +173,25 @@ public final class VertexMulticore
             disable("submit", e);
             return false;
         }
+    }
+
+    /** setPosition head hook (client thread): any reposition invalidates in-flight builds. */
+    public static void onRendererRepositioned(Object renderer)
+    {
+        if (!ENABLED)
+        {
+            return;
+        }
+
+        Integer previous = repositionStamps.get(renderer);
+        repositionStamps.put(renderer, Integer.valueOf(previous == null ? 1 : previous.intValue() + 1));
+    }
+
+    /** Current reposition stamp for a renderer; 0 until its first setPosition. */
+    private static int stampOf(Object renderer)
+    {
+        Integer stamp = repositionStamps.get(renderer);
+        return stamp == null ? 0 : stamp.intValue();
     }
 
     /** Pending build-queue depth for diagnostics; 0 when multicore is off. */
@@ -249,6 +273,15 @@ public final class VertexMulticore
         }
 
         ChunkBuild chunkBuild = (ChunkBuild)build;
+
+        if (chunkBuild.stamp != stampOf(chunkBuild.renderer))
+        {
+            // Repositioned since submit: the section this build was for no longer exists
+            // at this renderer. Skip the body instead of building torn geometry.
+            build.failed = true;
+            return;
+        }
+
         currentBuild.set(chunkBuild);
 
         try
@@ -301,6 +334,8 @@ public final class VertexMulticore
 
         queue.invalidateGeneration();
         inFlight.clear();
+        // loadRenderers replaces every renderer object; stale keys would retain them.
+        repositionStamps.clear();
     }
 
     /** Client thread, once per frame: apply finished builds into display lists. */
@@ -346,6 +381,7 @@ public final class VertexMulticore
         queue.clearAll(SINK);
         inFlight.clear();
         tessellatorPool.clear();
+        repositionStamps.clear();
         // Drop the statics so a straggler worker's late complete() (join timed out) can't
         // keep its build reachable; the workers hold their own queue reference.
         queue = null;
@@ -362,7 +398,11 @@ public final class VertexMulticore
 
             try
             {
-                if (wrPosX.getInt(chunkBuild.renderer) != chunkBuild.posX
+                // Stamp first: it catches A->B->A repositioning, which restores the
+                // original coordinates and would sail through the XYZ comparison. The
+                // XYZ check stays as defense in depth (stamps only cover setPosition).
+                if (chunkBuild.stamp != stampOf(chunkBuild.renderer)
+                    || wrPosX.getInt(chunkBuild.renderer) != chunkBuild.posX
                     || wrPosY.getInt(chunkBuild.renderer) != chunkBuild.posY
                     || wrPosZ.getInt(chunkBuild.renderer) != chunkBuild.posZ)
                 {
