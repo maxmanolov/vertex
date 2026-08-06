@@ -70,6 +70,16 @@ public final class CtmPackScanner
             return;
         }
 
+        // Deterministic rule order regardless of filesystem enumeration (kyrofx #44);
+        // matches the sorted order used for zip packs.
+        java.util.Arrays.sort(files, new java.util.Comparator<File>()
+        {
+            public int compare(File a, File b)
+            {
+                return a.getName().compareTo(b.getName());
+            }
+        });
+
         for (File file : files)
         {
             if (file.isDirectory())
@@ -83,7 +93,7 @@ public final class CtmPackScanner
                 try
                 {
                     in = new java.io.FileInputStream(file);
-                    CtmProperties rule = CtmProperties.load(in);
+                    CtmProperties rule = CtmProperties.load(in, stem(file.getName()));
                     rule.directory = relativeDir(file.getParentFile());
                     rules.add(rule);
                 }
@@ -108,21 +118,41 @@ public final class CtmPackScanner
 
         try
         {
+            // Collect matching entries first and sort by path so zip archive order never
+            // decides rule precedence (kyrofx #44).
+            java.util.List<ZipEntry> matching = new java.util.ArrayList<ZipEntry>();
             Enumeration<? extends ZipEntry> entries = zip.entries();
 
             while (entries.hasMoreElements())
             {
-                ZipEntry entry = entries.nextElement();
+                ZipEntry candidate = entries.nextElement();
+
+                if (!candidate.isDirectory() && candidate.getName().startsWith(CTM_DIR) && candidate.getName().endsWith(".properties"))
+                {
+                    matching.add(candidate);
+                }
+            }
+
+            java.util.Collections.sort(matching, new java.util.Comparator<ZipEntry>()
+            {
+                public int compare(ZipEntry a, ZipEntry b)
+                {
+                    return a.getName().compareTo(b.getName());
+                }
+            });
+
+            for (ZipEntry entry : matching)
+            {
                 String name = entry.getName();
 
-                if (!entry.isDirectory() && name.startsWith(CTM_DIR) && name.endsWith(".properties"))
                 {
                     InputStream in = null;
 
                     try
                     {
                         in = zip.getInputStream(entry);
-                        CtmProperties rule = CtmProperties.load(in);
+                        int slashIndex = name.lastIndexOf('/');
+                        CtmProperties rule = CtmProperties.load(in, stem(name.substring(slashIndex + 1)));
                         int slash = name.lastIndexOf('/');
                         rule.directory = slash > 0 ? name.substring("assets/minecraft/".length(), slash) : null;
                         rules.add(rule);
@@ -145,6 +175,11 @@ public final class CtmPackScanner
         {
             zip.close();
         }
+    }
+
+    private static String stem(String fileName)
+    {
+        return fileName.substring(0, fileName.length() - ".properties".length());
     }
 
     /** Pack-relative directory under assets/minecraft, e.g. mcpatcher/ctm/glass. */

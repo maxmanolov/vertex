@@ -89,16 +89,37 @@ public final class CtmProperties
 
     public static CtmProperties load(InputStream in) throws IOException
     {
+        return load(in, null);
+    }
+
+    public static CtmProperties load(InputStream in, String defaultTile) throws IOException
+    {
         Properties props = new Properties();
         props.load(in);
-        return new CtmProperties(props);
+        return new CtmProperties(props, defaultTile);
     }
 
     public CtmProperties(Properties props)
     {
+        this(props, null);
+    }
+
+    /**
+     * defaultTile: the properties filename stem. Per the documented format, a rule that
+     * declares neither matchBlocks nor matchTiles matches the tile named by its own file
+     * (kyrofx #43).
+     */
+    public CtmProperties(Properties props, String defaultTile)
+    {
         this.method = Method.parse(get(props, "method", "ctm"));
         this.matchBlocks = split(props.getProperty("matchBlocks"));
         this.matchTiles = split(props.getProperty("matchTiles"));
+
+        if (this.matchBlocks.isEmpty() && this.matchTiles.isEmpty() && defaultTile != null && !defaultTile.isEmpty())
+        {
+            this.matchTiles.add(defaultTile);
+        }
+
         this.tiles = parseIntList(props.getProperty("tiles"));
         this.connect = Connect.parse(get(props, "connect", this.matchTiles.isEmpty() ? "block" : "tile"));
         this.facesMask = parseFaces(props.getProperty("faces"));
