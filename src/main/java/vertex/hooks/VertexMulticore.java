@@ -40,7 +40,11 @@ public final class VertexMulticore
     private static BuildQueue queue;
     private static BuildWorkers workers;
     private static boolean initialized = false;
-    private static boolean disabled = false;
+    // Written from whichever thread fails (workers included) and read on every hook's
+    // fast path: must be volatile or the client thread may never observe a worker-side
+    // disable.
+    private static volatile boolean disabled = false;
+    private static boolean tornDown = false;
 
     private static Constructor<?> tessellatorCtor;
     private static Method tessStartQuads;
@@ -89,11 +93,14 @@ public final class VertexMulticore
     /** Head guard on WorldRenderer.updateRenderer: true = skip the vanilla body. */
     public static boolean interceptUpdate(Object renderer, Object entity)
     {
-        if (!ENABLED || disabled)
+        if (!ENABLED)
         {
             return false;
         }
 
+        // The worker-context check must precede the disabled check: a worker already
+        // inside a build when disable trips would otherwise run the vanilla body without
+        // the tile-entity list swap - exactly the cross-thread race the swap prevents.
         ChunkBuild building = currentBuild.get();
 
         if (building != null)
@@ -121,7 +128,7 @@ public final class VertexMulticore
             return false;
         }
 
-        if (!(renderer instanceof ImmediateMarker) || !ready(renderer))
+        if (disabled || !(renderer instanceof ImmediateMarker) || !ready(renderer))
         {
             return false;
         }
@@ -234,6 +241,13 @@ public final class VertexMulticore
     /** Called from the worker loop around the vanilla body. */
     public static void runBuild(BuildQueue.Build build) throws Exception
     {
+        if (disabled)
+        {
+            // The pipeline is coming down; don't touch the live renderer anymore.
+            build.failed = true;
+            return;
+        }
+
         ChunkBuild chunkBuild = (ChunkBuild)build;
         currentBuild.set(chunkBuild);
 
