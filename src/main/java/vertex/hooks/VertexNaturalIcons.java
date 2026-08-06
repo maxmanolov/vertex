@@ -3,8 +3,8 @@ package vertex.hooks;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import vertex.Mappings;
 
 /**
@@ -15,8 +15,11 @@ import vertex.Mappings;
  */
 public final class VertexNaturalIcons
 {
-    private static final Map<String, Object> cache = new HashMap<String, Object>();
-    private static boolean broken = false;
+    // ConcurrentHashMap: multicore workers reach this cache in parallel through the icon
+    // dispatch during chunk builds (kyrofx #36). Racing get/put may at worst create a
+    // duplicate proxy, which is benign; a torn HashMap is not.
+    private static final Map<String, Object> cache = new ConcurrentHashMap<String, Object>();
+    private static volatile boolean broken = false;
 
     public static Object variant(final Object baseIcon, final boolean flipU, final boolean flipV)
     {
