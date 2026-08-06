@@ -1,0 +1,49 @@
+# Vertex 0.3.0-rc1 benchmark report
+
+All numbers measured on the official Mojang 1.7.10 client, Apple M3 (GL 2.1 on Metal),
+Zulu JDK 8, via the built-in diagnostics (`diagnostics=true`) and autonomous harness.
+Reproduction flags for every scenario are in docs/ARCHITECTURE.md. Pacing, not average
+FPS, is the optimization target; percentiles come from the allocation-free frame
+histogram (0.5ms buckets).
+
+## Frame pacing
+
+| Scenario | ftP50 | ftP99 | ftMax | frames/min | notes |
+|---|---|---|---|---|---|
+| Steady state, churn load, multicore off | 16.7ms | 23.2ms | 51.9ms | 3,689 | vsync-locked baseline |
+| Under full stress cycle, multicore ON | 13.2-15.2ms | 19.7-20.2ms | see note | ~3,900 | teleports, RD flips, mass updates |
+
+Note: multi-second ftMax spikes during stress windows are vanilla's blocking world
+save/load on exit/rejoin transitions, annotated in KNOWN-LIMITATIONS.md; steady-state
+windows show the pacing above.
+
+## Chunk-build throughput
+
+| Path | world-load flood | steady state |
+|---|---|---|
+| Vanilla budgeted path (multicore off) | budget-limited trickle | ~460 rebuilds/min under churn |
+| Worker pool (multicore on, 6 workers) | **~10,400 sections/min** | churn parity, queue drained |
+
+## Memory and allocation
+
+- Steady state: 124MB used heap, 1 minor GC (17ms) per minute
+- 8-minute stress with 4 world exit/rejoin cycles: heap oscillated 175-314MB with no
+  growth trend; GC contained within transition windows
+
+## Feature-cost measurements backing exclusions
+
+- GL state redundancy (Fast Render): 45-49% of ~2M calls/min redundant when keyed
+  correctly per (unit, target) - but only ~263 calls/frame, ~26 microseconds against a
+  16ms frame (docs/benchmarks/fastrender.md). Excluded.
+- Fast Math: vanilla's 64k trig table ~1ns/op; the 4k variant slower and 16x less
+  accurate on this hardware (docs/benchmarks/fastmath.md). Excluded.
+- CTM: measured dispatch cost side (142k-164k icon resolutions/min steady, 2.4M during
+  load), zero performance benefit mechanism (docs/benchmarks/ctm-determination.md). Excluded.
+
+## Active-feature overhead (measured at the counters)
+
+- Icon dispatch (better grass / natural textures): one interface call on 142k-164k
+  resolutions/min; inert branches are a boolean check
+- Brightness hook (dynamic lights): one volatile read per lookup with no sources
+- Render-pass skips: one static call per pass per frame; config polls at most 1/s
+- Diagnostics off: one nanoTime + histogram increment per frame, counters reset per interval
