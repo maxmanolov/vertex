@@ -47,6 +47,17 @@ public final class BuildQueue
     private volatile boolean closed = false;
     private volatile int generation = 0;
 
+    /** Invalidate everything queued; prior-generation results discard at drain. */
+    public void invalidateGeneration()
+    {
+        synchronized (this.lock)
+        {
+            ++this.generation;
+            this.pending.clear();
+            this.lock.notifyAll();
+        }
+    }
+
     public int generation()
     {
         return this.generation;

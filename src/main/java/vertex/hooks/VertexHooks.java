@@ -183,13 +183,13 @@ public final class VertexHooks
                 return -1;
             }
 
-            // The vanilla queue retains nulled slots between compactions; raw size()
-            // almost never reaches zero, so count live entries.
+            // The vanilla queue retains nulled slots AND clean entries it never removes;
+            // only entries that are actually dirty represent pending work.
             int live = 0;
 
             for (Object entry : (List<?>)worldRenderersToUpdate.get(renderGlobal))
             {
-                if (entry != null)
+                if (entry instanceof ImmediateMarker && ((ImmediateMarker)entry).vertex$isDirty())
                 {
                     ++live;
                 }

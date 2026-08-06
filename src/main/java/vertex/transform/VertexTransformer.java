@@ -39,6 +39,8 @@ public class VertexTransformer implements IClassTransformer
             {
                 LogWrapper.info("[Vertex] Patching RenderGlobal (" + name + ")");
                 result = RenderGlobalPatch.apply(result);
+                result = HeadInstanceCallPatch.apply(result, "a", "()V",
+                    "vertex/hooks/VertexMulticore", "onRenderersReloadedHook");
                 // Tail hooks BEFORE head skips: a skip guard adds a synthetic early RETURN,
                 // and a tail call attached to it would run the feature while its pass is
                 // disabled - custom sky layers were observed drawing 5,928/min with the
