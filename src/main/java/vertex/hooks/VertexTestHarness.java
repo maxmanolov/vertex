@@ -22,6 +22,7 @@ public final class VertexTestHarness
 {
     private static final String AUTO_JOIN = System.getProperty("vertex.test.autoJoin");
     private static final int CHURN = Integer.getInteger("vertex.test.churn", 0).intValue();
+    private static final int CHAT_SPAM = Integer.getInteger("vertex.test.chatSpam", 0).intValue();
     private static final int MENU_WARMUP_FRAMES = 200;
 
     private static boolean disabled = false;
@@ -40,11 +41,21 @@ public final class VertexTestHarness
     private static Field posX;
     private static Field posY;
     private static Field posZ;
+    private static long lastChatMs = 0L;
+    private static int chatLines = 0;
+    private static Object chatGui;
+    private static Method printChatMessage;
+    private static java.lang.reflect.Constructor<?> componentCtor;
 
     public static void tick(Object minecraft)
     {
         VertexDynamicLightsCollector.tick(minecraft);
         VertexPackLoader.tick(minecraft);
+
+        if (VertexGuiProbe.active())
+        {
+            VertexGuiProbe.tick(minecraft);
+        }
 
         if (disabled || (AUTO_JOIN == null && CHURN <= 0))
         {
@@ -105,6 +116,17 @@ public final class VertexTestHarness
                 }
             }
 
+            if (CHAT_SPAM > 0 && world != null)
+            {
+                long now = System.currentTimeMillis();
+
+                if (now - lastChatMs >= 1000L)
+                {
+                    lastChatMs = now;
+                    printChat(minecraft, "Vertex chat background test line " + (++chatLines));
+                }
+            }
+
             if (CHURN > 0 && world != null)
             {
                 long now = System.currentTimeMillis();
@@ -131,6 +153,39 @@ public final class VertexTestHarness
             LogWrapper.severe("[Vertex] Test harness disabled after failure");
             e.printStackTrace();
         }
+    }
+
+    /** Keeps fresh chat lines on screen so background toggles are visible in captures. */
+    private static void printChat(Object minecraft, String text) throws Exception
+    {
+        if (printChatMessage == null)
+        {
+            Field ingameGui = accessible(minecraft.getClass(), Mappings.MC_INGAME_GUI);
+            Object gui = ingameGui.get(minecraft);
+            Field chatField = accessible(gui.getClass(), Mappings.GI_PERSISTANT_CHAT);
+            chatGui = chatField.get(gui);
+            Class<?> componentText = minecraft.getClass().getClassLoader().loadClass(Mappings.CHAT_COMPONENT_TEXT);
+            componentCtor = componentText.getConstructor(String.class);
+
+            for (Method candidate : chatGui.getClass().getDeclaredMethods())
+            {
+                if (candidate.getName().equals(Mappings.CHAT_PRINT_MESSAGE)
+                    && candidate.getParameterTypes().length == 1
+                    && candidate.getParameterTypes()[0].getName().equals("fj"))
+                {
+                    candidate.setAccessible(true);
+                    printChatMessage = candidate;
+                    break;
+                }
+            }
+
+            if (printChatMessage == null)
+            {
+                throw new IllegalStateException("GuiNewChat.printChatMessage not found");
+            }
+        }
+
+        printChatMessage.invoke(chatGui, componentCtor.newInstance(text));
     }
 
     /** Stress driver: world exit happened; let autoJoin re-enter from the menu. */
