@@ -1,14 +1,20 @@
-# Known limitations - Vertex 0.3.0
+# Known limitations - Vertex 0.3.1
 
 - **Multi-core chunk building is an EXPERIMENTAL opt-in** (`-Dvertex.multicore=true`).
   Everything in the default configuration is fully verified; the experimental flag is
   labeled to exactly its evidence: geometry structurally identical to the vanilla path
   (per-section audit, identical zero-sets), correct terrain in still captures from
   multiple angles, 5,000-17,700 real rebuilds/min through stress cycles with clean
-  shutdowns and flat heap. Its promotion to default-on in a future release is gated on
-  in-motion verification - a five-minute fly-through (TESTING.md) or the async-readback
-  motion gate (docs/benchmarks/framebuffer-comparison.md). Full defect and retraction
-  history: docs/benchmarks/multicore-status.md.
+  shutdowns and flat heap. 0.3.1 hardens the pipeline substantially (#73-#76: clean
+  self-disable teardown, exception-safe GL replay, per-renderer reposition stamps,
+  idempotent tessellator recycling; a fresh 3-minute post-fix stress soak passed clean).
+  Its promotion to default-on in a future release is still gated on in-motion
+  verification - a five-minute fly-through (TESTING.md) or the async-readback motion
+  gate (docs/benchmarks/framebuffer-comparison.md). Full defect and retraction history:
+  docs/benchmarks/multicore-status.md.
+- **Workers still execute against the live WorldRenderer**: reposition races are now
+  caught by build stamps and discarded, but the stronger immutable-snapshot design
+  remains open (docs/ROADMAP.md #1).
 - **Intermittent world-exit crash under the stress harness (1 of 7 runs, 5 consecutive
   clean since)**: "Already tesselating!" at rejoin, a known vanilla 1.7.10 teardown
   fragility signature; attribution unresolved, never observed outside synthetic
