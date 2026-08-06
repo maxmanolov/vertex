@@ -376,6 +376,9 @@ public final class VertexMulticore
             catch (Exception e)
             {
                 disable("replay", e);
+                // The section's display list may hold half-replayed geometry; re-dirty it
+                // so the vanilla path rebuilds it cleanly after the pipeline tears down.
+                discard(build);
                 return false;
             }
         }
