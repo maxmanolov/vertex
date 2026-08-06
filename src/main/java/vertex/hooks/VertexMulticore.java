@@ -36,6 +36,11 @@ public final class VertexMulticore
     private static final ThreadLocal<ChunkBuild> currentBuild = new ThreadLocal<ChunkBuild>();
     private static final ConcurrentLinkedQueue<Object> tessellatorPool = new ConcurrentLinkedQueue<Object>();
     private static final IdentityHashMap<Object, ChunkBuild> inFlight = new IdentityHashMap<Object, ChunkBuild>();
+    // Per-renderer reposition stamps: bumped by the setPosition head hook (client thread),
+    // read by workers and the drain. WorldRenderer doesn't override equals, so the
+    // ConcurrentHashMap keys by identity; concurrency is only needed for visibility.
+    private static final java.util.concurrent.ConcurrentHashMap<Object, Integer> repositionStamps =
+        new java.util.concurrent.ConcurrentHashMap<Object, Integer>();
 
     private static BuildQueue queue;
     private static BuildWorkers workers;
@@ -170,6 +175,25 @@ public final class VertexMulticore
         }
     }
 
+    /** setPosition head hook (client thread): any reposition invalidates in-flight builds. */
+    public static void onRendererRepositioned(Object renderer)
+    {
+        if (!ENABLED)
+        {
+            return;
+        }
+
+        Integer previous = repositionStamps.get(renderer);
+        repositionStamps.put(renderer, Integer.valueOf(previous == null ? 1 : previous.intValue() + 1));
+    }
+
+    /** Current reposition stamp for a renderer; 0 until its first setPosition. */
+    private static int stampOf(Object renderer)
+    {
+        Integer stamp = repositionStamps.get(renderer);
+        return stamp == null ? 0 : stamp.intValue();
+    }
+
     /** Pending build-queue depth for diagnostics; 0 when multicore is off. */
     public static int pendingDepth()
     {
@@ -301,6 +325,8 @@ public final class VertexMulticore
 
         queue.invalidateGeneration();
         inFlight.clear();
+        // loadRenderers replaces every renderer object; stale keys would retain them.
+        repositionStamps.clear();
     }
 
     /** Client thread, once per frame: apply finished builds into display lists. */
@@ -346,6 +372,7 @@ public final class VertexMulticore
         queue.clearAll(SINK);
         inFlight.clear();
         tessellatorPool.clear();
+        repositionStamps.clear();
         // Drop the statics so a straggler worker's late complete() (join timed out) can't
         // keep its build reachable; the workers hold their own queue reference.
         queue = null;

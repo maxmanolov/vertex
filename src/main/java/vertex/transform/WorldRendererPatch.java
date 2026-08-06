@@ -86,7 +86,9 @@ final class WorldRendererPatch implements Opcodes
         cls.methods.add(setup);
 
         // setPosition head: this.vertex$immediate = false; recycled grid slots must not
-        // carry a pending immediate from their previous section.
+        // carry a pending immediate from their previous section. The reposition also
+        // notifies the multicore stamp tracker so in-flight worker builds for this
+        // renderer invalidate (an A->B->A move would otherwise pass the drain XYZ check).
         for (MethodNode method : cls.methods)
         {
             if (method.name.equals(Mappings.WR_SET_POSITION) && method.desc.equals(Mappings.WR_SET_POSITION_DESC))
@@ -95,6 +97,9 @@ final class WorldRendererPatch implements Opcodes
                 head.add(new VarInsnNode(ALOAD, 0));
                 head.add(new InsnNode(ICONST_0));
                 head.add(new FieldInsnNode(PUTFIELD, cls.name, Mappings.ADDED_IMMEDIATE_FIELD, "Z"));
+                head.add(new VarInsnNode(ALOAD, 0));
+                head.add(new MethodInsnNode(INVOKESTATIC, "vertex/hooks/VertexMulticore",
+                    "onRendererRepositioned", "(Ljava/lang/Object;)V", false));
                 method.instructions.insertBefore(method.instructions.getFirst(), head);
                 break;
             }
