@@ -73,6 +73,10 @@ public class VertexTransformer implements IClassTransformer
             else if (Mappings.MINECRAFT.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching Minecraft (" + name + ")");
+                result = HeadInstanceCallPatch.apply(result, Mappings.MC_LOAD_WORLD, Mappings.MC_LOAD_WORLD_DESC,
+                    "vertex/hooks/VertexTessellator", "sanitizeOnWorldChange");
+                result = TailInstanceCallPatch.apply(result, Mappings.MC_LOAD_WORLD, Mappings.MC_LOAD_WORLD_DESC,
+                    "vertex/hooks/VertexTessellator", "sanitizeOnWorldChange");
                 result = HeadInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC, "vertex/hooks/VertexTestHarness", "tick");
             }
             else if (Mappings.RENDER_BLOCKS.equals(name))

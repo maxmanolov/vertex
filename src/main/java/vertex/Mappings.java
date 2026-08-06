@@ -93,6 +93,8 @@ public final class Mappings
     public static final String MC_RENDER_GLOBAL = "g";
     public static final String MC_RUN_GAME_LOOP = "ak";
     public static final String MC_RUN_GAME_LOOP_DESC = "()V";
+    public static final String MC_LOAD_WORLD = "a";
+    public static final String MC_LOAD_WORLD_DESC = "(Lbjf;)V";
     public static final String MC_LAUNCH_INTEGRATED_SERVER = "a";
     public static final String MINECRAFT_GET_MINECRAFT = "B";
     public static final String MINECRAFT_GET_MINECRAFT_DESC = "()Lbao;";
@@ -254,7 +256,6 @@ public final class Mappings
     public static final String WORLD_SET_TIME = "b";
     public static final String MC_REFRESH_RESOURCES = "c";
     public static final String MC_SHUTDOWN = "k";
-    public static final String MC_LOAD_WORLD = "a";
 
     private Mappings()
     {

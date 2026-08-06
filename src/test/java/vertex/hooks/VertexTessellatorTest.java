@@ -5,10 +5,29 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
 public class VertexTessellatorTest
 {
+    public static final class RecoverableTessellator
+    {
+        private boolean x;
+        private boolean throwOnReset;
+        private int resets;
+
+        private void d()
+        {
+            ++this.resets;
+
+            if (this.throwOnReset)
+            {
+                throw new IllegalStateException("reset failed");
+            }
+        }
+    }
+
     private final Object main = new Object();
     private final Object workerOwn = new Object();
 
@@ -55,5 +74,44 @@ public class VertexTessellatorTest
         worker.join();
         assertSame(this.workerOwn, seenAfterBind.get());
         assertSame("client thread must be unaffected by worker bindings", this.main, VertexTessellator.get());
+    }
+
+    @Test
+    public void worldChangeRecoversAnAbandonedMainTessellation()
+    {
+        RecoverableTessellator tessellator = new RecoverableTessellator();
+        tessellator.x = true;
+        VertexTessellator.bind(tessellator);
+
+        VertexTessellator.sanitizeOnWorldChange(null);
+
+        assertFalse(tessellator.x);
+        assertEquals(1, tessellator.resets);
+    }
+
+    @Test
+    public void worldChangeLeavesAnIdleMainTessellatorAlone()
+    {
+        RecoverableTessellator tessellator = new RecoverableTessellator();
+        VertexTessellator.bind(tessellator);
+
+        VertexTessellator.sanitizeOnWorldChange(null);
+
+        assertFalse(tessellator.x);
+        assertEquals(0, tessellator.resets);
+    }
+
+    @Test
+    public void worldChangeClearsDrawingStateWhenResetFails()
+    {
+        RecoverableTessellator tessellator = new RecoverableTessellator();
+        tessellator.x = true;
+        tessellator.throwOnReset = true;
+        VertexTessellator.bind(tessellator);
+
+        VertexTessellator.sanitizeOnWorldChange(null);
+
+        assertFalse(tessellator.x);
+        assertEquals(1, tessellator.resets);
     }
 }
