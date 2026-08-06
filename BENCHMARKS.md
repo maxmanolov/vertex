@@ -22,12 +22,15 @@ windows show the pacing above.
 | Path | world-load flood | steady state |
 |---|---|---|
 | Vanilla budgeted path (multicore off) | budget-limited trickle | ~460 rebuilds/min under churn |
-| Worker pool (multicore on, 6 workers) | RETRACTED | see docs/benchmarks/multicore-status.md |
+| Worker pool (multicore on, 6 workers, REAL builds) | **5,000-17,700 rebuilds/min** across stress windows (~300 sections/s during teleport storms) | churn parity, queue drained |
 
-**Retraction:** the previously reported ~10,400 sections/min counted replays of builds a
-flag race had silenced - the worker bodies never ran, so the number measured empty
-display-list swaps. Real worker throughput will be re-measured only after the replay
-renders correct geometry.
+The earlier ~10,400/min figure was retracted (it measured empty builds silenced by a flag
+race; docs/benchmarks/multicore-status.md). The numbers above are from the post-fix
+stress suite with structurally verified geometry: measured across a full 6-minute cycle
+run (26 teleports, 6 render-distance flips, 3 resource reloads, 3 world exit/rejoins,
+clean shutdown, pacing p50 16.2ms / p99 18.7ms at steady state, heap 343-454MB with no
+growth trend), with repeat runs passing under identical load. One intermittent teardown
+crash in five stress runs is tracked openly (see KNOWN-LIMITATIONS.md).
 
 ## Memory and allocation
 
