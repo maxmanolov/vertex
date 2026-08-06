@@ -156,6 +156,12 @@ public final class VertexMulticore
         }
     }
 
+    /** Pending build-queue depth for diagnostics; 0 when multicore is off. */
+    public static int pendingDepth()
+    {
+        return ENABLED && !disabled && queue != null ? queue.pendingCount() : 0;
+    }
+
     /** True while a worker build for this renderer is queued or running (client thread). */
     public static boolean isInFlight(Object renderer)
     {
