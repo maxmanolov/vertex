@@ -89,3 +89,10 @@ first soak, and only an instrumented run showed the icon dispatch was live all a
 - Every feature lands with either a regression check or a documented manual verification,
   plus a benchmark when it claims a measurable win. Claims without numbers stay out of
   FEATURES.md status upgrades.
+
+- Release audit procedure (run before any tagged build): clone main into a fresh
+  directory, `./gradlew clean build test`, then launch the produced jar against the
+  official client with a brand-new game directory (only a world save copied in as a test
+  fixture). Pass criteria: all classes patch, the config file generates itself, the world
+  joins, zero unexpected self-disables. Verified for 0.2.0 on 2026-08-05: reproducible
+  build, 63/63 tests, 11/11 classes patched, no stale or uncommitted state required.
