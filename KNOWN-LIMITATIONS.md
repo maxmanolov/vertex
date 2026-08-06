@@ -1,10 +1,17 @@
-# Known limitations - Vertex 0.3.0-rc1
+# Known limitations - Vertex 0.3.0-rc2
 
 - **Multi-core chunk building ships default-OFF** (`-Dvertex.multicore=true` to enable).
-  It has passed every mechanical gate: ~10k worker-built sections/min replayed cleanly,
-  8-minute stress cycles with world reloads and clean shutdown, zero self-disables, no
-  heap growth. What remains is human visual sign-off (see TESTING.md); the automated
-  framebuffer gate is experimental (docs/benchmarks/framebuffer-comparison.md).
+  Its geometry is now structurally verified: the per-section build audit matches the
+  vanilla path exactly (identical zero-sets, no divergent sections) and captures show
+  correct terrain - see docs/benchmarks/multicore-status.md for the full defect history,
+  which included claims retracted mid-release-cycle when the first output-level evidence
+  contradicted every healthy activity counter. Real-build stress: 5,000-17,700
+  rebuilds/min, clean cycles and shutdowns. Remaining before default-on: the human
+  fly-through (TESTING.md).
+- **Intermittent world-exit crash under stress (1 in 5 runs)**: "Already tesselating!"
+  at rejoin, a known vanilla 1.7.10 teardown fragility signature; attribution unresolved
+  (three targeted repro attempts passed, on and off). Tracked with full detail in the
+  issue tracker; the stress suite is the reproduction harness.
 - **World-transition frame stalls are vanilla behavior**: the multi-second ftMax spikes
   in stress telemetry are Minecraft's blocking world save/load, not Vertex overhead;
   steady-state pacing under stress measured ftP50 13-15ms / ftP99 ~20ms.
