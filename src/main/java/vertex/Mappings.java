@@ -207,6 +207,43 @@ public final class Mappings
      * World.setWorldTime=b(J)V  Minecraft.refreshResources=c()V  shutdown=k()V
      * Minecraft.loadWorld=a(Lbjf;)V
      */
+    /* HUD and GUI members (resolved from MCP 1.7.10 srg + stable-12 CSVs):
+     * Gui=bbw  Gui.drawRect=a(IIIII)V (static)
+     * GuiNewChat=bcc  drawChat=func_146230_a=a(I)V  printChatMessage=func_146227_a=a(Lfj;)V
+     * GuiIngame=bbv  renderScoreboard=func_96136_a=a(Lazx;IILbbu;)V  persistantChatGUI=l
+     * ScreenChatOptions=bcs  GuiScreen=bdw  initGui=func_73866_w_=b()V
+     * GuiScreen.actionPerformed=func_146284_a=a(Lbcb;)V  buttonList=field_146292_n=n
+     * GuiScreen.width=l  height=m
+     * GuiButton=bcb  id=k  displayString=j  xPosition=h  yPosition=i  width=f  height=g
+     * Minecraft.ingameGUI=r  ChatComponentText=fq
+     */
+    public static final String GUI = "bbw";
+    public static final String GUI_DRAW_RECT = "a";
+    public static final String GUI_DRAW_RECT_DESC = "(IIIII)V";
+    public static final String GUI_NEW_CHAT = "bcc";
+    public static final String CHAT_DRAW = "a";
+    public static final String CHAT_DRAW_DESC = "(I)V";
+    public static final String CHAT_PRINT_MESSAGE = "a";
+    public static final String CHAT_PRINT_MESSAGE_DESC = "(Lfj;)V";
+    public static final String GUI_INGAME = "bbv";
+    public static final String GI_RENDER_SCOREBOARD = "a";
+    public static final String GI_RENDER_SCOREBOARD_DESC = "(Lazx;IILbbu;)V";
+    public static final String GI_PERSISTANT_CHAT = "l";
+    public static final String GUI_SCREEN = "bdw";
+    public static final String SCREEN_CHAT_OPTIONS = "bcs";
+    public static final String SCREEN_INIT_GUI = "b";
+    public static final String SCREEN_INIT_GUI_DESC = "()V";
+    public static final String SCREEN_ACTION_PERFORMED = "a";
+    public static final String SCREEN_ACTION_PERFORMED_DESC = "(Lbcb;)V";
+    public static final String SCREEN_BUTTON_LIST = "n";
+    public static final String SCREEN_WIDTH = "l";
+    public static final String GUI_BUTTON = "bcb";
+    public static final String BUTTON_ID = "k";
+    public static final String BUTTON_DISPLAY = "j";
+    public static final String BUTTON_Y = "i";
+    public static final String MC_INGAME_GUI = "r";
+    public static final String CHAT_COMPONENT_TEXT = "fq";
+
     public static final String MC_GAME_SETTINGS = "u";
     public static final String GS_RENDER_DISTANCE = "c";
     public static final String GS_HIDE_GUI = "av";
