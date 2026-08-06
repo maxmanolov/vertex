@@ -51,3 +51,28 @@ Remaining suspects, in investigation order:
    replay pipeline.
 
 Diagnostics for all of this are now permanent behind -Dvertex.test.buildAudit.
+
+## RESOLVED: the fragment defect
+
+Root cause, found by instrumented elimination:
+
+1. Pool lifecycle: exonerated (zero double-borrows).
+2. Body re-execution: red herring - repeated builds were legitimate re-marks.
+3. **The bug: replay treated preRenderBlocks' int argument as a display-list id. It is
+   the PASS INDEX** (verified in blo.a(Lsv;)V bytecode: called with the pass loop
+   counter). Every section's geometry compiled into GL lists 0 and 1 - the audit showed
+   every replay in a run targeting exactly those two ids - leaving all real renderer
+   lists empty and producing the floating-fragment mash. Replay now targets
+   renderer.glRenderList + pass.
+4. Unmasked behind it: vanilla getVertexState throws on an empty translucent pass
+   (PriorityQueue rejects zero capacity) - now guarded; and the capture drain gate
+   counted clean queue entries vanilla never removes - now counts dirty entries only.
+5. Also hardened: loadRenderers now invalidates the build generation (stale builds from
+   a replaced renderer grid can never replay into reallocated list ids).
+
+Verification: multicore capture shows correct, continuous terrain
+(multicore-terrain-fixed.png); the per-section audit is structurally IDENTICAL to the
+vanilla path - 7,495 zero-byte (occluded/air) sections on each side, the exact same set,
+zero sections built by one path and not the other. Residual pixel-level diff between
+runs equals the comparator's known off-vs-off noise floor (lighting interpolation),
+with silhouettes pixel-aligned in the diff mask.

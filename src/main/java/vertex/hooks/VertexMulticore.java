@@ -50,6 +50,7 @@ public final class VertexMulticore
     private static Method setupTranslationBridge;
     private static Field wrNeedsUpdate;
     private static Field wrBytesDrawn;
+    private static Field wrGlRenderList;
     private static Field wrVertexState;
     private static Field wrTileEntities;
     private static Field wrTileEntityRenderers;
@@ -252,6 +253,42 @@ public final class VertexMulticore
         }
     }
 
+    /**
+     * loadRenderers rebuilt the whole grid: every renderer object is replaced and every
+     * display-list id reallocated. In-flight builds reference the OLD objects, whose
+     * stamps still match, so without this their replays compile into list ids the new
+     * grid assigned to other renderers - the fragment defect's mechanism: a few sections
+     * accumulated many builds' geometry (7.4MB in one list) while 34/60 near-surface
+     * sections went empty. The CheatBreaker-era design invalidated on loadRenderers;
+     * the wrap port was missing this hook.
+     */
+    /** Adapter for the head hook on RenderGlobal.loadRenderers (instance arg unused). */
+    public static void onRenderersReloadedHook(Object renderGlobal)
+    {
+        onRenderersReloaded();
+    }
+
+    public static void onRenderersReloaded()
+    {
+        if (!ENABLED || disabled)
+        {
+            return;
+        }
+
+        if (BUILD_AUDIT)
+        {
+            LogWrapper.info("[VertexAudit] loadRenderers fired, queue=" + (queue != null ? "live gen->" + (queue.generation() + 1) : "null"));
+        }
+
+        if (queue == null)
+        {
+            return;
+        }
+
+        queue.invalidateGeneration();
+        inFlight.clear();
+    }
+
     /** Client thread, once per frame: apply finished builds into display lists. */
     public static void drainFinished()
     {
@@ -318,7 +355,11 @@ public final class VertexMulticore
         {
             {
                 Object tessellator = build.passTessellators[slot];
-                GL11.glNewList(build.passListIds[slot], GL11.GL_COMPILE);
+                // preRenderBlocks' int argument is the PASS INDEX, not a list id (verified
+                // in blo.a(Lsv;)V bytecode: it is called with the pass loop counter). The
+                // original replay compiled every section into GL lists 0 and 1 - the whole
+                // fragment defect. The real target is the renderer's own list plus pass.
+                GL11.glNewList(wrGlRenderList.getInt(renderer) + build.passListIds[slot], GL11.GL_COMPILE);
                 GL11.glPushMatrix();
                 setupTranslationBridge.invoke(renderer);
                 GL11.glTranslatef(-8.0F, -8.0F, -8.0F);
@@ -327,16 +368,32 @@ public final class VertexMulticore
 
                 if (build.passIndices[slot] == 1 && build.entity != null)
                 {
-                    resolveEntityFields(build.entity);
-                    Object state = tessGetVertexState.invoke(tessellator,
-                        Float.valueOf((float)entityPosX.getDouble(build.entity)),
-                        Float.valueOf((float)entityPosY.getDouble(build.entity)),
-                        Float.valueOf((float)entityPosZ.getDouble(build.entity)));
-                    wrVertexState.set(renderer, state);
+                    try
+                    {
+                        resolveEntityFields(build.entity);
+                        Object state = tessGetVertexState.invoke(tessellator,
+                            Float.valueOf((float)entityPosX.getDouble(build.entity)),
+                            Float.valueOf((float)entityPosY.getDouble(build.entity)),
+                            Float.valueOf((float)entityPosZ.getDouble(build.entity)));
+                        wrVertexState.set(renderer, state);
+                    }
+                    catch (Exception emptyPass)
+                    {
+                        // Vanilla getVertexState sizes a PriorityQueue by quad count and
+                        // throws on zero: a translucent pass CAN start and tessellate no
+                        // quads. No quads means nothing to sort - a null state is correct.
+                        wrVertexState.set(renderer, null);
+                    }
                 }
 
                 int drawn = ((Integer)tessDraw.invoke(tessellator)).intValue();
                 wrBytesDrawn.setInt(renderer, wrBytesDrawn.getInt(renderer) + drawn);
+
+                if (BUILD_AUDIT)
+                {
+                    LogWrapper.info("[VertexAudit] replay build=" + build.posX + "," + build.posY + "," + build.posZ
+                        + " slot=" + slot + " listId=" + build.passListIds[slot] + " bytes=" + drawn + " gen=" + build.generation);
+                }
                 GL11.glPopMatrix();
                 GL11.glEndList();
                 tessSetTranslation.invoke(tessellator, Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D));
@@ -414,6 +471,7 @@ public final class VertexMulticore
             Class<?> wr = renderer.getClass();
             wrNeedsUpdate = accessible(wr, Mappings.WR_NEEDS_UPDATE);
             wrBytesDrawn = accessible(wr, Mappings.WR_BYTES_DRAWN);
+            wrGlRenderList = accessible(wr, "z");
             wrVertexState = accessible(wr, Mappings.WR_VERTEX_STATE);
             wrTileEntities = accessible(wr, Mappings.WR_TILE_ENTITIES);
             wrTileEntityRenderers = accessible(wr, Mappings.WR_TILE_ENTITY_RENDERERS);
