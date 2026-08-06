@@ -30,6 +30,17 @@ would be attributable to the renderer. Known remaining work, in order:
    invalidates the settled state it was meant to protect).
 3. Exclude or despawn passive mobs in frame; suppress the achievement toast.
 
+## Final rc1 attempt
+
+After the live-entry drain gate and a pre-launch render-distance pin (the mid-run pin
+was forcing the reload it guarded against), the off-vs-off control still measured 66-74%
+on this scene. Eleven iterations eliminated confounds one at a time (dead-player fixture
+state, cross-run world mutation, server-physics deaths, pause menu, height race, server
+time sync, weather strength, respawn scatter) and once reached 5.8% on a single angle,
+proving convergence is possible - but at least one nondeterminism source remains
+unidentified, and the time-box for rc1 is spent. The tool stays in the tree with this
+record so the next attempt starts from the full confound list instead of rediscovering it.
+
 ## Consequence for release verification
 
 Multi-core visual sign-off remains on the MANUAL test checklist (fly-through with
