@@ -27,8 +27,10 @@ justification. Architecture and the clean-room policy live in
 
 `vertex.properties` is created in the game directory on first run. Every key defaults to
 vanilla behavior; set a key to `false` to skip that work for performance. Edits hot-reload
-within a second — no restart. Current keys: `sky`, `clouds`, `weather`, `voidParticles`,
-`textureAnimations`, `interactiveRenderPriority`.
+within a second — no restart. The generated file documents every key with a comment; the
+authoritative list lives there and in [FEATURES.md](FEATURES.md) (17 keys as of 0.3.x,
+covering render passes, pack visual features, dynamic lights, HUD backgrounds and
+diagnostics).
 
 ### Render-pass controls (active)
 
@@ -43,9 +45,11 @@ Vanilla marks a changed block's 3x3x3 chunk-section neighborhood dirty and leave
 
 Vertex promotes the section containing an *interactive* change - one within 8 blocks of the view entity - to an immediate rebuild that runs ahead of the vanilla budget, capped at 4 sections per frame. Blocks on a section boundary also promote the face-adjacent section (never diagonals), so no stale face or hole lingers at the seam. Server-driven changes (pistons, fluids, redstone, other players) stay on the vanilla throttled path and cannot bypass the budget.
 
-### Multi-core chunk building (planned)
+### Multi-core chunk building (experimental opt-in)
 
-Porting the worker-pool chunk tessellation (CPU workers build geometry, the client thread only compiles display lists) requires redirecting every read of the global `Tessellator.instance` to a per-thread instance, which touches most rendering classes at load time. The transformer pipeline is built to support it; it lands in a later release.
+Implemented and dark-launched: a pool of CPU workers tessellates chunk geometry into per-build Tessellator instances while the client thread compiles the results into display lists. The global `Tessellator.instance` read is redirected to a per-thread instance across all rendering classes at load time. Worker output is structurally verified against the vanilla path (identical per-section build audits, matching frame captures — see docs/benchmarks/multicore-status.md).
+
+Off by default in 0.3.x; enable with `-Dvertex.multicore=true`. It flips to default-on after the remaining promotion gate (a human fly-through pass, TESTING.md) closes. Self-disables cleanly on any failure without costing the session.
 
 ## How it works
 

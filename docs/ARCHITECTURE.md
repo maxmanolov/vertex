@@ -94,5 +94,7 @@ first soak, and only an instrumented run showed the icon dispatch was live all a
   directory, `./gradlew clean build test`, then launch the produced jar against the
   official client with a brand-new game directory (only a world save copied in as a test
   fixture). Pass criteria: all classes patch, the config file generates itself, the world
-  joins, zero unexpected self-disables. Verified for 0.2.0 on 2026-08-05: reproducible
+  joins, zero unexpected self-disables. Every release attaches a `SHA256SUMS` file
+  computed over the published assets (`shasum -a 256 *.jar > SHA256SUMS`) so downloads
+  are verifiable. Verified for 0.2.0 on 2026-08-05: reproducible
   build, 63/63 tests, 11/11 classes patched, no stale or uncommitted state required.
