@@ -75,6 +75,14 @@ public class VertexConfigDefaultsTest
         assertFalse(VertexConfig.enabled("fog"));
     }
 
+    @Test
+    public void invalidBooleanValuesUseDeclaredDefaults() throws Exception
+    {
+        write("betterGrass=disabled\nfog=disabled\n");
+        assertFalse(VertexConfig.enabled("betterGrass"));
+        assertTrue(VertexConfig.enabled("fog"));
+    }
+
     private static void write(String content) throws Exception
     {
         FileOutputStream out = new FileOutputStream(new File(Launch.minecraftHome, "vertex.properties"));
