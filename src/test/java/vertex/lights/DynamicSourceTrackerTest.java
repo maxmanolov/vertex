@@ -25,7 +25,7 @@ public class DynamicSourceTrackerTest
     }
 
     @Test
-    public void burstIsCapped()
+    public void burstIsCappedButNeverDropped()
     {
         DynamicSourceTracker tracker = new DynamicSourceTracker();
         int[] many = new int[4 * 20];
@@ -38,6 +38,11 @@ public class DynamicSourceTrackerTest
             many[i * 4 + 3] = 14;
         }
 
+        // The reporter's reproduction: 20 changes, then an identical snapshot. The cap
+        // must delay the remaining 12, not delete them.
         assertEquals(DynamicSourceTracker.MAX_REMARKS, tracker.update(many).length / 3);
+        assertEquals(DynamicSourceTracker.MAX_REMARKS, tracker.update(many).length / 3);
+        assertEquals(4, tracker.update(many).length / 3);
+        assertEquals(0, tracker.update(many).length / 3);
     }
 }
