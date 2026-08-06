@@ -98,17 +98,22 @@ public final class BuildQueue
     {
         synchronized (this.lock)
         {
-            while (this.pending.isEmpty())
+            while (true)
             {
+                // Closed beats pending: after close() no worker starts new work, even if
+                // builds are still queued - shutdown discards them on the client thread.
                 if (this.closed)
                 {
                     return null;
                 }
 
+                if (!this.pending.isEmpty())
+                {
+                    return this.pending.pollFirst();
+                }
+
                 this.lock.wait(2000L);
             }
-
-            return this.pending.pollFirst();
         }
     }
 

@@ -154,4 +154,72 @@ public class BuildQueueTest
         assertTrue("no concurrency observed", peak.get() >= 2);
         queue.close();
     }
+
+    @Test
+    public void takeReturnsNullAfterCloseEvenWithPendingBuilds() throws Exception
+    {
+        BuildQueue queue = new BuildQueue();
+        queue.submit(new Build("a", 1, 0));
+        queue.close();
+        assertEquals(null, queue.take());
+        // The undrained build is still there for the shutdown discard pass.
+        assertEquals(1, queue.pendingCount());
+    }
+
+    @Test
+    public void closeWakesABlockedTaker() throws Exception
+    {
+        final BuildQueue queue = new BuildQueue();
+        final CountDownLatch exited = new CountDownLatch(1);
+        Thread taker = new Thread(new Runnable()
+        {
+            public void run()
+            {
+                try
+                {
+                    if (queue.take() == null)
+                    {
+                        exited.countDown();
+                    }
+                }
+                catch (InterruptedException interrupted)
+                {
+                    // failure: latch never counts down
+                }
+            }
+        }, "TestTaker");
+        taker.start();
+        Thread.sleep(100L);
+        queue.close();
+        assertTrue("blocked take() did not observe close", exited.await(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    public void shutdownStopsWorkersEvenWithABacklog() throws Exception
+    {
+        final BuildQueue queue = new BuildQueue();
+        final AtomicInteger started = new AtomicInteger();
+        BuildWorkers workers = new BuildWorkers(queue, new BuildWorkers.Task()
+        {
+            public void build(BuildQueue.Build build) throws Exception
+            {
+                started.incrementAndGet();
+                Thread.sleep(20L);
+            }
+        }, "ShutdownWorker");
+
+        for (int i = 0; i < 200; ++i)
+        {
+            queue.submit(new Build("r" + i, 1, 0));
+        }
+
+        Thread.sleep(50L);
+        queue.close();
+        workers.shutdown();
+        int afterShutdown = started.get();
+        Thread.sleep(100L);
+        // No worker picked up new builds after shutdown returned.
+        assertEquals(afterShutdown, started.get());
+        assertTrue("backlog should remain undrained", queue.pendingCount() > 0);
+    }
 }
