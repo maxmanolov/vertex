@@ -13,17 +13,44 @@ import org.lwjgl.opengl.GL11;
 public final class VertexGLStats
 {
     private static final int CAP_TRACK = 65536;
+    private static final int GL_TEXTURE_2D_CAP = 3553;
     private static final byte[] capState = new byte[CAP_TRACK];
 
     private static long stateCalls;
     private static long redundantCalls;
-    private static int lastTexture = -1;
+    // OpenGL keeps one binding per (texture unit, target) and one GL_TEXTURE_2D enable
+    // per unit (kyrofx #38); redundancy must be judged against that state, not a single
+    // last-id. Keys are (unit << 32 | target).
+    private static final java.util.HashMap<Long, Integer> lastBound = new java.util.HashMap<Long, Integer>();
+    private static final java.util.HashMap<Integer, Byte> textureCapByUnit = new java.util.HashMap<Integer, Byte>();
+    private static int activeUnit = 0;
+
+    public static void activeTexture(int unit)
+    {
+        activeUnit = unit;
+        org.lwjgl.opengl.GL13.glActiveTexture(unit);
+    }
+
+    public static void activeTextureArb(int unit)
+    {
+        activeUnit = unit;
+        org.lwjgl.opengl.ARBMultitexture.glActiveTextureARB(unit);
+    }
 
     public static void enable(int cap)
     {
         ++stateCalls;
 
-        if (cap >= 0 && cap < CAP_TRACK)
+        if (cap == GL_TEXTURE_2D_CAP)
+        {
+            Byte previous = textureCapByUnit.put(Integer.valueOf(activeUnit), Byte.valueOf((byte)1));
+
+            if (previous != null && previous.byteValue() == 1)
+            {
+                ++redundantCalls;
+            }
+        }
+        else if (cap >= 0 && cap < CAP_TRACK)
         {
             if (capState[cap] == 1)
             {
@@ -40,7 +67,16 @@ public final class VertexGLStats
     {
         ++stateCalls;
 
-        if (cap >= 0 && cap < CAP_TRACK)
+        if (cap == GL_TEXTURE_2D_CAP)
+        {
+            Byte previous = textureCapByUnit.put(Integer.valueOf(activeUnit), Byte.valueOf((byte)2));
+
+            if (previous != null && previous.byteValue() == 2)
+            {
+                ++redundantCalls;
+            }
+        }
+        else if (cap >= 0 && cap < CAP_TRACK)
         {
             if (capState[cap] == 2)
             {
@@ -56,13 +92,14 @@ public final class VertexGLStats
     public static void bindTexture(int target, int texture)
     {
         ++stateCalls;
+        Long key = Long.valueOf((long)activeUnit << 32 | (target & 0xFFFFFFFFL));
+        Integer previous = lastBound.put(key, Integer.valueOf(texture));
 
-        if (texture == lastTexture)
+        if (previous != null && previous.intValue() == texture)
         {
             ++redundantCalls;
         }
 
-        lastTexture = texture;
         GL11.glBindTexture(target, texture);
     }
 
