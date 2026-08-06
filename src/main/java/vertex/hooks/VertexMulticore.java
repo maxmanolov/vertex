@@ -194,6 +194,12 @@ public final class VertexMulticore
             int slot = build.capturedPasses++;
             build.passTessellators[slot] = tessellator;
             build.passListIds[slot] = listId;
+
+            if (BUILD_AUDIT)
+            {
+                LogWrapper.info("[VertexAudit] pre build=" + build.posX + "," + build.posY + "," + build.posZ
+                    + " slot=" + slot + " tess=" + System.identityHashCode(tessellator) + " listId=" + listId);
+            }
             tessStartQuads.invoke(tessellator);
             tessSetTranslation.invoke(tessellator, Double.valueOf(-build.posX), Double.valueOf(-build.posY), Double.valueOf(-build.posZ));
         }
@@ -359,14 +365,32 @@ public final class VertexMulticore
         VertexStats.rebuild();
     }
 
+    private static final boolean BUILD_AUDIT = Boolean.getBoolean("vertex.test.buildAudit");
+
     private static Object borrowTessellator() throws Exception
     {
         Object pooled = tessellatorPool.poll();
-        return pooled != null ? pooled : tessellatorCtor.newInstance(Integer.valueOf(2097152));
+        Object result = pooled != null ? pooled : tessellatorCtor.newInstance(Integer.valueOf(2097152));
+
+        if (BUILD_AUDIT)
+        {
+            ChunkBuild owner = currentBuild.get();
+            LogWrapper.info("[VertexAudit] borrow tess=" + System.identityHashCode(result)
+                + " pooled=" + (pooled != null)
+                + " build=" + (owner != null ? owner.posX + "," + owner.posY + "," + owner.posZ : "none")
+                + " thread=" + Thread.currentThread().getName());
+        }
+
+        return result;
     }
 
     private static void recycleTessellator(Object tessellator)
     {
+        if (BUILD_AUDIT)
+        {
+            LogWrapper.info("[VertexAudit] recycle tess=" + System.identityHashCode(tessellator));
+        }
+
         if (tessellatorPool.size() < 16)
         {
             tessellatorPool.add(tessellator);
