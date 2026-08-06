@@ -100,6 +100,7 @@ public class VertexFrameStatsTest
             // Disabled stretch: frames accumulate, then the disabled-interval drain runs.
             long cursor = System.nanoTime() - 500_000_000L;
             last.setLong(null, cursor);
+            lastPlanted = cursor;
 
             for (int i = 0; i < 5; ++i)
             {
