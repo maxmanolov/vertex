@@ -46,7 +46,30 @@ public final class VertexConfig
     {
         refresh();
         String value = values.getProperty(key);
-        return value == null || !value.trim().equalsIgnoreCase("false");
+
+        if (value == null)
+        {
+            // A missing key means its declared default, never a blanket true: default-off
+            // features (betterGrass, diagnostics) must not switch on because a file is
+            // hand-written, predates the key, or failed to parse (kyrofx #28). Undeclared
+            // keys resolve to false so a typo can never enable anything.
+            return declaredDefault(key);
+        }
+
+        return !value.trim().equalsIgnoreCase("false");
+    }
+
+    private static boolean declaredDefault(String key)
+    {
+        for (String[] entry : KEYS)
+        {
+            if (entry[0].equals(key))
+            {
+                return entry[1].equals("true");
+            }
+        }
+
+        return false;
     }
 
     /** Inverse convenience for the skip patches: true means "suppress this render pass". */
