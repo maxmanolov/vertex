@@ -86,6 +86,7 @@ public final class VertexMulticore
         Object savedTileEntities;
         List<Object> capturedTileEntities;
         List<Object> previousTileEntityRenderers;
+        boolean released;
 
         ChunkBuild(Object renderer, int stamp, int generation, Object entity, int posX, int posY, int posZ)
         {
@@ -413,6 +414,7 @@ public final class VertexMulticore
                 }
 
                 replay(chunkBuild);
+                releaseBuild(chunkBuild);
                 return true;
             }
             catch (Exception e)
@@ -429,6 +431,7 @@ public final class VertexMulticore
         {
             ChunkBuild chunkBuild = (ChunkBuild)build;
             inFlight.remove(chunkBuild.renderer);
+            releaseBuild(chunkBuild);
 
             try
             {
@@ -443,6 +446,52 @@ public final class VertexMulticore
             }
         }
     };
+
+    /**
+     * The one terminal path for a build's captured resources, idempotent so success,
+     * discard, replay failure and shutdown can all call it (#76). A discarded build's
+     * tessellators are mid-tessellation (startDrawingQuads ran, draw never did), so each
+     * is sanitized - buffer reset, isDrawing cleared, translation zeroed - before pooling;
+     * one that resists sanitization is dropped for GC rather than poisoning the pool.
+     */
+    private static void releaseBuild(ChunkBuild build)
+    {
+        if (build.released)
+        {
+            return;
+        }
+
+        build.released = true;
+
+        for (int slot = 0; slot < build.passTessellators.length; ++slot)
+        {
+            Object tessellator = build.passTessellators[slot];
+            build.passTessellators[slot] = null;
+
+            if (tessellator == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                tessReset.invoke(tessellator);
+                tessIsDrawing.setBoolean(tessellator, false);
+                tessSetTranslation.invoke(tessellator, Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D));
+                recycleTessellator(tessellator);
+            }
+            catch (Exception sanitizeFailed)
+            {
+                LogWrapper.warning("[Vertex] Dropped a pass tessellator that resisted sanitization: " + sanitizeFailed);
+            }
+        }
+
+        // Terminal build: drop capture references so a retained Build object cannot pin
+        // tile entities or the world's render lists.
+        build.savedTileEntities = null;
+        build.capturedTileEntities = null;
+        build.previousTileEntityRenderers = null;
+    }
 
     /** The exact GL sequence of the vanilla boundary methods, replayed on the client. */
     private static void replay(ChunkBuild build) throws Exception
@@ -519,12 +568,14 @@ public final class VertexMulticore
                     GL11.glEndList();
                 }
 
-                // A tessellator whose draw threw may still be mid-tessellation; pooling it
-                // would hand "Already tesselating!" to the next borrower. Only clean ones
-                // return to the pool - a failed one is dropped for GC. The reset gets its
-                // own catch so a throw here can never mask the original exception.
+                // A cleanly replayed tessellator pools immediately and its slot is nulled
+                // so releaseBuild skips it; a failed slot stays on the build and reaches
+                // releaseBuild via the discard path, which sanitizes before pooling. The
+                // reset gets its own catch so it can never mask the original exception.
                 if (slotReplayed)
                 {
+                    build.passTessellators[slot] = null;
+
                     try
                     {
                         tessSetTranslation.invoke(tessellator, Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D));
