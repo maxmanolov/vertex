@@ -25,6 +25,14 @@ public class DynamicSourceTrackerTest
     }
 
     @Test
+    public void changedLightLevelRemarksThePositionOnce()
+    {
+        DynamicSourceTracker tracker = new DynamicSourceTracker();
+        tracker.update(new int[] {10, 64, 10, 10});
+        assertArrayEquals(new int[] {10, 64, 10}, tracker.update(new int[] {10, 64, 10, 14}));
+    }
+
+    @Test
     public void burstIsCappedButNeverDropped()
     {
         DynamicSourceTracker tracker = new DynamicSourceTracker();
