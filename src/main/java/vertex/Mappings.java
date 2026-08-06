@@ -176,6 +176,9 @@ public final class Mappings
     public static final String TESS_SET_TRANSLATION = "b";
     public static final String TESS_DRAW = "a";
     public static final String TESS_GET_VERTEX_STATE = "a";
+    /* Tessellator.reset=func_78379_d=d()V (private), isDrawing=field_78415_z=x */
+    public static final String TESS_RESET = "d";
+    public static final String TESS_IS_DRAWING = "x";
     public static final String ENTITY_RENDERER = "blt";
     public static final String TEXTURE_MAP = "bpz";
     public static final String WORLD_CLIENT = "bjf";

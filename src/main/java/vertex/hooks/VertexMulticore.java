@@ -56,6 +56,8 @@ public final class VertexMulticore
     private static Method tessSetTranslation;
     private static Method tessDraw;
     private static Method tessGetVertexState;
+    private static Method tessReset;
+    private static Field tessIsDrawing;
     private static Method setupTranslationBridge;
     private static Field wrNeedsUpdate;
     private static Field wrBytesDrawn;
@@ -622,6 +624,9 @@ public final class VertexMulticore
             tessSetTranslation = tess.getMethod(Mappings.TESS_SET_TRANSLATION, Double.TYPE, Double.TYPE, Double.TYPE);
             tessDraw = tess.getMethod(Mappings.TESS_DRAW);
             tessGetVertexState = tess.getMethod(Mappings.TESS_GET_VERTEX_STATE, Float.TYPE, Float.TYPE, Float.TYPE);
+            tessReset = tess.getDeclaredMethod(Mappings.TESS_RESET);
+            tessReset.setAccessible(true);
+            tessIsDrawing = accessible(tess, Mappings.TESS_IS_DRAWING);
             queue = new BuildQueue();
             workers = new BuildWorkers(queue, new BuildWorkers.Task()
             {
