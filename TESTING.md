@@ -1,9 +1,12 @@
-# Manual test checklist - Vertex 0.3.0-rc1
+# Manual test checklist - Vertex 0.3.0
 
 Automated coverage (unit tests, autonomous soaks, stress cycles) runs via the harness
 flags documented in docs/ARCHITECTURE.md. The items below are the ones that need eyes.
 
-## Multi-core visual sign-off (the release-blocking item)
+## Multi-core visual sign-off (promotion gate for default-on)
+
+Multicore ships as an experimental opt-in; this check promotes it to default in a
+future release. It does not block using 0.3.0's default configuration.
 
 1. Launch the 1.7.10-Vertex profile with `-Dvertex.multicore=true`.
 2. Join a world; fly fast in one direction for ~60s, then turn 180 and return.
