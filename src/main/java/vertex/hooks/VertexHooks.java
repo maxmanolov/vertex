@@ -146,6 +146,14 @@ public final class VertexHooks
 
                     if (marker.vertex$needsImmediate())
                     {
+                        // A renderer being built on a worker must not run the vanilla body
+                        // here concurrently (kyrofx #35): keep the flag and the queue entry;
+                        // this consumer picks it up after the worker result drains.
+                        if (VertexMulticore.isInFlight(entry))
+                        {
+                            continue;
+                        }
+
                         if (marker.vertex$isDirty())
                         {
                             marker.vertex$rebuild(viewEntity);
