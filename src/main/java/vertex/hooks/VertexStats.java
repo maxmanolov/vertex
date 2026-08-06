@@ -13,6 +13,7 @@ public final class VertexStats
     private static final long REPORT_INTERVAL_MS = 60000L;
     private static final String[] SKIP_KEYS = {"sky", "clouds", "weather", "voidParticles", "textureAnimations", "fog"};
 
+    public static long emptyReplays = 0L;
     private static long promotions = 0L;
     private static long rebuilds = 0L;
     private static long lastReport = System.currentTimeMillis();
@@ -69,7 +70,7 @@ public final class VertexStats
         long reportRebuilds = rebuilds;
         LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + reportPromotions + " rebuilds=" + reportRebuilds
             + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
-            + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
+            + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " emptyReplays=" + emptyReplays + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " buildQ=" + VertexMulticore.pendingDepth()
             + VertexFrameStats.drainReport()
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
@@ -80,6 +81,7 @@ public final class VertexStats
     {
         promotions = 0L;
         rebuilds = 0L;
+        emptyReplays = 0L;
         VertexIcons.hits = 0L;
         VertexIcons.sideHits = 0L;
         VertexIcons.naturalVariants = 0L;
