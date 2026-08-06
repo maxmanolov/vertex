@@ -41,8 +41,9 @@ public final class VertexStats
 
         if (!VertexConfig.enabled("diagnostics"))
         {
-            promotions = 0L;
-            rebuilds = 0L;
+            // Drain EVERY counter while disabled, or the first enabled report would carry
+            // data accumulated since forever, labelled as one minute (kyrofx #37).
+            drainAll();
             return;
         }
 
@@ -63,10 +64,17 @@ public final class VertexStats
 
         long[] gl = VertexGLStats.drain();
         long redundantPct = gl[0] > 0 ? gl[1] * 100L / gl[0] : 0L;
-        LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + promotions + " rebuilds=" + rebuilds
+        long reportPromotions = promotions;
+        long reportRebuilds = rebuilds;
+        LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + reportPromotions + " rebuilds=" + reportRebuilds
             + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
             + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
+        drainAll();
+    }
+
+    private static void drainAll()
+    {
         promotions = 0L;
         rebuilds = 0L;
         VertexIcons.hits = 0L;
@@ -75,6 +83,7 @@ public final class VertexStats
         VertexRandomEntities.applied = 0L;
         VertexSky.draws = 0L;
         VertexCtm.applied = 0L;
+        VertexGLStats.drain();
     }
 
     private VertexStats()
