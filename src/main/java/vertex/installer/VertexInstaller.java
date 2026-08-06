@@ -112,7 +112,7 @@ public final class VertexInstaller
             }
         }
 
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT);
         String home = System.getProperty("user.home");
 
         if (os.contains("win"))

@@ -69,7 +69,7 @@ public final class SkyLayer
             };
         }
 
-        String blend = trimmed(props.getProperty("blend"), "add").toLowerCase();
+        String blend = trimmed(props.getProperty("blend"), "add").toLowerCase(java.util.Locale.ROOT);
         boolean rotate = !"false".equalsIgnoreCase(trimmed(props.getProperty("rotate"), "true"));
         float speed = parseFloat(props.getProperty("speed"), 1.0F);
         float[] axis = parseAxis(props.getProperty("axis"));

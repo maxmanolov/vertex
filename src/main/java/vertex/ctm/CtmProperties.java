@@ -22,7 +22,7 @@ public final class CtmProperties
 
         static Method parse(String value)
         {
-            String normalized = value.trim().toLowerCase();
+            String normalized = value.trim().toLowerCase(java.util.Locale.ROOT);
 
             if (normalized.equals("ctm") || normalized.equals("glass"))
             {
@@ -63,7 +63,7 @@ public final class CtmProperties
 
         static Connect parse(String value)
         {
-            return valueOf(value.trim().toUpperCase());
+            return valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
         }
     }
 
@@ -178,7 +178,7 @@ public final class CtmProperties
 
         int mask = 0;
 
-        for (String token : value.trim().toLowerCase().split("\\s+"))
+        for (String token : value.trim().toLowerCase(java.util.Locale.ROOT).split("\\s+"))
         {
             if (token.equals("bottom"))
             {

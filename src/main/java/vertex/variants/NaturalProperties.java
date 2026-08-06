@@ -73,7 +73,7 @@ public final class NaturalProperties
             return null;
         }
 
-        String trimmed = value.trim().toUpperCase();
+        String trimmed = value.trim().toUpperCase(java.util.Locale.ROOT);
         boolean flip = trimmed.endsWith("F");
 
         if (flip)
