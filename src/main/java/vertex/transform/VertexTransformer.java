@@ -102,6 +102,28 @@ public class VertexTransformer implements IClassTransformer
                 result = ReturnValuePatch.apply(result, Mappings.BLOCK_MIXED_BRIGHTNESS, Mappings.BLOCK_MIXED_BRIGHTNESS_DESC,
                     "vertex/hooks/VertexDynamicLights", "adjust");
             }
+            else if (Mappings.GUI_NEW_CHAT.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching GuiNewChat (" + name + ")");
+                result = RerouteStaticInMethodPatch.apply(result, Mappings.CHAT_DRAW, Mappings.CHAT_DRAW_DESC,
+                    Mappings.GUI, Mappings.GUI_DRAW_RECT, Mappings.GUI_DRAW_RECT_DESC,
+                    "vertex/hooks/VertexHud", "chatRect");
+            }
+            else if (Mappings.GUI_INGAME.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching GuiIngame (" + name + ")");
+                result = RerouteStaticInMethodPatch.apply(result, Mappings.GI_RENDER_SCOREBOARD, Mappings.GI_RENDER_SCOREBOARD_DESC,
+                    Mappings.GUI, Mappings.GUI_DRAW_RECT, Mappings.GUI_DRAW_RECT_DESC,
+                    "vertex/hooks/VertexHud", "scoreboardRect");
+            }
+            else if (Mappings.SCREEN_CHAT_OPTIONS.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching ScreenChatOptions (" + name + ")");
+                result = TailInstanceCallPatch.apply(result, Mappings.SCREEN_INIT_GUI, Mappings.SCREEN_INIT_GUI_DESC,
+                    "vertex/hooks/VertexHud", "chatOptionsInit");
+                result = HeadGuardPatch.apply(result, Mappings.SCREEN_ACTION_PERFORMED, Mappings.SCREEN_ACTION_PERFORMED_DESC,
+                    "vertex/hooks/VertexHud", "chatOptionsAction", HeadGuardPatch.THIS_AND_OBJECT);
+            }
             else if (Mappings.WORLD_CLIENT.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching WorldClient (" + name + ")");

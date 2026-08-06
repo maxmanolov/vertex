@@ -34,6 +34,8 @@ public final class VertexConfig
         {"randomEntities", "true", "Per-mob texture variants when a pack supplies numbered siblings"},
         {"customSky", "true", "Draw pack-defined custom sky layers"},
         {"connectedTextures", "true", "Connected textures from a pack's mcpatcher/ctm rules"},
+        {"chatBackground", "true", "Draw the translucent background behind chat lines"},
+        {"scoreboardBackground", "true", "Draw the translucent background behind the scoreboard sidebar"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
     };
 
@@ -76,6 +78,34 @@ public final class VertexConfig
     public static boolean skip(String key)
     {
         return !enabled(key);
+    }
+
+    /**
+     * In-game toggle support: set one key and rewrite the file in the same commented
+     * format, carrying over current values and preserving keys Vertex doesn't declare.
+     * lastModified is re-read after the write so our own save doesn't trigger a reload.
+     */
+    public static synchronized void setAndSave(String key, boolean value)
+    {
+        refresh();
+        values.setProperty(key, String.valueOf(value));
+
+        if (file == null)
+        {
+            return;
+        }
+
+        try
+        {
+            writeCurrent();
+            lastModified = file.lastModified();
+            LogWrapper.info("[Vertex] Saved " + key + "=" + value + " to " + file.getName());
+        }
+        catch (Exception e)
+        {
+            // The in-memory toggle already applied; a failed save only loses persistence.
+            LogWrapper.warning("[Vertex] Could not save vertex.properties: " + e);
+        }
     }
 
     private static void refresh()
@@ -137,6 +167,12 @@ public final class VertexConfig
 
     private static void writeDefaults() throws Exception
     {
+        values.clear();
+        writeCurrent();
+    }
+
+    private static void writeCurrent() throws Exception
+    {
         Writer out = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
 
         try
@@ -146,14 +182,37 @@ public final class VertexConfig
 
             for (String[] key : KEYS)
             {
+                String value = values.getProperty(key[0], key[1]).trim();
                 out.write("# " + key[2] + "\n");
-                out.write(key[0] + "=" + key[1] + "\n\n");
+                out.write(key[0] + "=" + value + "\n\n");
+            }
+
+            // Keys we don't declare (hand-added or from a newer/older version) survive saves.
+            for (String name : values.stringPropertyNames())
+            {
+                if (!declaresKey(name))
+                {
+                    out.write(name + "=" + values.getProperty(name) + "\n");
+                }
             }
         }
         finally
         {
             out.close();
         }
+    }
+
+    private static boolean declaresKey(String name)
+    {
+        for (String[] entry : KEYS)
+        {
+            if (entry[0].equals(name))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private VertexConfig()

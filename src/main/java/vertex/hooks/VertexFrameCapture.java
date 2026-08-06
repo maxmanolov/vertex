@@ -29,6 +29,8 @@ public final class VertexFrameCapture
 {
     private static final String SHOT_DIR = System.getProperty("vertex.test.shotDir");
     private static final boolean MOTION = Boolean.getBoolean("vertex.test.motion");
+    // HUD comparisons (chat/scoreboard backgrounds) need the GUI visible in shots.
+    private static final boolean SHOW_HUD = Boolean.getBoolean("vertex.test.showHud");
     private static final int MOTION_SHOTS = 24;
     private static final int MOTION_FRAME_STRIDE = 40;
     private static final double MOTION_SPEED = 0.25D;
@@ -146,7 +148,7 @@ public final class VertexFrameCapture
                     setWorldTime.invoke(serverWorlds[0], Long.valueOf(6000L));
                 }
             }
-            hideGui.setBoolean(gameSettings.get(minecraft), true);
+            hideGui.setBoolean(gameSettings.get(minecraft), !SHOW_HUD);
             // difficulty is EnumDifficulty in 1.7.10; PEACEFUL is the first constant.
             difficulty.set(gameSettings.get(minecraft), difficulty.getType().getEnumConstants()[0]);
             // The focusless test window would auto-pause into GuiIngameMenu, which is
