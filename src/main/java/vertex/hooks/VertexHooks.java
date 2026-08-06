@@ -173,7 +173,38 @@ public final class VertexHooks
         }
     }
 
+    /** Frame capture: live (non-null) build-queue entries, or -1 when unavailable. */
+    public static int pendingUpdates(Object renderGlobal)
+    {
+        try
+        {
+            if (!ready(renderGlobal))
+            {
+                return -1;
+            }
+
+            // The vanilla queue retains nulled slots between compactions; raw size()
+            // almost never reaches zero, so count live entries.
+            int live = 0;
+
+            for (Object entry : (List<?>)worldRenderersToUpdate.get(renderGlobal))
+            {
+                if (entry != null)
+                {
+                    ++live;
+                }
+            }
+
+            return live;
+        }
+        catch (Exception e)
+        {
+            return -1;
+        }
+    }
+
     /** Test-harness entry: gate-free section promotion for synthetic rebuild load. */
+
     static void promoteForTest(Object renderGlobal, int x, int y, int z) throws Exception
     {
         if (ready(renderGlobal))

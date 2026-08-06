@@ -198,6 +198,24 @@ public final class Mappings
     public static final String WC_DO_VOID_FOG_PARTICLES = "C";
     public static final String WC_DO_VOID_FOG_PARTICLES_DESC = "(III)V";
 
+    /* Stress harness members (resolved from MCP 1.7.10 srg):
+     * Minecraft.gameSettings=u  GameSettings(bbj).renderDistanceChunks=c  hideGUI=av
+     * Entity.setPosition=b(DDD)V  rotationYaw=y  rotationPitch=z
+     * World.setWorldTime=b(J)V  Minecraft.refreshResources=c()V  shutdown=k()V
+     * Minecraft.loadWorld=a(Lbjf;)V
+     */
+    public static final String MC_GAME_SETTINGS = "u";
+    public static final String GS_RENDER_DISTANCE = "c";
+    public static final String GS_HIDE_GUI = "av";
+    public static final String ENTITY_SET_POSITION = "b";
+    public static final String ENTITY_SET_POSITION_DESC = "(DDD)V";
+    public static final String ENTITY_ROTATION_YAW = "y";
+    public static final String ENTITY_ROTATION_PITCH = "z";
+    public static final String WORLD_SET_TIME = "b";
+    public static final String MC_REFRESH_RESOURCES = "c";
+    public static final String MC_SHUTDOWN = "k";
+    public static final String MC_LOAD_WORLD = "a";
+
     private Mappings()
     {
     }
