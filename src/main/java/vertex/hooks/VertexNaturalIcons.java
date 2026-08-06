@@ -21,6 +21,15 @@ public final class VertexNaturalIcons
     private static final Map<String, Object> cache = new ConcurrentHashMap<String, Object>();
     private static volatile boolean broken = false;
 
+    /**
+     * Resource reload: the atlas rebuilds and every icon object is replaced, so cached
+     * proxies reference dead sprites and pin the old atlas's objects (kyrofx #42).
+     */
+    public static void onResourceReload()
+    {
+        cache.clear();
+    }
+
     public static Object variant(final Object baseIcon, final boolean flipU, final boolean flipV)
     {
         if (broken || (!flipU && !flipV))

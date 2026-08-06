@@ -93,6 +93,7 @@ public final class VertexPackLoader
     {
         lastManager = manager;
         VertexRandomEntities.onResourceReload();
+        VertexNaturalIcons.onResourceReload();
 
         try
         {
