@@ -22,6 +22,7 @@ public final class VertexDynamicLightsCollector
     private static boolean initialized = false;
     private static boolean disabled = false;
     private static int tickCounter = 0;
+    private static boolean wasEnabled = false;
 
     private static Field theWorld;
     private static Field renderGlobal;
@@ -36,10 +37,39 @@ public final class VertexDynamicLightsCollector
 
     public static void tick(Object minecraft)
     {
-        if (disabled || !VertexConfig.enabled("dynamicLights"))
+        if (disabled)
         {
             return;
         }
+
+        boolean enabled = VertexConfig.enabled("dynamicLights");
+
+        if (!enabled)
+        {
+            // Turning the feature off must also remove light already baked into display
+            // lists (kyrofx #33): publish an empty snapshot once, so the tracker emits
+            // remarks for every formerly lit position and those sections rebuild dark.
+            if (wasEnabled && initialized)
+            {
+                try
+                {
+                    publish(minecraft, new int[0]);
+                }
+                catch (Exception e)
+                {
+                    disabled = true;
+                    LogWrapper.severe("[Vertex] Dynamic light collector disabled after failure");
+                    e.printStackTrace();
+                }
+            }
+
+            wasEnabled = false;
+            return;
+        }
+
+        // Re-enabling needs no special case: the next publish diffs against the empty
+        // snapshot and re-marks every current source's surroundings.
+        wasEnabled = true;
 
         if (++tickCounter % 4 != 0)
         {
