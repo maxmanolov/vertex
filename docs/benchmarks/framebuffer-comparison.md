@@ -47,3 +47,14 @@ Multi-core visual sign-off remains on the MANUAL test checklist (fly-through wit
 `-Dvertex.multicore=true`). The machine evidence gathered so far - silhouette-exact
 control masks and ~10k worker-built sections replaying without geometry faults in stress
 runs - is strong but is not claimed as a substitute for eyes on the screen.
+
+## Motion-burst mode (experimental, added post-rc2)
+
+`-Dvertex.test.motion=true` flies the camera smoothly along +Z while capturing a
+sequential frame burst, for consecutive-frame temporal analysis (section flicker and
+pop-in produce delta spikes steady parallax cannot). Current limitation, measured: the
+combination of per-frame repositioning, fresh terrain generation, and synchronous
+front-buffer readback collapses the client to under 1 fps on GL-over-Metal, yielding
+3-frame series (~95% deltas - fully changed scenes) that cannot support temporal claims.
+Making this a usable gate needs asynchronous PBO readback and a pre-generated flight
+corridor in the fixture world. Until then, in-motion verification remains a manual item.
