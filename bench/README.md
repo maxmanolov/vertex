@@ -1,115 +1,114 @@
 # Local client benchmark
 
-Use this harness to compare Minecraft 1.7.10 clients on one computer. The harness uses
-one external frame collector for all clients. It does not load Vertex code into the
-baseline clients.
+Use the quick benchmark to compare Vanilla 1.7.10 with Vertex or a supported
+OptiFine 1.7.10 JAR on one Windows computer. You do not need a plan file or a
+process ID.
 
-## Requirements
+## Quick start
 
-- Use JDK 17 to build the harness. The Gradle wrapper supports JDK 8 through JDK 23.
-  The output runs on JDK 8.
-- On Windows, use the [PresentMon console application](https://github.com/GameTechDev/PresentMon/blob/main/README-ConsoleApplication.md).
-- Add your account to the Windows `Performance Log Users` group if PresentMon reports
-  an access error.
-- Install each client before you start the suite. Supply your own OptiFine files. Use
-  manual launch mode for Lunar Client.
+Requirements:
 
-The harness does not read launcher account files. It writes the effective plan to the
-result directory. This plan includes metadata, instructions, and configured paths. Do
-not put tokens, passwords, session IDs, account data, or other credentials in a plan.
-Review the result files before you share them.
+- Install Minecraft Java Edition 1.7.10 with the official launcher.
+- Start Vanilla 1.7.10 one time, and then close the game and launcher.
+- Supply the Vertex or OptiFine JAR that you want to test.
 
-## Build
-
-On Windows:
+Build the Windows package:
 
 ```text
-gradlew.bat benchmarkJar benchmarkTest
+gradlew.bat benchmarkDist benchmarkTest
 ```
 
-On macOS or Linux:
+Extract `build/distributions/vertex-benchmark-<version>-windows.zip`. Then use
+one of these methods:
+
+1. Drag one or more supported client JAR files onto `benchmark.cmd`.
+2. Start `benchmark.cmd`, and select the JAR files in the file window.
+
+Do not use the computer while the benchmark runs. The result opens when the
+test is complete.
+
+Quick mode records raw game-loop intervals through the neutral controller. It
+does not need a separate frame collector, administrator access, or a process
+ID. It does not measure display-present events or dropped display frames.
+
+## Test scenarios
+
+The quick benchmark uses the same neutral scenario controller in each standard
+client. It creates a new offline world with a fixed seed for each run. It tests:
+
+- Static world rendering with a fixed camera.
+- Chunk travel and loading at 24 blocks per second.
+- 1,920 block and lighting updates per second.
+- 160 moving pigs with AI, pathfinding, and collision.
+
+The report shows each scenario separately. It also shows an equal-weight
+combined index. The combined index is not an FPS value.
+
+The standard preset runs three repetitions for each client. The fast preset
+runs one repetition and is only a smoke comparison:
 
 ```text
-./gradlew benchmarkJar benchmarkTest
+java -jar vertex-benchmark.jar quick client.jar --preset fast
 ```
 
-The output file is `build/libs/vertex-benchmark-<version>.jar`.
+## Safety and isolation
 
-## Configure
+The quick benchmark uses the installed Vanilla 1.7.10 libraries, assets, and
+legacy Java runtime. A client JAR does not contain these files.
 
-Copy `bench/profiles.example.json` to `bench/profiles.local.json`. Edit these fields:
+The tool does not read launcher account files. It uses an offline benchmark
+identity. It creates a separate game directory, world, native directory, log,
+and capture for each run under `%LOCALAPPDATA%\VertexBenchmark`. It does not
+write to the installed Minecraft directory.
 
-- Set `collector.executable` to the PresentMon console executable.
-- Set `collector.metric` to `presented` or `displayed`. Do not use `auto` in a suite
-  plan. The `auto` value is only for the single-file `analyze` command.
-- Set the resolution and game settings to the values that you use.
-- Add each client `options.txt` path to `settingsFiles` when the path is stable.
-- Change `processName` if the render process does not use `javaw.exe`.
-- Add the exact client version or build to `metadata`.
+The tool checks JAR structure before it runs a file. It does not run an unknown
+JAR. This structure check is not a security scan. Use JAR files from a source
+that you trust.
 
-Use one plan for a quality-parity test. Use a different plan for a client-optimized
-test. Do not combine these test types in one report.
+## Supported clients
 
-Validate the plan:
-
-```text
-java -jar build/libs/vertex-benchmark-0.3.2.jar validate --plan bench/profiles.local.json
-```
-
-## Run
-
-Close all other processes that use the configured `processName` before each capture.
-Then run:
-
-```text
-java -jar build/libs/vertex-benchmark-0.3.2.jar run --plan bench/profiles.local.json
-```
-
-The harness shows the next profile in a seeded, position-balanced order. Every run
-uses a full client close and a cooldown as a washout. The order does not balance
-continuous carryover because no client stays open between runs. For each run:
-
-1. Start the requested client.
-2. Load the same world.
-3. Set the same camera position, yaw, pitch, time, and weather.
-4. Apply the settings in the plan.
-5. Return to the harness and press Enter.
-6. Enter the game process ID. On Windows, use Task Manager **Details**, or run
-   `Get-Process -Name javaw | Select-Object Id,ProcessName` in PowerShell. Change
-   `javaw` if the plan uses a different process name.
-7. Return focus to the game during the five-second focus-settle countdown.
-8. Do not change focus or open a menu during warm-up or capture.
-9. Close the client when the harness requests it. The next run cannot start until the
-   target process and any command-launched process have stopped.
-
-Use a static camera for the first suite. For a motion test, use the same pre-generated
-course or the same external server for every client. Do not use the Vertex churn driver
-for a cross-client result. It is not available in the baseline clients.
-
-## Import mode
-
-Set `collector.type` to `import` to use CSV files from a separate capture workflow. The
-harness requests one file for each run. The CSV must contain a supported frame-time
-column, `ProcessID`, and the entered game process ID. Supported frame-time columns
-include `MsBetweenPresents`, `FrameTime`, `MsBetweenAppStart`, `DisplayedTime`, and
-`MsBetweenDisplayChange`. The standalone `analyze` command can read a file without
-`ProcessID`, but suite imports require process identity.
+- Vanilla 1.7.10 is the automatic baseline.
+- Vertex JARs use the automatic standard-client adapter.
+- Supported OptiFine 1.7.10 JARs use the automatic standard-client adapter.
+- Lunar Client does not use a standalone client JAR. Use the advanced manual
+  workflow for an installed Lunar Client. Do not compare its manual result with
+  the automatic scenario index as if both test methods are the same.
 
 ## Output
 
-The harness creates a new timestamped suite directory. It does not overwrite an existing
-run. The directory contains:
+The tool opens `summary.html`. The quick report includes mean FPS, 1% low FPS,
+0.1% low FPS, game-loop interval percentiles, and the change from Vanilla. It
+keeps the raw CSV and one JSON record for each capture.
 
-- The effective plan.
-- The raw CSV and its SHA-256 value for each run.
-- One JSON record for each run.
-- JSON, CSV, and Markdown summaries.
+Do not compare reports from different computers. Keep the power mode, display
+mode, graphics driver, and background programs constant.
 
-The report calculates each run before it combines runs. It uses nearest-rank
-percentiles. It reports mean FPS, p50, p95, p99, p99.9, maximum frame time, 1% low, and
-0.1% low. It does not remove outliers. A selected series with any dropped frame is
-invalid and is not included in aggregate performance results.
+## Advanced manual workflow
 
-Do not compare reports from different computers. Keep the power mode, display mode,
-driver, Java version, heap, world, settings, and background programs constant. Use at
-least three valid repetitions for each profile.
+The JSON workflow remains available for clients that the quick adapter cannot
+start. Copy `bench/profiles.example.json`, edit it, and validate it:
+
+```text
+java -jar vertex-benchmark.jar validate --plan bench/profiles.local.json
+```
+
+Run the plan:
+
+```text
+java -jar vertex-benchmark.jar run --plan bench/profiles.local.json
+```
+
+Manual mode asks you to start the client, load a repeatable scene, enter the
+render process ID, and keep the client focused during capture. Use the same
+external frame collector and the same scene for all clients in one manual
+report. On Windows, use the [PresentMon console application](https://github.com/GameTechDev/PresentMon/blob/main/README-ConsoleApplication.md).
+Do not use the Vertex-only churn driver for a cross-client result.
+
+The harness writes configured paths, metadata, and instructions to the manual
+result. Do not put passwords, tokens, session IDs, or account data in a plan.
+
+To analyze one existing capture:
+
+```text
+java -jar vertex-benchmark.jar analyze --csv frames.csv --metric presented
+```

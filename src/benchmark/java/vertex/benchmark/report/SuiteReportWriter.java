@@ -31,6 +31,7 @@ public final class SuiteReportWriter
     public static final String SUMMARY_JSON = "summary.json";
     public static final String SUMMARY_CSV = "summary.csv";
     public static final String SUMMARY_MARKDOWN = "summary.md";
+    public static final String SUMMARY_HTML = "summary.html";
 
     private static final Gson GSON = new GsonBuilder()
         .serializeNulls()
@@ -192,7 +193,7 @@ public final class SuiteReportWriter
         return output;
     }
 
-    /** Writes the three suite summary files. */
+    /** Writes the suite summary files. */
     public static void writeSummary(Path outputDirectory, String baselineProfileId,
         int requiredValidRepetitions, Collection<RunRecord> records) throws IOException
     {
@@ -237,8 +238,17 @@ public final class SuiteReportWriter
         addString(collector, "swapChain", record.getSwapChain());
         addString(collector, "rawCsvSha256", record.getRawCsvSha256());
         collector.addProperty("invalidRows", Integer.valueOf(record.getInvalidRowCount()));
-        collector.addProperty("droppedFrames",
-            Integer.valueOf(record.getDroppedFrameCount()));
+        collector.addProperty("droppedFrameDetectionAvailable",
+            Boolean.valueOf(record.isDroppedFrameCountAvailable()));
+        if (record.isDroppedFrameCountAvailable())
+        {
+            collector.addProperty("droppedFrames",
+                Integer.valueOf(record.getDroppedFrameCount()));
+        }
+        else
+        {
+            collector.add("droppedFrames", JsonNull.INSTANCE);
+        }
         root.add("collector", collector);
 
         JsonObject hashes = new JsonObject();
@@ -283,6 +293,13 @@ public final class SuiteReportWriter
             requiredValidRepetitions, records));
     }
 
+    public static String toSummaryHtml(String baselineProfileId,
+        int requiredValidRepetitions, Collection<RunRecord> records)
+    {
+        return summaryHtml(summarize(baselineProfileId,
+            requiredValidRepetitions, records));
+    }
+
     /** Returns the directory name for one run ID. */
     public static String runDirectoryName(String runId)
     {
@@ -318,6 +335,7 @@ public final class SuiteReportWriter
         writeUtf8(outputDirectory.resolve(SUMMARY_JSON), summaryJson(summary));
         writeUtf8(outputDirectory.resolve(SUMMARY_CSV), summaryCsv(summary));
         writeUtf8(outputDirectory.resolve(SUMMARY_MARKDOWN), summaryMarkdown(summary));
+        writeUtf8(outputDirectory.resolve(SUMMARY_HTML), summaryHtml(summary));
     }
 
     private static String summaryJson(Summary summary)
@@ -518,6 +536,134 @@ public final class SuiteReportWriter
             }
         }
         return markdown.toString();
+    }
+
+    private static String summaryHtml(Summary summary)
+    {
+        StringBuilder html = new StringBuilder(8192);
+        html.append("<!doctype html>\n<html lang=\"en\">\n<head>\n")
+            .append("<meta charset=\"utf-8\">\n")
+            .append("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n")
+            .append("<title>Minecraft benchmark results</title>\n")
+            .append("<style>\n")
+            .append(":root{color-scheme:light dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif}")
+            .append("body{max-width:1100px;margin:0 auto;padding:32px 20px;line-height:1.45}")
+            .append("h1{margin-bottom:8px}h2{margin-top:32px}")
+            .append(".meta,.note{color:#667085}.warning{border-left:4px solid #d97706;padding:8px 12px;background:#d9770618}")
+            .append(".table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%}")
+            .append("th,td{padding:10px 12px;border-bottom:1px solid #8885;text-align:right;white-space:nowrap}")
+            .append("th:first-child,td:first-child{text-align:left}.positive{color:#16803c;font-weight:700}")
+            .append(".negative{color:#c52a2a;font-weight:700}.neutral{font-weight:700}")
+            .append("a{color:#2563eb}code{font-family:ui-monospace,Consolas,monospace}\n")
+            .append("</style>\n</head>\n<body>\n")
+            .append("<h1>Minecraft benchmark results</h1>\n");
+
+        if (summary.suiteId != null)
+        {
+            html.append("<p class=\"meta\">Suite: <code>")
+                .append(html(summary.suiteId)).append("</code></p>\n");
+        }
+        html.append("<p class=\"meta\">Baseline: <code>")
+            .append(html(summary.baselineProfileId)).append("</code> &middot; Required valid runs: ")
+            .append(summary.requiredValidRepetitions).append("</p>\n");
+
+        if (!summary.suiteWarnings.isEmpty())
+        {
+            html.append("<section class=\"warning\"><h2>Warnings</h2><ul>\n");
+            for (String warning : summary.suiteWarnings)
+            {
+                html.append("<li>").append(html(warning)).append("</li>\n");
+            }
+            html.append("</ul></section>\n");
+        }
+
+        html.append("<h2>Results</h2>\n")
+            .append("<p class=\"note\">These values are medians. Positive improvement means that the candidate performs better.</p>\n")
+            .append("<div class=\"table-wrap\"><table>\n<thead><tr>")
+            .append("<th>Profile</th><th>Valid runs</th><th>Mean FPS</th><th>1% low FPS</th>")
+            .append("<th>Mean frame time</th><th>P99 frame time</th></tr></thead>\n<tbody>\n");
+        for (ProfileAggregate profile : summary.profiles)
+        {
+            html.append("<tr><td>").append(html(profile.profileLabel)).append(" <code>")
+                .append(html(profile.profileId)).append("</code></td><td>")
+                .append(profile.validCount).append(" / ")
+                .append(summary.requiredValidRepetitions).append(profile.sufficient ? "" : " (insufficient)")
+                .append("</td><td>").append(number(profile.metrics[MEAN_FPS].median()))
+                .append("</td><td>").append(number(profile.metrics[ONE_PERCENT_LOW].median()))
+                .append("</td><td>").append(number(profile.metrics[MEAN_FRAME_TIME].median()))
+                .append(" ms</td><td>").append(number(profile.metrics[P99].median()))
+                .append(" ms</td></tr>\n");
+        }
+        html.append("</tbody></table></div>\n");
+
+        if (!summary.comparisons.isEmpty())
+        {
+            html.append("<h2>Improvement from baseline</h2>\n")
+                .append("<div class=\"table-wrap\"><table>\n<thead><tr>")
+                .append("<th>Profile</th><th>Paired runs</th><th>Mean FPS</th><th>1% low FPS</th>")
+                .append("<th>Mean frame time</th><th>P99 frame time</th></tr></thead>\n<tbody>\n");
+            for (ComparisonAggregate comparison : summary.comparisons)
+            {
+                ProfileAggregate profile = summary.profileById.get(comparison.profileId);
+                html.append("<tr><td>").append(html(profile.profileLabel)).append(" <code>")
+                    .append(html(comparison.profileId)).append("</code></td><td>")
+                    .append(comparison.pairedCount)
+                    .append(comparison.sufficient ? "" : " (insufficient)").append("</td>")
+                    .append(improvementCell(comparison.improvements[0].median()))
+                    .append(improvementCell(comparison.improvements[3].median()))
+                    .append(improvementCell(comparison.improvements[1].median()))
+                    .append(improvementCell(comparison.improvements[2].median()))
+                    .append("</tr>\n");
+            }
+            html.append("</tbody></table></div>\n");
+        }
+
+        html.append("<p class=\"note\">No outlier was removed. Open ")
+            .append("<a href=\"summary.csv\">summary.csv</a>, ")
+            .append("<a href=\"summary.json\">summary.json</a>, or ")
+            .append("<a href=\"summary.md\">summary.md</a> for more data.</p>\n")
+            .append("</body>\n</html>\n");
+        return html.toString();
+    }
+
+    private static String improvementCell(double value)
+    {
+        String style = "neutral";
+        if (!Double.isNaN(value) && !Double.isInfinite(value))
+        {
+            if (value > 0.0000001D)
+            {
+                style = "positive";
+            }
+            else if (value < -0.0000001D)
+            {
+                style = "negative";
+            }
+        }
+        return "<td class=\"" + style + "\">" + percent(value) + "</td>";
+    }
+
+    private static String html(String value)
+    {
+        if (value == null)
+        {
+            return "";
+        }
+        StringBuilder escaped = new StringBuilder(value.length() + 16);
+        for (int index = 0; index < value.length(); ++index)
+        {
+            char character = value.charAt(index);
+            switch (character)
+            {
+                case '&': escaped.append("&amp;"); break;
+                case '<': escaped.append("&lt;"); break;
+                case '>': escaped.append("&gt;"); break;
+                case '"': escaped.append("&quot;"); break;
+                case '\'': escaped.append("&#39;"); break;
+                default: escaped.append(character); break;
+            }
+        }
+        return escaped.toString();
     }
 
     private static Summary summarize(String baselineProfileId,

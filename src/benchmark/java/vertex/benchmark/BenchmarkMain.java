@@ -1,10 +1,14 @@
 package vertex.benchmark;
 
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import vertex.benchmark.plan.BenchmarkPlan;
 import vertex.benchmark.plan.BenchmarkPlanIO;
+import vertex.benchmark.quick.QuickBenchmark;
 
 /** Entry point for the standalone local benchmark harness. */
 public final class BenchmarkMain
@@ -23,7 +27,7 @@ public final class BenchmarkMain
     {
         try
         {
-            CliArguments parsed = CliArguments.parse(arguments);
+            CliArguments parsed = CliArguments.parse(normalize(arguments));
             String command = parsed.getCommand();
 
             if (command.equals("help") || parsed.flag("help"))
@@ -56,6 +60,12 @@ public final class BenchmarkMain
                 return 0;
             }
 
+            if (command.equals("quick"))
+            {
+                new QuickBenchmark().run(parsed);
+                return 0;
+            }
+
             throw new IllegalArgumentException("Unknown command: " + command);
         }
         catch (Exception error)
@@ -82,9 +92,47 @@ public final class BenchmarkMain
     {
         System.out.println("Vertex local client benchmark");
         System.out.println("Usage:");
+        System.out.println("  java -jar vertex-benchmark.jar quick [client.jar ...] [--preset fast|standard]");
+        System.out.println("      [--mcdir <directory>] [--no-open] [--dry-run]");
         System.out.println("  java -jar vertex-benchmark.jar validate --plan <file>");
         System.out.println("  java -jar vertex-benchmark.jar run --plan <file> [--presentmon <file>] [--dry-run]");
         System.out.println("  java -jar vertex-benchmark.jar analyze --csv <file> [--metric presented|displayed|auto]");
+    }
+
+    private static String[] normalize(String[] arguments)
+    {
+        if (arguments.length == 0)
+        {
+            return new String[] {"quick"};
+        }
+
+        if (isCommand(arguments[0]))
+        {
+            return arguments;
+        }
+
+        try
+        {
+            if (!Files.exists(Paths.get(arguments[0])))
+            {
+                return arguments;
+            }
+        }
+        catch (RuntimeException invalidPath)
+        {
+            return arguments;
+        }
+
+        List<String> values = new ArrayList<String>();
+        values.add("quick");
+        values.addAll(Arrays.asList(arguments));
+        return values.toArray(new String[values.size()]);
+    }
+
+    private static boolean isCommand(String value)
+    {
+        return value.equals("help") || value.equals("validate") || value.equals("analyze")
+            || value.equals("run") || value.equals("quick");
     }
 
     private BenchmarkMain()

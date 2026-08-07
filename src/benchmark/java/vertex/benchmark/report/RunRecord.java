@@ -53,6 +53,7 @@ public final class RunRecord
     private final String rawCsvSha256;
     private final int invalidRowCount;
     private final int droppedFrameCount;
+    private final boolean droppedFrameCountAvailable;
     private final Map<String, String> settingsHashesBefore;
     private final Map<String, String> settingsHashesAfter;
     private final Map<String, String> hostFields;
@@ -119,6 +120,7 @@ public final class RunRecord
         rawCsvSha256 = builder.rawCsvSha256;
         invalidRowCount = builder.invalidRowCount;
         droppedFrameCount = builder.droppedFrameCount;
+        droppedFrameCountAvailable = builder.droppedFrameCountAvailable;
         settingsHashesBefore = copyMap(builder.settingsHashesBefore);
         settingsHashesAfter = copyMap(builder.settingsHashesAfter);
         hostFields = copyMap(builder.hostFields);
@@ -256,6 +258,11 @@ public final class RunRecord
         return droppedFrameCount;
     }
 
+    public boolean isDroppedFrameCountAvailable()
+    {
+        return droppedFrameCountAvailable;
+    }
+
     public Map<String, String> getSettingsHashesBefore()
     {
         return settingsHashesBefore;
@@ -332,6 +339,7 @@ public final class RunRecord
         private String rawCsvSha256;
         private int invalidRowCount;
         private int droppedFrameCount;
+        private boolean droppedFrameCountAvailable = true;
         private Map<String, String> settingsHashesBefore =
             new LinkedHashMap<String, String>();
         private Map<String, String> settingsHashesAfter =
@@ -504,6 +512,12 @@ public final class RunRecord
         public Builder droppedFrameCount(int value)
         {
             droppedFrameCount = value;
+            return this;
+        }
+
+        public Builder droppedFrameCountAvailable(boolean value)
+        {
+            droppedFrameCountAvailable = value;
             return this;
         }
 

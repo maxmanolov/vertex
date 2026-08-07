@@ -40,6 +40,8 @@ dependencies {
     compileOnly 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
     testImplementation 'junit:junit:4.13.2'
     benchmarkImplementation 'com.google.code.gson:gson:2.2.4'
+    benchmarkImplementation 'net.minecraft:launchwrapper:1.12'
+    benchmarkImplementation 'org.ow2.asm:asm-debug-all:5.0.3'
     benchmarkTestImplementation 'junit:junit:4.13.2'
 }
 
@@ -91,6 +93,22 @@ tasks.register('benchmarkJar', Jar) {
     }
     manifest {
         attributes('Main-Class': 'vertex.benchmark.BenchmarkMain')
+    }
+}
+
+tasks.register('benchmarkDist', Zip) {
+    description = 'Builds the Windows drag-and-drop benchmark package.'
+    group = 'distribution'
+    dependsOn tasks.named('benchmarkJar')
+    archiveBaseName = 'vertex-benchmark'
+    archiveClassifier = 'windows'
+
+    from(tasks.named('benchmarkJar')) {
+        rename { 'vertex-benchmark.jar' }
+    }
+    from('bench/benchmark.cmd')
+    from('bench/README-QUICK.txt') {
+        rename { 'README.txt' }
     }
 }
 

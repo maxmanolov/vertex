@@ -119,6 +119,41 @@ public final class SuiteReportWriterTest
     }
 
     @Test
+    public void writesStandaloneHtmlWithEscapedValues()
+    {
+        String html = SuiteReportWriter.toSummaryHtml("vanilla", 1,
+            Arrays.asList(
+                valid("base-1", "vanilla", "Vanilla", 1, 1, 10.0D),
+                valid("fast-1", "fast", "Fast <client> & test", 1, 2, 8.0D)
+            ));
+
+        assertTrue(html.startsWith("<!doctype html>"));
+        assertTrue(html.contains("Fast &lt;client&gt; &amp; test"));
+        assertFalse(html.contains("Fast <client> & test"));
+        assertTrue(html.contains("+25.000%"));
+        assertTrue(html.contains("class=\"positive\""));
+        assertTrue(html.contains("summary.csv"));
+    }
+
+    @Test
+    public void writesHtmlWithoutNonFiniteNumbers()
+    {
+        RunRecord invalid = RunRecord.builder("bad-1", 1, 2, "bad")
+            .profileLabel("Bad")
+            .status(RunRecord.Status.INVALID)
+            .failure("No usable frame rows.")
+            .build();
+
+        String html = SuiteReportWriter.toSummaryHtml("vanilla", 1,
+            Arrays.asList(valid("base-1", "vanilla", "Vanilla", 1, 1, 10.0D),
+                invalid));
+
+        assertTrue(html.contains("n/a"));
+        assertFalse(html.contains("NaN"));
+        assertFalse(html.contains("Infinity"));
+    }
+
+    @Test
     public void writesRunRecordBesideCaptureFile() throws Exception
     {
         FrameMetrics metrics = constantMetrics(8.0D);
@@ -151,8 +186,26 @@ public final class SuiteReportWriterTest
         assertTrue(json.contains("\"schemaVersion\": 1"));
         assertTrue(json.contains("\"selectedColumn\": \"MsBetweenPresents\""));
         assertTrue(json.contains("\"rawCsvSha256\": \"abc123\""));
+        assertTrue(json.contains("\"droppedFrameDetectionAvailable\": true"));
         assertTrue(json.contains("\"droppedFrames\": 3"));
         assertTrue(json.contains("\"onePercentLowFps\""));
+    }
+
+    @Test
+    public void writesUnavailableDroppedFrameCountAsNull() throws Exception
+    {
+        RunRecord record = RunRecord.builder("internal", 1, 1, "vanilla")
+            .collector("internal-game-loop", "game-loop-interval", "FrameTime")
+            .droppedFrameCountAvailable(false)
+            .metrics(constantMetrics(10.0D))
+            .build();
+        Path output = temporaryFolder.newFolder("internal-suite").toPath();
+
+        Path recordFile = SuiteReportWriter.writeRun(output, record);
+        String json = new String(Files.readAllBytes(recordFile), StandardCharsets.UTF_8);
+
+        assertTrue(json.contains("\"droppedFrameDetectionAvailable\": false"));
+        assertTrue(json.contains("\"droppedFrames\": null"));
     }
 
     @Test
@@ -163,16 +216,20 @@ public final class SuiteReportWriterTest
             valid("base-1", "vanilla", "Vanilla", 1, 1, 10.0D));
 
         SuiteReportWriter.writeSuite(output, "quality,parity", "vanilla", 1,
-            records, Collections.singletonList("Keep the power mode constant."));
+            records, Collections.singletonList("Keep <power> & mode constant."));
 
         assertTrue(Files.isRegularFile(output.resolve("runs").resolve("base-1")
             .resolve("run.json")));
         assertTrue(Files.isRegularFile(output.resolve("summary.json")));
         assertTrue(Files.isRegularFile(output.resolve("summary.csv")));
         assertTrue(Files.isRegularFile(output.resolve("summary.md")));
+        assertTrue(Files.isRegularFile(output.resolve("summary.html")));
         String csv = new String(Files.readAllBytes(output.resolve("summary.csv")),
             StandardCharsets.UTF_8);
         assertTrue(csv.contains("\"quality,parity\""));
+        String html = new String(Files.readAllBytes(output.resolve("summary.html")),
+            StandardCharsets.UTF_8);
+        assertTrue(html.contains("Keep &lt;power&gt; &amp; mode constant."));
     }
 
     @Test
@@ -193,6 +250,7 @@ public final class SuiteReportWriterTest
         assertTrue(Files.isRegularFile(output.resolve("summary.json")));
         assertTrue(Files.isRegularFile(output.resolve("summary.csv")));
         assertTrue(Files.isRegularFile(output.resolve("summary.md")));
+        assertTrue(Files.isRegularFile(output.resolve("summary.html")));
     }
 
     private static RunRecord valid(String runId, String profileId, String label,
