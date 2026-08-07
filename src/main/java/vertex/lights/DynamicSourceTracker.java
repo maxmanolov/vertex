@@ -59,8 +59,28 @@ public final class DynamicSourceTracker
 
             if (!present)
             {
-                remarks.add(new int[] {from[i], from[i + 1], from[i + 2]});
+                addRemark(remarks, from[i], from[i + 1], from[i + 2]);
             }
         }
+    }
+
+    /** True while capped remarks from earlier updates are still queued. */
+    public boolean hasPending()
+    {
+        return !this.pending.isEmpty();
+    }
+
+    /** Adds one position unless the same position is already waiting for a rebuild. */
+    private static void addRemark(List<int[]> remarks, int x, int y, int z)
+    {
+        for (int[] remark : remarks)
+        {
+            if (remark[0] == x && remark[1] == y && remark[2] == z)
+            {
+                return;
+            }
+        }
+
+        remarks.add(new int[] {x, y, z});
     }
 }
