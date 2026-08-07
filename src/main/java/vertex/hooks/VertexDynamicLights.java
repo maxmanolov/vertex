@@ -25,6 +25,13 @@ public final class VertexDynamicLights
     /** Called from every Block.getMixedBrightnessForBlock return site. */
     public static int adjust(int packed, int x, int y, int z)
     {
+        // Fullbright overrides everything, dynamic sources included: geometry bakes at
+        // max lightmap coordinates (#116). One volatile read when off.
+        if (VertexFullbright.fullbright())
+        {
+            return VertexFullbright.FULLBRIGHT_PACKED;
+        }
+
         int[] active = sources;
 
         if (active.length == 0 || !VertexConfig.enabled("dynamicLights"))

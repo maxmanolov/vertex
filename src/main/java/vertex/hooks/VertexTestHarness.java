@@ -51,6 +51,7 @@ public final class VertexTestHarness
     {
         VertexDynamicLightsCollector.tick(minecraft);
         VertexPackLoader.tick(minecraft);
+        VertexFullbright.tick(minecraft);
 
         if (VertexGuiProbe.active())
         {
@@ -101,6 +102,17 @@ public final class VertexTestHarness
                     {
                         LogWrapper.info("[Vertex] Test harness: dead player detected, respawning");
                         respawnPlayer.invoke(scriptPlayer);
+
+                        // The capture's environment pins (daytime, Peaceful) must still
+                        // run this tick: returning before them let night mobs kill the
+                        // respawned player faster than the pins could ever land, starving
+                        // the run into a death loop (observed 34x, 22x and 6x before this
+                        // reorder - the pins are exactly what breaks the loop).
+                        if (VertexFrameCapture.active())
+                        {
+                            VertexFrameCapture.tick(minecraft, world, scriptPlayer);
+                        }
+
                         return;
                     }
 

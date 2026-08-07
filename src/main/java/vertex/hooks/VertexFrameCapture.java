@@ -38,6 +38,10 @@ public final class VertexFrameCapture
     private static int motionCaptured = 0;
     private static double motionZ = 0.0D;
     private static final java.util.List<byte[]> motionRaws = new java.util.ArrayList<byte[]>();
+    // Day-clock tick the capture pins (6000 = noon). Fullbright evidence needs a dark
+    // scene - noon under open sky is lightmap-max everywhere and shows no delta - so
+    // -Dvertex.test.pinTime=18000 shoots the same fixture at midnight.
+    private static final long PIN_TIME = Long.getLong("vertex.test.pinTime", 6000L).longValue();
     private static final long SETTLE_MS = 45000L;
     private static final int FRAMES_PER_ANGLE = 120;
     private static final float[] YAWS = {0.0F, 120.0F, 240.0F};
@@ -77,6 +81,46 @@ public final class VertexFrameCapture
     private static Field renderGlobalField;
     private static Field renderDistanceField;
     private static int drainedFrames = 0;
+    private static int pinDebugTicks = 0;
+    private static int timePinTicks = 0;
+    private static Field capabilities;
+    private static Field disableDamage;
+    private static Field serverPlayers;
+    private static boolean gateTimeoutLogged = false;
+
+    /** One-shot sample of the stuck-dirty set for the fullbright gate investigation. */
+    private static void dumpStuckDirty(Object renderGlobal) throws Exception
+    {
+        Field listField = renderGlobal.getClass().getDeclaredField(Mappings.RG_WORLD_RENDERERS_TO_UPDATE);
+        listField.setAccessible(true);
+        java.util.List<?> list = (java.util.List<?>) listField.get(renderGlobal);
+        int logged = 0;
+
+        for (Object renderer : list)
+        {
+            if (!(renderer instanceof vertex.api.ImmediateMarker)
+                || !((vertex.api.ImmediateMarker) renderer).vertex$isDirty())
+            {
+                continue;
+            }
+
+            Class<?> wr = renderer.getClass();
+            Field px = wr.getDeclaredField(Mappings.WR_POS_X); px.setAccessible(true);
+            Field py = wr.getDeclaredField(Mappings.WR_POS_Y); py.setAccessible(true);
+            Field pz = wr.getDeclaredField(Mappings.WR_POS_Z); pz.setAccessible(true);
+            Field inFrustum = wr.getDeclaredField("l"); inFrustum.setAccessible(true);
+            LogWrapper.info("[VertexStuck] pos=" + px.getInt(renderer) + "," + py.getInt(renderer)
+                + "," + pz.getInt(renderer) + " inFrustum=" + inFrustum.getBoolean(renderer)
+                + " inFlight=" + VertexMulticore.isInFlight(renderer));
+
+            if (++logged >= 12)
+            {
+                break;
+            }
+        }
+
+        LogWrapper.info("[VertexStuck] listSize=" + list.size() + " sampled=" + logged);
+    }
 
     static boolean active()
     {
@@ -108,7 +152,15 @@ public final class VertexFrameCapture
             // Environment pins run EVERY tick unconditionally - an early return before
             // these once let night fall, and hostile mobs killed the spawn-idling player
             // 34 times in a single run. Peaceful difficulty removes hostiles entirely.
-            setWorldTime.invoke(world, Long.valueOf(6000L));
+            // EXCEPT the time pin, every 100 ticks only: rewriting world time per tick
+            // makes the light engine recompute skylight continuously, which re-marks
+            // sections endlessly (observed as a 5-7k/min rebuild storm at pinTime=18000
+            // that starved the drain gate). Drift over 100 ticks is 5 game seconds -
+            // irrelevant to any comparison - and the light engine stays quiet.
+            if (timePinTicks++ % 100 == 0)
+            {
+                setWorldTime.invoke(world, Long.valueOf(PIN_TIME));
+            }
 
             // Weather strength scales the whole terrain lightmap even with rain rendering
             // off (the diff mask showed every terrain pixel shifted while sky matched:
@@ -146,14 +198,96 @@ public final class VertexFrameCapture
             {
                 Object[] serverWorlds = (Object[])worldServers.get(server);
 
-                if (serverWorlds != null && serverWorlds.length > 0 && serverWorlds[0] != null)
+                if (serverWorlds != null && serverWorlds.length > 0 && serverWorlds[0] != null
+                    && timePinTicks % 100 == 1)
                 {
-                    setWorldTime.invoke(serverWorlds[0], Long.valueOf(6000L));
+                    setWorldTime.invoke(serverWorlds[0], Long.valueOf(PIN_TIME));
                 }
             }
             hideGui.setBoolean(gameSettings.get(minecraft), !SHOW_HUD);
+
+            // Invulnerability pin: the Peaceful difficulty pin turns out to be a placebo
+            // at night - captures only ever "worked" at pinned noon, where daylight
+            // blocks hostile spawns regardless of difficulty. At pinTime=18000 zombies
+            // killed the pinned player all run (416 dead-ticks) while the client
+            // difficulty read PEACEFUL every sample - the client-side write never
+            // demonstrably reaches the integrated server. Pin damage off directly;
+            // the capture player is a camera, not a participant.
+            if (capabilities == null)
+            {
+                capabilities = player.getClass().getField("bE");
+                Object caps = capabilities.get(player);
+                disableDamage = caps.getClass().getField("a");
+            }
+
+            disableDamage.setBoolean(capabilities.get(player), true);
+
+            // The flag must ALSO land on the SERVER-side player entity: damage is
+            // computed by the integrated server against its own EntityPlayerMP, whose
+            // capabilities object is distinct from the client copy - a client-only
+            // flag is one more placebo.
+            if (server != null)
+            {
+                Object[] pinWorlds = (Object[])worldServers.get(server);
+
+                if (pinWorlds != null && pinWorlds.length > 0 && pinWorlds[0] != null)
+                {
+                    if (serverPlayers == null)
+                    {
+                        Class<?> serverWorldBase = pinWorlds[0].getClass();
+
+                        while (serverWorldBase.getSuperclass() != Object.class)
+                        {
+                            serverWorldBase = serverWorldBase.getSuperclass();
+                        }
+
+                        serverPlayers = serverWorldBase.getDeclaredField(Mappings.WORLD_PLAYER_ENTITIES);
+                        serverPlayers.setAccessible(true);
+                    }
+
+                    for (Object serverPlayer : (java.util.List<?>)serverPlayers.get(pinWorlds[0]))
+                    {
+                        disableDamage.setBoolean(capabilities.get(serverPlayer), true);
+                    }
+                }
+            }
             // difficulty is EnumDifficulty in 1.7.10; PEACEFUL is the first constant.
             difficulty.set(gameSettings.get(minecraft), difficulty.getType().getEnumConstants()[0]);
+
+            if (Boolean.getBoolean("vertex.test.pinDebug") && ++pinDebugTicks % 100 == 0)
+            {
+                Object serverDifficulty = "?";
+
+                try
+                {
+                    Object srv = getIntegratedServer.invoke(minecraft);
+                    Object[] worlds = srv != null ? (Object[])worldServers.get(srv) : null;
+
+                    if (worlds != null && worlds.length > 0 && worlds[0] != null)
+                    {
+                        java.lang.reflect.Field wd = worlds[0].getClass().getSuperclass().getSuperclass()
+                            .getDeclaredField("r");
+                        wd.setAccessible(true);
+                        serverDifficulty = wd.get(worlds[0]);
+                    }
+                }
+                catch (Exception probeFailure)
+                {
+                    serverDifficulty = "probe:" + probeFailure;
+                }
+
+                LogWrapper.info("[VertexPinDebug] tick=" + pinDebugTicks
+                    + " clientDifficulty=" + difficulty.get(gameSettings.get(minecraft))
+                    + " serverWorldDifficulty=" + serverDifficulty
+                    + " settleFrames=" + settleFrames + " angle=" + angleIndex
+                    + " pending=" + VertexHooks.pendingUpdates(renderGlobalField.get(minecraft))
+                    + " drainedFrames=" + drainedFrames);
+
+                if (pinDebugTicks == 10000)
+                {
+                    dumpStuckDirty(renderGlobalField.get(minecraft));
+                }
+            }
             // The focusless test window would auto-pause into GuiIngameMenu, which is
             // what earlier captures actually photographed; keep every screen closed.
             displayGuiScreen.invoke(minecraft, new Object[] {null});
@@ -227,7 +361,24 @@ public final class VertexFrameCapture
             {
                 int pending = VertexHooks.pendingUpdates(renderGlobalField.get(minecraft));
 
-                if (pending != 0)
+                // Illustrative captures can cap the gate: under fullbright at pinned
+                // midnight the dirty queue plateaus (cycling ground sections saturate
+                // vanilla's out-of-frustum processing lane and empty sky sections starve
+                // behind them - full forensics on the tracking issue), so the strict
+                // fully-built-world gate never opens. Comparison-grade runs keep the
+                // strict default (no timeout); a capped run logs that it proceeded.
+                long gateTimeout = Long.getLong("vertex.test.gateTimeoutMs", 0L).longValue();
+
+                if (pending != 0 && gateTimeout > 0L && now - worldSeenMs >= SETTLE_MS + gateTimeout)
+                {
+                    if (!gateTimeoutLogged)
+                    {
+                        gateTimeoutLogged = true;
+                        LogWrapper.warning("[Vertex] Frame capture gate timed out with pending=" + pending
+                            + "; capturing a possibly incomplete far field");
+                    }
+                }
+                else if (pending != 0)
                 {
                     drainedFrames = 0;
                     return;

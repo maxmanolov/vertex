@@ -115,6 +115,11 @@ public final class Mappings
     public static final String RG_UPDATE_RENDERERS_DESC = "(Lsv;Z)Z";
     public static final String RG_LOAD_RENDERERS = "a";
     public static final String RG_LOAD_RENDERERS_DESC = "()V";
+    /* RenderGlobal.markBlockForRenderUpdate=func_147588_b=b(III)V - the light-only
+     * re-mark path (IWorldAccess.notifyLightSet), distinct from markBlockForUpdate
+     * (block changes) and markBlockRangeForRenderUpdate. Skippable under fullbright. */
+    public static final String RG_MARK_BLOCK_FOR_RENDER_UPDATE = "b";
+    public static final String RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC = "(III)V";
     public static final String RG_MC = "A";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
@@ -247,6 +252,7 @@ public final class Mappings
     public static final String GI_PERSISTANT_CHAT = "l";
     public static final String GUI_SCREEN = "bdw";
     public static final String SCREEN_CHAT_OPTIONS = "bcs";
+    public static final String GUI_VIDEO_SETTINGS = "bef";
     public static final String SCREEN_INIT_GUI = "b";
     public static final String SCREEN_INIT_GUI_DESC = "()V";
     public static final String SCREEN_ACTION_PERFORMED = "a";
