@@ -41,6 +41,8 @@ public final class VertexStressDriver
     private static Method shutdown;
     private static Field gameSettings;
     private static Field renderDistance;
+    private static boolean renderDistanceSaved = false;
+    private static int savedRenderDistance;
     private static Field theWorld;
     private static Field thePlayer;
 
@@ -72,6 +74,15 @@ public final class VertexStressDriver
             if (QUIT_AFTER_MS > 0L && now - startMs >= QUIT_AFTER_MS)
             {
                 LogWrapper.info("[Vertex] Stress driver: quitAfter reached, shutting down cleanly");
+
+                if (renderDistanceSaved)
+                {
+                    // Undo the render-distance phase before the game persists settings
+                    // on shutdown (#115: pinned test values must never outlive the run).
+                    renderDistance.setInt(gameSettings.get(minecraft), savedRenderDistance);
+                    LogWrapper.info("[Vertex] Stress driver restored render distance " + savedRenderDistance);
+                }
+
                 shutdown.invoke(minecraft);
                 disabled = true;
                 return;
@@ -232,6 +243,10 @@ public final class VertexStressDriver
         Object settings = gameSettings.get(minecraft);
         renderDistance = settings.getClass().getDeclaredField(Mappings.GS_RENDER_DISTANCE);
         renderDistance.setAccessible(true);
+        // The render-distance phase mutates a persisted setting; snapshot it so a quit
+        // mid-cycle cannot leak the stress value into options.txt (#115).
+        savedRenderDistance = renderDistance.getInt(settings);
+        renderDistanceSaved = true;
         theWorld = mc.getDeclaredField(Mappings.MC_THE_WORLD);
         theWorld.setAccessible(true);
         thePlayer = mc.getDeclaredField(Mappings.MC_THE_PLAYER);

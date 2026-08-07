@@ -71,6 +71,9 @@ public final class VertexFrameCapture
     private static Field difficulty;
     private static Field posXField;
     private static Field posZField;
+    private static boolean settingsSnapshotTaken = false;
+    private static boolean savedHideGui;
+    private static Object savedDifficulty;
     private static Field renderGlobalField;
     private static Field renderDistanceField;
     private static int drainedFrames = 0;
@@ -253,6 +256,7 @@ public final class VertexFrameCapture
             {
                 done = true;
                 LogWrapper.info("[Vertex] Frame capture complete (" + YAWS.length + " angles)");
+                restorePinnedSettings(minecraft);
             }
         }
         catch (Throwable e)
@@ -260,6 +264,35 @@ public final class VertexFrameCapture
             disabled = true;
             LogWrapper.severe("[Vertex] Frame capture disabled after failure");
             e.printStackTrace();
+            restorePinnedSettings(minecraft);
+        }
+    }
+
+    /**
+     * The per-tick pins overwrite live gameSettings, and the game persists gameSettings
+     * to options.txt on shutdown - so pinned values outlived the run and followed any
+     * copy of the game dir into normal play (#115: a play dir seeded from a harness dir
+     * kept Peaceful difficulty, presenting as a hunger/regeneration bug). Restore the
+     * armed-time snapshot the moment the capture reaches any terminal state; after this
+     * the pins stop (active() is false), so the restored values persist.
+     */
+    private static void restorePinnedSettings(Object minecraft)
+    {
+        if (!settingsSnapshotTaken)
+        {
+            return;
+        }
+
+        try
+        {
+            Object settings = gameSettings.get(minecraft);
+            hideGui.setBoolean(settings, savedHideGui);
+            difficulty.set(settings, savedDifficulty);
+            LogWrapper.info("[Vertex] Frame capture restored pinned settings (difficulty, hideGui)");
+        }
+        catch (Exception e)
+        {
+            LogWrapper.warning("[Vertex] Frame capture could not restore pinned settings: " + e);
         }
     }
 
@@ -416,6 +449,11 @@ public final class VertexFrameCapture
         hideGui.setAccessible(true);
         difficulty = gameSettings.get(minecraft).getClass().getDeclaredField("au");
         difficulty.setAccessible(true);
+        // Snapshot before the first pin so every terminal state can restore what the
+        // player actually had (#115).
+        savedHideGui = hideGui.getBoolean(gameSettings.get(minecraft));
+        savedDifficulty = difficulty.get(gameSettings.get(minecraft));
+        settingsSnapshotTaken = true;
         posXField = entity.getDeclaredField(Mappings.ENTITY_POS_X);
         posXField.setAccessible(true);
         posZField = entity.getDeclaredField(Mappings.ENTITY_POS_Z);
