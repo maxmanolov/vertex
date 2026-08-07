@@ -12,23 +12,23 @@ public final class VertexColorizer
 {
     public static boolean hasGrass()
     {
-        return VertexPackLoader.grassMap != null && VertexConfig.enabled("customColors");
+        return VertexPackLoader.grassMap() != null && VertexConfig.enabled("customColors");
     }
 
     public static int grass(double temperature, double humidity)
     {
-        ColorMap map = VertexPackLoader.grassMap;
+        ColorMap map = VertexPackLoader.grassMap();
         return map != null ? map.sample((float)temperature, (float)humidity) : 0xFFFFFF;
     }
 
     public static boolean hasFoliage()
     {
-        return VertexPackLoader.foliageMap != null && VertexConfig.enabled("customColors");
+        return VertexPackLoader.foliageMap() != null && VertexConfig.enabled("customColors");
     }
 
     public static int foliage(double temperature, double humidity)
     {
-        ColorMap map = VertexPackLoader.foliageMap;
+        ColorMap map = VertexPackLoader.foliageMap();
         return map != null ? map.sample((float)temperature, (float)humidity) : 0xFFFFFF;
     }
 

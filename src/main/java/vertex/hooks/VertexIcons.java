@@ -94,7 +94,7 @@ public final class VertexIcons
         }
 
         // Natural textures: deterministic mirror variant per position and face.
-        vertex.variants.NaturalProperties natural = VertexPackLoader.naturalProperties;
+        vertex.variants.NaturalProperties natural = VertexPackLoader.naturalProperties();
 
         if (natural != null && icon != null && VertexConfig.enabled("naturalTextures"))
         {
