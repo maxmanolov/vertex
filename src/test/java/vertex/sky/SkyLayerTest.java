@@ -44,6 +44,21 @@ public class SkyLayerTest
         assertEquals(0.0F, layer.timing.opacity(6000), 0.0001F);
     }
 
+    @Test
+    public void derivesStartFadeOutFromTheDocumentedEndFadeOut()
+    {
+        Properties props = new Properties();
+        props.setProperty("source", "custom.png");
+        props.setProperty("startFadeIn", "19:00");
+        props.setProperty("endFadeIn", "20:00");
+        props.setProperty("endFadeOut", "6:00");
+        SkyLayer layer = SkyLayer.parse(props, "unused.png");
+
+        assertEquals(1.0F, layer.timing.opacity(18000), 0.0001F);
+        assertEquals(0.5F, layer.timing.opacity(23500), 0.0001F);
+        assertEquals(0.0F, layer.timing.opacity(0), 0.0001F);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void partialFadeWindowsRefuse()
     {

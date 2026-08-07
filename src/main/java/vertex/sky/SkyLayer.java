@@ -52,10 +52,19 @@ public final class SkyLayer
 
         if (startFadeIn != null)
         {
-            timing = SkyLayerTiming.parse(startFadeIn,
-                required(props, "endFadeIn"),
-                required(props, "startFadeOut"),
-                trimmed(props.getProperty("endFadeOut"), null));
+            String endFadeIn = required(props, "endFadeIn");
+            String startFadeOut = trimmed(props.getProperty("startFadeOut"), null);
+            String endFadeOut = trimmed(props.getProperty("endFadeOut"), null);
+
+            if (startFadeOut != null)
+            {
+                // Keep compatibility with layers that used Vertex's earlier field order.
+                timing = SkyLayerTiming.parse(startFadeIn, endFadeIn, startFadeOut, endFadeOut);
+            }
+            else
+            {
+                timing = SkyLayerTiming.parse(startFadeIn, endFadeIn, required(props, "endFadeOut"));
+            }
         }
         else
         {
