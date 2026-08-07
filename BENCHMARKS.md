@@ -1,5 +1,9 @@
 # Vertex 0.3.0-rc1 benchmark report
 
+To run a local cross-client comparison, use [bench/README.md](bench/README.md). This
+harness measures each client through the same external frame collector. Do not use the
+Vertex-only diagnostics line as the primary result for a cross-client comparison.
+
 All numbers measured on the official Mojang 1.7.10 client, Apple M3 (GL 2.1 on Metal),
 Zulu JDK 8, via the built-in diagnostics (`diagnostics=true`) and autonomous harness.
 Reproduction flags for every scenario are in docs/ARCHITECTURE.md. Pacing, not average

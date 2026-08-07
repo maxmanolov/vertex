@@ -15,6 +15,22 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    benchmark {
+        java.srcDir 'src/benchmark/java'
+    }
+    benchmarkTest {
+        java.srcDir 'src/benchmarkTest/java'
+        compileClasspath += sourceSets.benchmark.output
+        runtimeClasspath += sourceSets.benchmark.output
+    }
+}
+
+configurations {
+    benchmarkTestImplementation.extendsFrom benchmarkImplementation
+    benchmarkTestRuntimeOnly.extendsFrom benchmarkRuntimeOnly
+}
+
 dependencies {
     // LaunchWrapper is Mojang's own tweaker loader; provided by the launcher profile at runtime.
     implementation 'net.minecraft:launchwrapper:1.12'
@@ -23,6 +39,8 @@ dependencies {
     // Present on the game classpath at runtime; needed only to compile the fog hook.
     compileOnly 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
     testImplementation 'junit:junit:4.13.2'
+    benchmarkImplementation 'com.google.code.gson:gson:2.2.4'
+    benchmarkTestImplementation 'junit:junit:4.13.2'
 }
 
 jar {
@@ -50,3 +68,30 @@ test {
     useJUnit()
     testLogging { events 'failed', 'skipped' }
 }
+
+tasks.register('benchmarkTest', Test) {
+    description = 'Runs the local benchmark harness tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.benchmarkTest.output.classesDirs
+    classpath = sourceSets.benchmarkTest.runtimeClasspath
+    useJUnit()
+    testLogging { events 'failed', 'skipped' }
+}
+
+tasks.register('benchmarkJar', Jar) {
+    description = 'Builds the standalone local benchmark harness.'
+    group = 'build'
+    archiveBaseName = 'vertex-benchmark'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from sourceSets.benchmark.output
+    from {
+        configurations.benchmarkRuntimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    manifest {
+        attributes('Main-Class': 'vertex.benchmark.BenchmarkMain')
+    }
+}
+
+check.dependsOn tasks.named('benchmarkTest')

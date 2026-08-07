@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "suiteId": "minecraft-1.7.10-quality-parity",
+  "baselineProfile": "vanilla",
+  "repetitions": 4,
+  "warmupSeconds": 30,
+  "captureSeconds": 120,
+  "cooldownSeconds": 30,
+  "seed": 1710,
+  "resultDirectory": "benchmark-results",
+  "collector": {
+    "type": "presentmon",
+    "executable": "C:\\Tools\\PresentMon-2.4.1-x64.exe",
+    "metric": "presented"
+  },
+  "profiles": [
+    {
+      "id": "vanilla",
+      "label": "Vanilla 1.7.10",
+      "launchMode": "manual",
+      "processName": "javaw.exe",
+      "command": [],
+      "settingsFiles": [],
+      "instructions": [
+        "Start the official 1.7.10 profile.",
+        "Load the benchmark world and use the fixed camera position."
+      ],
+      "metadata": {
+        "minecraftVersion": "1.7.10",
+        "preset": "quality-parity",
+        "scenario": "static-camera",
+        "resolution": "1920x1080",
+        "renderDistance": "8",
+        "vsync": "off",
+        "fpsLimit": "unlimited",
+        "graphics": "fancy",
+        "resourcePack": "default"
+      }
+    },
+    {
+      "id": "vertex",
+      "label": "Vertex 1.7.10",
+      "launchMode": "manual",
+      "processName": "javaw.exe",
+      "command": [],
+      "settingsFiles": [],
+      "instructions": [
+        "Start the 1.7.10-Vertex profile.",
+        "Load the benchmark world and use the fixed camera position."
+      ],
+      "metadata": {
+        "minecraftVersion": "1.7.10",
+        "preset": "quality-parity",
+        "scenario": "static-camera",
+        "resolution": "1920x1080",
+        "renderDistance": "8",
+        "vsync": "off",
+        "fpsLimit": "unlimited",
+        "graphics": "fancy",
+        "resourcePack": "default"
+      }
+    },
+    {
+      "id": "optifine",
+      "label": "OptiFine 1.7.10",
+      "launchMode": "manual",
+      "processName": "javaw.exe",
+      "command": [],
+      "settingsFiles": [],
+      "instructions": [
+        "Start the user-supplied OptiFine 1.7.10 profile.",
+        "Load the benchmark world and use the fixed camera position."
+      ],
+      "metadata": {
+        "minecraftVersion": "1.7.10",
+        "preset": "quality-parity",
+        "scenario": "static-camera",
+        "resolution": "1920x1080",
+        "renderDistance": "8",
+        "vsync": "off",
+        "fpsLimit": "unlimited",
+        "graphics": "fancy",
+        "resourcePack": "default"
+      }
+    },
+    {
+      "id": "lunar",
+      "label": "Lunar Client 1.7.10",
+      "launchMode": "manual",
+      "processName": "javaw.exe",
+      "command": [],
+      "settingsFiles": [],
+      "instructions": [
+        "Start Lunar Client with Minecraft 1.7.10.",
+        "Load the benchmark world and use the fixed camera position."
+      ],
+      "metadata": {
+        "minecraftVersion": "1.7.10",
+        "preset": "quality-parity",
+        "scenario": "static-camera",
+        "resolution": "1920x1080",
+        "renderDistance": "8",
+        "vsync": "off",
+        "fpsLimit": "unlimited",
+        "graphics": "fancy",
+        "resourcePack": "default"
+      }
+    }
+  ]
+}
