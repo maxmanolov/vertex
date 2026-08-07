@@ -38,6 +38,10 @@ public final class VertexFrameCapture
     private static int motionCaptured = 0;
     private static double motionZ = 0.0D;
     private static final java.util.List<byte[]> motionRaws = new java.util.ArrayList<byte[]>();
+    // Day-clock tick the capture pins (6000 = noon). Fullbright evidence needs a dark
+    // scene - noon under open sky is lightmap-max everywhere and shows no delta - so
+    // -Dvertex.test.pinTime=18000 shoots the same fixture at midnight.
+    private static final long PIN_TIME = Long.getLong("vertex.test.pinTime", 6000L).longValue();
     private static final long SETTLE_MS = 45000L;
     private static final int FRAMES_PER_ANGLE = 120;
     private static final float[] YAWS = {0.0F, 120.0F, 240.0F};
@@ -105,7 +109,7 @@ public final class VertexFrameCapture
             // Environment pins run EVERY tick unconditionally - an early return before
             // these once let night fall, and hostile mobs killed the spawn-idling player
             // 34 times in a single run. Peaceful difficulty removes hostiles entirely.
-            setWorldTime.invoke(world, Long.valueOf(6000L));
+            setWorldTime.invoke(world, Long.valueOf(PIN_TIME));
 
             // Weather strength scales the whole terrain lightmap even with rain rendering
             // off (the diff mask showed every terrain pixel shifted while sky matched:
@@ -145,7 +149,7 @@ public final class VertexFrameCapture
 
                 if (serverWorlds != null && serverWorlds.length > 0 && serverWorlds[0] != null)
                 {
-                    setWorldTime.invoke(serverWorlds[0], Long.valueOf(6000L));
+                    setWorldTime.invoke(serverWorlds[0], Long.valueOf(PIN_TIME));
                 }
             }
             hideGui.setBoolean(gameSettings.get(minecraft), !SHOW_HUD);
