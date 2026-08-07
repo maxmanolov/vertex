@@ -40,7 +40,19 @@ public final class VertexInstaller
             return;
         }
 
-        File mcDir = minecraftDir(args);
+        File mcDir;
+
+        try
+        {
+            mcDir = minecraftDir(args);
+        }
+        catch (IllegalArgumentException invalid)
+        {
+            System.err.println("Invalid installer arguments: " + invalid.getMessage());
+            System.err.println("Usage: java -jar vertex-" + version + ".jar install [--mcdir /path/to/.minecraft]");
+            System.exit(1);
+            return;
+        }
         File vanillaJson = new File(mcDir, "versions/" + VANILLA_ID + "/" + VANILLA_ID + ".json");
         File vanillaJar = new File(mcDir, "versions/" + VANILLA_ID + "/" + VANILLA_ID + ".jar");
 
@@ -104,12 +116,40 @@ public final class VertexInstaller
 
     private static File minecraftDir(String[] args)
     {
-        for (int i = 0; i < args.length - 1; ++i)
+        File selected = null;
+
+        for (int i = 1; i < args.length; ++i)
         {
-            if (args[i].equals("--mcdir"))
+            String argument = args[i];
+
+            if (!argument.equals("--mcdir"))
             {
-                return new File(args[i + 1]);
+                throw new IllegalArgumentException("unknown argument: " + argument);
             }
+
+            if (selected != null)
+            {
+                throw new IllegalArgumentException("--mcdir may be specified only once");
+            }
+
+            if (i + 1 >= args.length)
+            {
+                throw new IllegalArgumentException("--mcdir requires a path");
+            }
+
+            String path = args[++i];
+
+            if (path.trim().isEmpty() || path.startsWith("--"))
+            {
+                throw new IllegalArgumentException("--mcdir requires a non-empty path");
+            }
+
+            selected = new File(path);
+        }
+
+        if (selected != null)
+        {
+            return selected;
         }
 
         String os = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT);

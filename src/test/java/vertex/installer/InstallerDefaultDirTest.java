@@ -1,6 +1,7 @@
 package vertex.installer;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Locale;
 import org.junit.Test;
@@ -22,11 +23,53 @@ public class InstallerDefaultDirTest
         return (File) minecraftDir.invoke(null, (Object) args);
     }
 
+    private static IllegalArgumentException invalid(String... args) throws Exception
+    {
+        try
+        {
+            defaultDir(args);
+        }
+        catch (InvocationTargetException expected)
+        {
+            assertTrue(expected.getCause() instanceof IllegalArgumentException);
+            return (IllegalArgumentException)expected.getCause();
+        }
+
+        throw new AssertionError("installer arguments were accepted");
+    }
+
     @Test
     public void explicitMcdirArgumentWinsOnEveryPlatform() throws Exception
     {
         File dir = defaultDir(new String[] {"install", "--mcdir", "custom-target"});
         assertEquals("custom-target", dir.getName());
+    }
+
+    @Test
+    public void missingMcdirValueRefusesTheDefaultDirectory() throws Exception
+    {
+        assertTrue(invalid("install", "--mcdir").getMessage().contains("requires a path"));
+    }
+
+    @Test
+    public void emptyAndOptionLikeMcdirValuesAreRejected() throws Exception
+    {
+        assertTrue(invalid("install", "--mcdir", " ").getMessage().contains("non-empty path"));
+        assertTrue(invalid("install", "--mcdir", "--other").getMessage().contains("non-empty path"));
+    }
+
+    @Test
+    public void duplicateMcdirArgumentsAreRejected() throws Exception
+    {
+        assertTrue(invalid("install", "--mcdir", "first", "--mcdir", "second")
+            .getMessage().contains("only once"));
+    }
+
+    @Test
+    public void unknownAndExtraArgumentsAreRejected() throws Exception
+    {
+        assertTrue(invalid("install", "--mcdr", "target").getMessage().contains("unknown argument"));
+        assertTrue(invalid("install", "extra").getMessage().contains("unknown argument"));
     }
 
     @Test
