@@ -52,13 +52,18 @@ public final class BuildWorkers
                         {
                             task.build(build);
                         }
-                        catch (Exception e)
+                        catch (Throwable failure)
                         {
                             build.failed = true;
-                            e.printStackTrace();
+                            failure.printStackTrace();
                         }
-
-                        queue.complete(build);
+                        finally
+                        {
+                            // Every claimed build needs one client-thread disposition.
+                            // An Error used to terminate this worker before complete(),
+                            // which left its renderer permanently marked in flight (#97).
+                            queue.complete(build);
+                        }
                     }
                 }
             }, namePrefix + "-" + i);

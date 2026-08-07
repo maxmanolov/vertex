@@ -156,6 +156,45 @@ public class BuildQueueTest
     }
 
     @Test
+    public void workerErrorsStillReturnBuildsForDiscard() throws Exception
+    {
+        final BuildQueue queue = new BuildQueue();
+        final CountDownLatch attempted = new CountDownLatch(1);
+        BuildWorkers workers = new BuildWorkers(queue, new BuildWorkers.Task()
+        {
+            public void build(BuildQueue.Build build)
+            {
+                attempted.countDown();
+                throw new AssertionError("worker error");
+            }
+        }, "ErrorWorker");
+        Build failed = new Build("error", 1, queue.generation());
+        RecordingSink sink = new RecordingSink();
+
+        try
+        {
+            queue.submit(failed);
+            assertTrue("worker did not start in time", attempted.await(5, TimeUnit.SECONDS));
+            long deadline = System.currentTimeMillis() + 2000L;
+
+            while (sink.discarded.isEmpty() && System.currentTimeMillis() < deadline)
+            {
+                queue.drain(sink, 1);
+                Thread.sleep(10L);
+            }
+        }
+        finally
+        {
+            queue.close();
+            workers.shutdown();
+        }
+
+        assertTrue("worker error must mark the build failed", failed.failed);
+        assertEquals("failed build must reach the discard path", 1, sink.discarded.size());
+        assertSame(failed, sink.discarded.get(0));
+    }
+
+    @Test
     public void takeReturnsNullAfterCloseEvenWithPendingBuilds() throws Exception
     {
         BuildQueue queue = new BuildQueue();
