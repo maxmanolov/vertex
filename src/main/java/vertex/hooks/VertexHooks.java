@@ -41,6 +41,23 @@ public final class VertexHooks
     private static Field renderChunksDeep;
 
     /**
+     * Vanilla 1.7.10 hard-allocates RenderGlobal storage for radii 2..16, but loads an
+     * arbitrary integer from options.txt. A game directory shared with a newer release
+     * can therefore crash renderer initialization before the first chunk arrives.
+     */
+    public static int clampLegacyRenderDistance(int requested)
+    {
+        int clamped = Math.max(2, Math.min(16, requested));
+
+        if (clamped != requested)
+        {
+            LogWrapper.warning("[Vertex] Render distance " + requested + " is outside Minecraft 1.7.10's supported range; using " + clamped);
+        }
+
+        return clamped;
+    }
+
+    /**
      * Runs after every EntityRenderer.setupFog exit. With fog=false, only linear
      * (distance) fog is disabled; density fog from lava, water, or blindness uses
      * EXP/EXP2 modes and is deliberately preserved.
