@@ -30,7 +30,25 @@ import vertex.multicore.BuildWorkers;
  */
 public final class VertexMulticore
 {
-    private static final boolean ENABLED = Boolean.getBoolean("vertex.multicore");
+    // Default-on since the promotion gate closed (human fly-through, 2026-08-06, on the
+    // pipeline with #92's resort guard). The system property still wins when set - the
+    // historical -Dvertex.multicore=true opt-in stays valid, and =false force-disables -
+    // otherwise the "multicore" config key decides (default true, restart to apply: the
+    // pool arms once per session). Resolved at first hook use, in-game, when the config
+    // is readable.
+    private static final boolean ENABLED = resolveEnabled();
+
+    private static boolean resolveEnabled()
+    {
+        String property = System.getProperty("vertex.multicore");
+
+        if (property != null)
+        {
+            return property.trim().equalsIgnoreCase("true");
+        }
+
+        return VertexConfig.enabled("multicore");
+    }
     private static final float SECTION_SCALE = 1.000001F;
 
     private static final ThreadLocal<ChunkBuild> currentBuild = new ThreadLocal<ChunkBuild>();

@@ -3,16 +3,19 @@
 Automated coverage (unit tests, autonomous soaks, stress cycles) runs via the harness
 flags documented in docs/ARCHITECTURE.md. The items below are the ones that need eyes.
 
-## Multi-core visual sign-off (promotion gate for default-on)
+## Multi-core visual sign-off - GATE CLOSED (2026-08-06)
 
-Multicore ships as an experimental opt-in; this check promotes it to default in a
-future release. It does not block using 0.3.0's default configuration.
+Multicore is default-on since 0.3.2. The gate did its job on the first attempt: the
+initial fly-through crashed in seconds on an in-motion race no automated soak had
+surfaced (#92, client resort vs worker vertexState write), the race was fixed at root
+and A/B-verified, and the follow-up fly-through on the fixed pipeline passed clean.
+The checklist below is retained for regression sign-off on future renderer changes:
 
-1. Launch the 1.7.10-Vertex profile with `-Dvertex.multicore=true`.
-2. Join a world; fly fast in one direction for ~60s, then turn 180 and return.
+1. Launch the 1.7.10-Vertex profile (multicore is on by default).
+2. Join a world; fly fast in one direction for ~60s - include water - then return.
 3. Look for: missing/stale sections, holes at section boundaries, flicker during
    rebuilds, lighting seams. Break and place blocks near chunk borders.
-4. Exit to title, rejoin, repeat briefly. If clean, multicore's default flips on.
+4. Exit to title, rejoin, repeat briefly.
 
 ## Feature spot checks (5 minutes total)
 

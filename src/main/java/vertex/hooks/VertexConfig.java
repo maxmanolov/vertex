@@ -34,6 +34,7 @@ public final class VertexConfig
         {"randomEntities", "true", "Per-mob texture variants when a pack supplies numbered siblings"},
         {"customSky", "true", "Draw pack-defined custom sky layers"},
         {"connectedTextures", "true", "Connected textures from a pack's mcpatcher/ctm rules"},
+        {"multicore", "true", "Build chunk geometry on CPU worker threads (restart required)"},
         {"chatBackground", "true", "Draw the translucent background behind chat lines"},
         {"scoreboardBackground", "true", "Draw the translucent background behind the scoreboard sidebar"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
