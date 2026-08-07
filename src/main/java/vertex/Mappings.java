@@ -34,6 +34,9 @@ package vertex;
  * WorldRenderer.updateRenderer           func_147892_a    a (Lsv;)V
  * WorldRenderer.distanceToEntitySquared  func_78912_a     a (Lsa;)F
  * Entity.posX/posY/posZ                  field_70165_t..  s / t / u
+ * Block.blockRegistry                    field_149771_c   c
+ * Block.getIdFromBlock                   func_149682_b    b (Laji;)I
+ * RegistryNamespaced.getNameForObject    func_148750_c    c (Object)String
  */
 public final class Mappings
 {
@@ -42,6 +45,9 @@ public final class Mappings
     public static final String WORLD_RENDERER = "blo";
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
+    public static final String BLOCK_REGISTRY = "c";
+    public static final String BLOCK_GET_ID = "b";
+    public static final String REGISTRY_NAME_FOR_OBJECT = "c";
     public static final String MC_RESOURCE_MANAGER = "an";
     public static final String BLOCKS_REGISTRY = "ajn";
     public static final String BLOCKS_GRASS = "c";
