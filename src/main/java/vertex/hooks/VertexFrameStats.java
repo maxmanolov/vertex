@@ -73,6 +73,13 @@ public final class VertexFrameStats
         lastGcCount = gcCount;
         lastGcMillis = gcMillis;
 
+        reset();
+        return out.toString();
+    }
+
+    /** Clears the current report window without formatting or reading runtime metrics. */
+    static void reset()
+    {
         for (int i = 0; i <= BUCKETS; ++i)
         {
             histogram[i] = 0;
@@ -80,7 +87,29 @@ public final class VertexFrameStats
 
         frames = 0L;
         maxNanos = 0L;
-        return out.toString();
+    }
+
+    /**
+     * Disabled-interval drain: clears the frame window AND rebaselines the GC delta.
+     * Without the rebaseline the first enabled report's gc= field spans the whole
+     * disabled epoch labelled as one minute - the same defect #86 describes for frames,
+     * one accumulator over. Reads the GC beans (cheap, once per disabled minute) so the
+     * first enabled report shows an accurate single-interval delta.
+     */
+    static void resetWindow()
+    {
+        reset();
+        long gcCount = 0L;
+        long gcMillis = 0L;
+
+        for (GarbageCollectorMXBean collector : ManagementFactory.getGarbageCollectorMXBeans())
+        {
+            gcCount += Math.max(0L, collector.getCollectionCount());
+            gcMillis += Math.max(0L, collector.getCollectionTime());
+        }
+
+        lastGcCount = gcCount;
+        lastGcMillis = gcMillis;
     }
 
     private static long percentile(int pct)

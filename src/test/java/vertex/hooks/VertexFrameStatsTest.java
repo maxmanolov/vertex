@@ -1,6 +1,7 @@
 package vertex.hooks;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,6 +49,74 @@ public class VertexFrameStatsTest
         VertexFrameStats.drainReport();
         String report = VertexFrameStats.drainReport();
         assertTrue(report, report.contains("frames=0"));
+    }
+
+    @Test
+    public void disabledDiagnosticsDrainResetsTheFrameWindow() throws Exception
+    {
+        VertexFrameStats.frame();
+        VertexFrameStats.frame();
+        Method drainAll = VertexStats.class.getDeclaredMethod("drainAll");
+        drainAll.setAccessible(true);
+        drainAll.invoke(null);
+        String report = VertexFrameStats.drainReport();
+        assertTrue(report, report.contains("frames=0"));
+    }
+
+    @Test
+    public void disabledDrainRebaselinesTheGcDelta() throws Exception
+    {
+        long liveCount = 0L;
+
+        for (java.lang.management.GarbageCollectorMXBean collector
+            : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans())
+        {
+            liveCount += Math.max(0L, collector.getCollectionCount());
+        }
+
+        // Simulate a stale baseline from a report a "disabled epoch" ago, then run the
+        // disabled-interval drain: the baseline must jump to the live bean totals so the
+        // next enabled report's gc= delta covers one interval, not the whole epoch.
+        Field gcBase = VertexFrameStats.class.getDeclaredField("lastGcCount");
+        gcBase.setAccessible(true);
+        gcBase.setLong(null, -1L);
+        VertexFrameStats.resetWindow();
+        assertTrue("resetWindow must rebaseline gc from live beans",
+            gcBase.getLong(null) >= liveCount);
+        String report = VertexFrameStats.drainReport();
+        assertTrue(report, report.contains(" gc="));
+    }
+
+    @Test
+    public void repeatedToggleCyclesNeverCarryDisabledFrames() throws Exception
+    {
+        Method drainAll = VertexStats.class.getDeclaredMethod("drainAll");
+        drainAll.setAccessible(true);
+        Field last = VertexFrameStats.class.getDeclaredField("lastFrameNanos");
+        last.setAccessible(true);
+
+        for (int cycle = 0; cycle < 3; ++cycle)
+        {
+            // Disabled stretch: frames accumulate, then the disabled-interval drain runs.
+            long cursor = System.nanoTime() - 500_000_000L;
+            last.setLong(null, cursor);
+            lastPlanted = cursor;
+
+            for (int i = 0; i < 5; ++i)
+            {
+                cursor += 2_000_000L;
+                setAndFrame(last, cursor);
+            }
+
+            drainAll.invoke(null);
+            // Re-enable: exactly the frames rendered after enabling are reported.
+            cursor += 2_000_000L;
+            setAndFrame(last, cursor);
+            cursor += 2_000_000L;
+            setAndFrame(last, cursor);
+            String report = VertexFrameStats.drainReport();
+            assertTrue("cycle " + cycle + ": " + report, report.contains("frames=2"));
+        }
     }
 
     private static void setAndFrame(Field last, long fakeNow) throws Exception

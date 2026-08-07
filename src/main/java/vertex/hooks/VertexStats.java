@@ -89,6 +89,7 @@ public final class VertexStats
         VertexSky.draws = 0L;
         VertexCtm.applied = 0L;
         VertexGLStats.drain();
+        VertexFrameStats.resetWindow();
     }
 
     private VertexStats()
