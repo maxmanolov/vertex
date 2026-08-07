@@ -61,6 +61,22 @@ public class VertexConfigDefaultsTest
     }
 
     @Test
+    public void malformedReloadDoesNotKeepPreviousValues() throws Exception
+    {
+        write("betterGrass=true\nfog=false\n");
+        assertTrue(VertexConfig.enabled("betterGrass"));
+        assertFalse(VertexConfig.enabled("fog"));
+
+        write("betterGrass=\\uZZZZ\n");
+        assertFalse("malformed reload must clear the previous enabled value", VertexConfig.enabled("betterGrass"));
+        assertTrue("malformed reload must clear the previous disabled value", VertexConfig.enabled("fog"));
+
+        write("betterGrass=true\nfog=false\n");
+        assertTrue("a later valid file must load", VertexConfig.enabled("betterGrass"));
+        assertFalse(VertexConfig.enabled("fog"));
+    }
+
+    @Test
     public void undeclaredKeysNeverEnable() throws Exception
     {
         write("");
