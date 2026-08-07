@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LogWrapper;
 import vertex.Mappings;
@@ -29,8 +30,38 @@ public final class VertexCtm
 
     private static CtmRuleSet rules;
     private static final Map<CtmProperties, Object[]> tiles = new HashMap<CtmProperties, Object[]>();
+    private static final Map<Object, BlockKeys> blockKeyCache = new ConcurrentHashMap<Object, BlockKeys>();
+    private static final Map<Object, ConcurrentHashMap<String, CandidateEntry>> candidateCache =
+        new ConcurrentHashMap<Object, ConcurrentHashMap<String, CandidateEntry>>();
     private static boolean disabled = false;
     private static Method getBlock;
+    private static Method getBlockId;
+    private static Object blockRegistry;
+    private static Method getBlockRegistryName;
+
+    private static final class BlockKeys
+    {
+        final String id;
+        final String name;
+
+        BlockKeys(String id, String name)
+        {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+    private static final class CandidateEntry
+    {
+        final CtmRuleSet owner;
+        final List<CtmProperties> rules;
+
+        CandidateEntry(CtmRuleSet owner, List<CtmProperties> rules)
+        {
+            this.owner = owner;
+            this.rules = rules;
+        }
+    }
 
     /** Head hook on TextureMap.loadTextureAtlas, before stitching. */
     public static void beforeStitch(Object textureMap)
@@ -43,6 +74,7 @@ public final class VertexCtm
         try
         {
             tiles.clear();
+            candidateCache.clear();
             registered = 0L;
             rules = scanPacks();
 
@@ -99,9 +131,10 @@ public final class VertexCtm
 
         try
         {
-            List<CtmProperties> matching = rules.forTile(tileName);
+            CtmRuleSet activeRules = rules;
+            List<CtmProperties> matching = candidates(activeRules, tileName, block);
 
-            if (matching == null)
+            if (matching.isEmpty())
             {
                 return null;
             }
@@ -144,6 +177,79 @@ public final class VertexCtm
         }
 
         return null;
+    }
+
+    private static List<CtmProperties> candidates(CtmRuleSet activeRules, String tileName, Object block) throws Exception
+    {
+        if (block == null)
+        {
+            return activeRules.matching(tileName, null, null);
+        }
+
+        ConcurrentHashMap<String, CandidateEntry> byTile = candidateCache.get(block);
+
+        if (byTile == null)
+        {
+            ConcurrentHashMap<String, CandidateEntry> created = new ConcurrentHashMap<String, CandidateEntry>();
+            ConcurrentHashMap<String, CandidateEntry> raced = candidateCache.putIfAbsent(block, created);
+            byTile = raced != null ? raced : created;
+        }
+
+        CandidateEntry cached = byTile.get(tileName);
+
+        if (cached != null && cached.owner == activeRules)
+        {
+            return cached.rules;
+        }
+
+        BlockKeys keys = blockKeys(block);
+        CandidateEntry created = new CandidateEntry(activeRules,
+            activeRules.matching(tileName, keys.id, keys.name));
+        byTile.put(tileName, created);
+        return created.rules;
+    }
+
+    private static BlockKeys blockKeys(Object block) throws Exception
+    {
+        BlockKeys cached = blockKeyCache.get(block);
+
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        return resolveBlockKeys(block);
+    }
+
+    private static synchronized BlockKeys resolveBlockKeys(Object block) throws Exception
+    {
+        BlockKeys cached = blockKeyCache.get(block);
+
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        if (getBlockId == null)
+        {
+            Class<?> blockRoot = block.getClass();
+
+            while (blockRoot.getSuperclass() != null && blockRoot.getSuperclass() != Object.class)
+            {
+                blockRoot = blockRoot.getSuperclass();
+            }
+
+            getBlockId = blockRoot.getMethod(Mappings.BLOCK_GET_ID, blockRoot);
+            java.lang.reflect.Field registryField = blockRoot.getField(Mappings.BLOCK_REGISTRY);
+            blockRegistry = registryField.get(null);
+            getBlockRegistryName = blockRegistry.getClass().getMethod(Mappings.REGISTRY_NAME_FOR_OBJECT, Object.class);
+        }
+
+        int numericId = ((Integer)getBlockId.invoke(null, block)).intValue();
+        String registryName = (String)getBlockRegistryName.invoke(blockRegistry, block);
+        BlockKeys resolved = new BlockKeys(String.valueOf(numericId), registryName);
+        blockKeyCache.put(block, resolved);
+        return resolved;
     }
 
     private static boolean faceEnabled(CtmProperties rule, int side)
