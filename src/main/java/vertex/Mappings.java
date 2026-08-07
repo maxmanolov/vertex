@@ -121,6 +121,11 @@ public final class Mappings
     public static final String WR_SET_POSITION_DESC = "(III)V";
     public static final String WR_UPDATE_RENDERER = "a";
     public static final String WR_UPDATE_RENDERER_DESC = "(Lsv;)V";
+    /* WorldRenderer.updateRendererSort=func_147889_b=b(Lsv;)V - client-side translucent
+     * resort; reads vertexState twice (null guard then use), so it must not run while a
+     * worker build owns the renderer (#92). */
+    public static final String WR_UPDATE_RENDERER_SORT = "b";
+    public static final String WR_UPDATE_RENDERER_SORT_DESC = "(Lsv;)V";
 
     public static final String ENTITY_POS_X = "s";
     public static final String ENTITY_POS_Y = "t";
