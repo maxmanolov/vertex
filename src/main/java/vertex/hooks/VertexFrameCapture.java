@@ -80,6 +80,9 @@ public final class VertexFrameCapture
     private static int drainedFrames = 0;
     private static int pinDebugTicks = 0;
     private static int timePinTicks = 0;
+    private static Field capabilities;
+    private static Field disableDamage;
+    private static Field serverPlayers;
 
     static boolean active()
     {
@@ -164,6 +167,52 @@ public final class VertexFrameCapture
                 }
             }
             hideGui.setBoolean(gameSettings.get(minecraft), !SHOW_HUD);
+
+            // Invulnerability pin: the Peaceful difficulty pin turns out to be a placebo
+            // at night - captures only ever "worked" at pinned noon, where daylight
+            // blocks hostile spawns regardless of difficulty. At pinTime=18000 zombies
+            // killed the pinned player all run (416 dead-ticks) while the client
+            // difficulty read PEACEFUL every sample - the client-side write never
+            // demonstrably reaches the integrated server. Pin damage off directly;
+            // the capture player is a camera, not a participant.
+            if (capabilities == null)
+            {
+                capabilities = player.getClass().getField("bE");
+                Object caps = capabilities.get(player);
+                disableDamage = caps.getClass().getField("a");
+            }
+
+            disableDamage.setBoolean(capabilities.get(player), true);
+
+            // The flag must ALSO land on the SERVER-side player entity: damage is
+            // computed by the integrated server against its own EntityPlayerMP, whose
+            // capabilities object is distinct from the client copy - a client-only
+            // flag is one more placebo.
+            if (server != null)
+            {
+                Object[] pinWorlds = (Object[])worldServers.get(server);
+
+                if (pinWorlds != null && pinWorlds.length > 0 && pinWorlds[0] != null)
+                {
+                    if (serverPlayers == null)
+                    {
+                        Class<?> serverWorldBase = pinWorlds[0].getClass();
+
+                        while (serverWorldBase.getSuperclass() != Object.class)
+                        {
+                            serverWorldBase = serverWorldBase.getSuperclass();
+                        }
+
+                        serverPlayers = serverWorldBase.getDeclaredField(Mappings.WORLD_PLAYER_ENTITIES);
+                        serverPlayers.setAccessible(true);
+                    }
+
+                    for (Object serverPlayer : (java.util.List<?>)serverPlayers.get(pinWorlds[0]))
+                    {
+                        disableDamage.setBoolean(capabilities.get(serverPlayer), true);
+                    }
+                }
+            }
             // difficulty is EnumDifficulty in 1.7.10; PEACEFUL is the first constant.
             difficulty.set(gameSettings.get(minecraft), difficulty.getType().getEnumConstants()[0]);
 
