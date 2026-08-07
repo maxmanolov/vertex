@@ -5,10 +5,10 @@ import java.util.List;
 
 /**
  * Pure diffing for dynamic light sources: given the previous and current snapshots
- * (groups of four ints: x, y, z, level), yields the block positions whose chunk sections
- * need a re-mark - the old and new positions of any source that appeared, vanished or
- * moved. Capped so a burst of sources cannot flood the priority queue; the per-frame
- * consumption cap bounds the rebuild cost downstream anyway.
+ * (groups of four ints: x, y, z, level), yields the origins of every render section that
+ * can contain a positive contribution from a source that appeared, vanished or changed.
+ * Capped so a burst of sources cannot flood the priority queue; the per-frame consumption
+ * cap bounds the rebuild cost downstream anyway.
  */
 public final class DynamicSourceTracker
 {
@@ -18,7 +18,7 @@ public final class DynamicSourceTracker
     private final List<int[]> pending = new ArrayList<int[]>();
 
     /**
-     * Returns positions (groups of three ints) to re-mark, and retains the snapshot.
+     * Returns section origins (groups of three ints) to re-mark, and retains the snapshot.
      * The per-call cap DELAYS work rather than deleting it (kyrofx #31): positions beyond
      * the cap queue up and drain on later calls, so no section keeps stale light.
      */
@@ -59,9 +59,74 @@ public final class DynamicSourceTracker
 
             if (!present)
             {
-                addRemark(remarks, from[i], from[i + 1], from[i + 2]);
+                addAffectedSections(remarks, from[i], from[i + 1], from[i + 2], from[i + 3]);
             }
         }
+    }
+
+    /** Adds each 16x16x16 render section that intersects the source's light radius. */
+    private static void addAffectedSections(List<int[]> remarks, int x, int y, int z, int level)
+    {
+        int effectiveLevel = Math.max(0, Math.min(15, level));
+
+        if (effectiveLevel == 0)
+        {
+            return;
+        }
+
+        int radius = effectiveLevel - 1;
+        int minSectionX = horizontalSection((long)x - radius);
+        int maxSectionX = horizontalSection((long)x + radius);
+        int minSectionY = Math.max(0, section((long)y - radius));
+        int maxSectionY = Math.min(15, section((long)y + radius));
+        int minSectionZ = horizontalSection((long)z - radius);
+        int maxSectionZ = horizontalSection((long)z + radius);
+
+        if (minSectionY > maxSectionY)
+        {
+            return;
+        }
+
+        for (int sectionX = minSectionX; sectionX <= maxSectionX; ++sectionX)
+        {
+            long baseX = (long)sectionX << 4;
+            long distanceX = distanceToRange(x, baseX, baseX + 15L);
+
+            for (int sectionY = minSectionY; sectionY <= maxSectionY; ++sectionY)
+            {
+                long baseY = (long)sectionY << 4;
+                long distanceY = distanceToRange(y, baseY, baseY + 15L);
+
+                for (int sectionZ = minSectionZ; sectionZ <= maxSectionZ; ++sectionZ)
+                {
+                    long baseZ = (long)sectionZ << 4;
+                    long distanceZ = distanceToRange(z, baseZ, baseZ + 15L);
+
+                    if (distanceX + distanceY + distanceZ < effectiveLevel)
+                    {
+                        addRemark(remarks, (int)baseX, (int)baseY, (int)baseZ);
+                    }
+                }
+            }
+        }
+    }
+
+    private static int horizontalSection(long coordinate)
+    {
+        long value = Math.floorDiv(coordinate, 16L);
+        long minimum = (long)Integer.MIN_VALUE >> 4;
+        long maximum = (long)Integer.MAX_VALUE >> 4;
+        return (int)Math.max(minimum, Math.min(maximum, value));
+    }
+
+    private static int section(long coordinate)
+    {
+        return (int)Math.floorDiv(coordinate, 16L);
+    }
+
+    private static long distanceToRange(long value, long minimum, long maximum)
+    {
+        return value < minimum ? minimum - value : (value > maximum ? value - maximum : 0L);
     }
 
     /** True while capped remarks from earlier updates are still queued. */
@@ -70,7 +135,7 @@ public final class DynamicSourceTracker
         return !this.pending.isEmpty();
     }
 
-    /** Adds one position unless the same position is already waiting for a rebuild. */
+    /** Adds one section origin unless it is already waiting for a rebuild. */
     private static void addRemark(List<int[]> remarks, int x, int y, int z)
     {
         for (int[] remark : remarks)
