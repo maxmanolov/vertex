@@ -39,7 +39,7 @@ public final class VertexSky
 
     public static void renderLayers(Object renderGlobal)
     {
-        List<SkyLayer> layers = VertexPackLoader.skyLayers;
+        List<SkyLayer> layers = VertexPackLoader.skyLayers();
 
         if (disabled || layers.isEmpty() || !VertexConfig.enabled("customSky"))
         {
@@ -204,7 +204,7 @@ public final class VertexSky
         getCelestialAngle = worldRoot.getDeclaredMethod(Mappings.WORLD_CELESTIAL_ANGLE, Float.TYPE);
         getCelestialAngle.setAccessible(true);
         ready = true;
-        LogWrapper.info("[Vertex] Custom sky armed (" + VertexPackLoader.skyLayers.size() + " layers)");
+        LogWrapper.info("[Vertex] Custom sky armed (" + VertexPackLoader.skyLayers().size() + " layers)");
     }
 
     private VertexSky()

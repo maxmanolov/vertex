@@ -19,16 +19,34 @@ import vertex.colors.ColorProperties;
  * runtime by proxying the obfuscated listener interface (no bytecode involved), then on
  * every resource reload probes the documented fixed paths - custom colors first:
  * mcpatcher/color.properties and mcpatcher/colormap/{grass,foliage}.png. Absent resources
- * are clean defaults; a malformed resource logs and is skipped. Listing-based features
- * (arbitrary CTM file names) need pack-zip walking and land separately.
+ * are clean defaults; a malformed reload publishes one empty state. Listing-based
+ * features (arbitrary CTM file names) need pack-zip walking and land separately.
  */
 public final class VertexPackLoader
 {
-    public static volatile ColorProperties colorProperties;
-    public static volatile ColorMap grassMap;
-    public static volatile ColorMap foliageMap;
-    public static volatile vertex.variants.NaturalProperties naturalProperties;
-    public static volatile java.util.List<vertex.sky.SkyLayer> skyLayers = java.util.Collections.emptyList();
+    static final class PackState
+    {
+        final ColorProperties colorProperties;
+        final ColorMap grassMap;
+        final ColorMap foliageMap;
+        final vertex.variants.NaturalProperties naturalProperties;
+        final java.util.List<vertex.sky.SkyLayer> skyLayers;
+
+        PackState(ColorProperties colorProperties, ColorMap grassMap, ColorMap foliageMap,
+            vertex.variants.NaturalProperties naturalProperties,
+            java.util.List<vertex.sky.SkyLayer> skyLayers)
+        {
+            this.colorProperties = colorProperties;
+            this.grassMap = grassMap;
+            this.foliageMap = foliageMap;
+            this.naturalProperties = naturalProperties;
+            this.skyLayers = skyLayers;
+        }
+    }
+
+    private static final PackState EMPTY = new PackState(null, null, null, null,
+        java.util.Collections.<vertex.sky.SkyLayer>emptyList());
+    private static volatile PackState state = EMPTY;
 
     private static boolean registered = false;
     private static boolean disabled = false;
@@ -36,6 +54,31 @@ public final class VertexPackLoader
     private static Object lastManager;
     private static Method getStream;
     private static Constructor<?> locationCtor;
+
+    static ColorProperties colorProperties()
+    {
+        return state.colorProperties;
+    }
+
+    static ColorMap grassMap()
+    {
+        return state.grassMap;
+    }
+
+    static ColorMap foliageMap()
+    {
+        return state.foliageMap;
+    }
+
+    static vertex.variants.NaturalProperties naturalProperties()
+    {
+        return state.naturalProperties;
+    }
+
+    static java.util.List<vertex.sky.SkyLayer> skyLayers()
+    {
+        return state.skyLayers;
+    }
 
     public static void tick(Object minecraft)
     {
@@ -98,9 +141,9 @@ public final class VertexPackLoader
         try
         {
             Properties colorProps = readProperties(manager, "mcpatcher/color.properties");
-            colorProperties = colorProps != null ? new ColorProperties(colorProps) : null;
-            grassMap = readColorMap(manager, "mcpatcher/colormap/grass.png");
-            foliageMap = readColorMap(manager, "mcpatcher/colormap/foliage.png");
+            ColorProperties nextColorProperties = colorProps != null ? new ColorProperties(colorProps) : null;
+            ColorMap nextGrassMap = readColorMap(manager, "mcpatcher/colormap/grass.png");
+            ColorMap nextFoliageMap = readColorMap(manager, "mcpatcher/colormap/foliage.png");
             // Sky layers are numbered by convention, so fixed-path probing suffices:
             // probe skyN.properties until a gap, capped.
             java.util.List<vertex.sky.SkyLayer> layers = new java.util.ArrayList<vertex.sky.SkyLayer>();
@@ -130,23 +173,29 @@ public final class VertexPackLoader
                 }
             }
 
-            skyLayers = layers;
             Properties naturalProps = readProperties(manager, "mcpatcher/natural.properties");
-            naturalProperties = naturalProps != null ? new vertex.variants.NaturalProperties(naturalProps) : null;
+            vertex.variants.NaturalProperties nextNaturalProperties = naturalProps != null
+                ? new vertex.variants.NaturalProperties(naturalProps) : null;
+            PackState next = new PackState(nextColorProperties, nextGrassMap, nextFoliageMap,
+                nextNaturalProperties,
+                java.util.Collections.unmodifiableList(new java.util.ArrayList<vertex.sky.SkyLayer>(layers)));
+            // One write publishes the complete reload to client and worker threads (#103).
+            state = next;
 
-            if (naturalProperties != null)
+            if (next.naturalProperties != null)
             {
                 VertexIcons.activate();
             }
             LogWrapper.info("[Vertex] Pack resources reloaded (colors: "
-                + (colorProperties != null ? colorProperties.size() + " keys" : "none")
-                + ", colormaps: " + (grassMap != null ? "grass " : "") + (foliageMap != null ? "foliage" : "")
-                + ", natural: " + (naturalProperties != null ? naturalProperties.size() + " tiles" : "none")
-                + ", sky layers: " + skyLayers.size() + ")");
+                + (next.colorProperties != null ? next.colorProperties.size() + " keys" : "none")
+                + ", colormaps: " + (next.grassMap != null ? "grass " : "") + (next.foliageMap != null ? "foliage" : "")
+                + ", natural: " + (next.naturalProperties != null ? next.naturalProperties.size() + " tiles" : "none")
+                + ", sky layers: " + next.skyLayers.size() + ")");
         }
         catch (Exception e)
         {
-            LogWrapper.warning("[Vertex] Pack reload failed, keeping defaults: " + e);
+            state = EMPTY;
+            LogWrapper.warning("[Vertex] Pack reload failed, using defaults: " + e);
         }
     }
 
