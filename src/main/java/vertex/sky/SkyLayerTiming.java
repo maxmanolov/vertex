@@ -4,7 +4,7 @@ package vertex.sky;
  * Fade timing for a custom sky layer, from the documented pack format: day-clock times
  * (hh:mm, where 06:00 is tick 0 of Minecraft's 24000-tick day) define a fade-in ramp and
  * a fade-out ramp; the layer holds full opacity between them. Windows may wrap midnight.
- * endFadeOut may be omitted and is then derived so fade-out lasts as long as fade-in.
+ * The documented endFadeOut field determines startFadeOut so both ramps have equal length.
  * Pure math, no game types: opacity(tick) is what the sky render hook multiplies into the
  * layer's blend.
  */
@@ -41,6 +41,16 @@ public class SkyLayerTiming
             fadeOutEnd = (fadeOutStart + span(fadeInStart, fadeInEnd)) % DAY_TICKS;
         }
 
+        return new SkyLayerTiming(fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd);
+    }
+
+    /** Documented form: derive fade-out start so its duration matches the fade-in ramp. */
+    public static SkyLayerTiming parse(String startIn, String endIn, String endOut)
+    {
+        int fadeInStart = parseClock(startIn);
+        int fadeInEnd = parseClock(endIn);
+        int fadeOutEnd = parseClock(endOut);
+        int fadeOutStart = (fadeOutEnd - span(fadeInStart, fadeInEnd) + DAY_TICKS) % DAY_TICKS;
         return new SkyLayerTiming(fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd);
     }
 
