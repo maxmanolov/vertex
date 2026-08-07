@@ -59,12 +59,14 @@ public final class VertexRandomEntities
             }
 
             String path = (String)getResourcePath.invoke(base);
-            Object[] pool = variants.get(path);
+            String domain = (String)getResourceDomain.invoke(base);
+            String key = domain + ":" + path;
+            Object[] pool = variants.get(key);
 
             if (pool == null)
             {
                 pool = discover(base, path);
-                variants.put(path, pool);
+                variants.put(key, pool);
             }
 
             if (pool.length <= 1)
