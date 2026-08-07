@@ -78,6 +78,8 @@ public final class VertexFrameCapture
     private static Field renderGlobalField;
     private static Field renderDistanceField;
     private static int drainedFrames = 0;
+    private static int pinDebugTicks = 0;
+    private static int timePinTicks = 0;
 
     static boolean active()
     {
@@ -109,7 +111,15 @@ public final class VertexFrameCapture
             // Environment pins run EVERY tick unconditionally - an early return before
             // these once let night fall, and hostile mobs killed the spawn-idling player
             // 34 times in a single run. Peaceful difficulty removes hostiles entirely.
-            setWorldTime.invoke(world, Long.valueOf(PIN_TIME));
+            // EXCEPT the time pin, every 100 ticks only: rewriting world time per tick
+            // makes the light engine recompute skylight continuously, which re-marks
+            // sections endlessly (observed as a 5-7k/min rebuild storm at pinTime=18000
+            // that starved the drain gate). Drift over 100 ticks is 5 game seconds -
+            // irrelevant to any comparison - and the light engine stays quiet.
+            if (timePinTicks++ % 100 == 0)
+            {
+                setWorldTime.invoke(world, Long.valueOf(PIN_TIME));
+            }
 
             // Weather strength scales the whole terrain lightmap even with rain rendering
             // off (the diff mask showed every terrain pixel shifted while sky matched:
@@ -147,7 +157,8 @@ public final class VertexFrameCapture
             {
                 Object[] serverWorlds = (Object[])worldServers.get(server);
 
-                if (serverWorlds != null && serverWorlds.length > 0 && serverWorlds[0] != null)
+                if (serverWorlds != null && serverWorlds.length > 0 && serverWorlds[0] != null
+                    && timePinTicks % 100 == 1)
                 {
                     setWorldTime.invoke(serverWorlds[0], Long.valueOf(PIN_TIME));
                 }
@@ -155,6 +166,34 @@ public final class VertexFrameCapture
             hideGui.setBoolean(gameSettings.get(minecraft), !SHOW_HUD);
             // difficulty is EnumDifficulty in 1.7.10; PEACEFUL is the first constant.
             difficulty.set(gameSettings.get(minecraft), difficulty.getType().getEnumConstants()[0]);
+
+            if (Boolean.getBoolean("vertex.test.pinDebug") && ++pinDebugTicks % 100 == 0)
+            {
+                Object serverDifficulty = "?";
+
+                try
+                {
+                    Object srv = getIntegratedServer.invoke(minecraft);
+                    Object[] worlds = srv != null ? (Object[])worldServers.get(srv) : null;
+
+                    if (worlds != null && worlds.length > 0 && worlds[0] != null)
+                    {
+                        java.lang.reflect.Field wd = worlds[0].getClass().getSuperclass().getSuperclass()
+                            .getDeclaredField("r");
+                        wd.setAccessible(true);
+                        serverDifficulty = wd.get(worlds[0]);
+                    }
+                }
+                catch (Exception probeFailure)
+                {
+                    serverDifficulty = "probe:" + probeFailure;
+                }
+
+                LogWrapper.info("[VertexPinDebug] tick=" + pinDebugTicks
+                    + " clientDifficulty=" + difficulty.get(gameSettings.get(minecraft))
+                    + " serverWorldDifficulty=" + serverDifficulty
+                    + " settleFrames=" + settleFrames + " angle=" + angleIndex);
+            }
             // The focusless test window would auto-pause into GuiIngameMenu, which is
             // what earlier captures actually photographed; keep every screen closed.
             displayGuiScreen.invoke(minecraft, new Object[] {null});

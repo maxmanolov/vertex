@@ -45,7 +45,7 @@ public final class VertexFullbright
     /** Head guard on RenderGlobal.markBlockForRenderUpdate: true = skip the re-mark. */
     public static boolean interceptLightRemark(Object renderGlobalInstance)
     {
-        if (!active)
+        if (!active || Boolean.getBoolean("vertex.test.disableRemarkSkip"))
         {
             return false;
         }
