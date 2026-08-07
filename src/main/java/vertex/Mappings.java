@@ -91,6 +91,7 @@ public final class Mappings
     public static final String MC_THE_WORLD = "f";
     public static final String MC_THE_PLAYER = "h";
     public static final String MC_RENDER_GLOBAL = "g";
+    public static final String GAME_SETTINGS = "bbj";
     public static final String MC_RUN_GAME_LOOP = "ak";
     public static final String MC_RUN_GAME_LOOP_DESC = "()V";
     public static final String MC_LOAD_WORLD = "a";
@@ -106,6 +107,8 @@ public final class Mappings
     public static final String RG_MARK_BLOCKS_FOR_UPDATE_DESC = "(IIIIII)V";
     public static final String RG_UPDATE_RENDERERS = "a";
     public static final String RG_UPDATE_RENDERERS_DESC = "(Lsv;Z)Z";
+    public static final String RG_LOAD_RENDERERS = "a";
+    public static final String RG_LOAD_RENDERERS_DESC = "()V";
     public static final String RG_MC = "A";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
