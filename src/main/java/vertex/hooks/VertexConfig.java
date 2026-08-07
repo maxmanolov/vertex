@@ -176,6 +176,10 @@ public final class VertexConfig
         }
         catch (Exception e)
         {
+            // The log promises declared defaults. Do not leave the last valid file's
+            // values active after a malformed hot reload (#101). lastModified already
+            // records this file version, so unchanged bad content logs only once.
+            values.clear();
             LogWrapper.warning("[Vertex] Could not read vertex.properties, using defaults: " + e);
         }
     }
