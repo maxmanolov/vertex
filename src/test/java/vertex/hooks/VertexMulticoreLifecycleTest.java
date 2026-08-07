@@ -2,11 +2,14 @@ package vertex.hooks;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import vertex.api.ImmediateMarker;
 import vertex.multicore.BuildQueue;
 
 import static org.junit.Assert.assertEquals;
@@ -44,7 +47,41 @@ public class VertexMulticoreLifecycleTest
         }
     }
 
+    public static final class FakeRenderer implements ImmediateMarker
+    {
+        public boolean q;
+        public final List<Object> x = new ArrayList<Object>();
+
+        public void vertex$markImmediate()
+        {
+        }
+
+        public boolean vertex$needsImmediate()
+        {
+            return false;
+        }
+
+        public void vertex$clearImmediate()
+        {
+        }
+
+        public boolean vertex$isDirty()
+        {
+            return this.q;
+        }
+
+        public void vertex$rebuild(Object viewEntity)
+        {
+        }
+
+        public void vertex$setupTranslation()
+        {
+        }
+    }
+
     private Object savedQueue;
+    private Object savedNeedsUpdate;
+    private Object savedTileEntityRenderers;
 
     @Before
     public void arm() throws Exception
@@ -56,6 +93,10 @@ public class VertexMulticoreLifecycleTest
         set("tessIsDrawing", x);
         set("tessSetTranslation", FakeTess.class.getDeclaredMethod("b", double.class, double.class, double.class));
         savedQueue = get("queue");
+        savedNeedsUpdate = get("wrNeedsUpdate");
+        savedTileEntityRenderers = get("wrTileEntityRenderers");
+        set("wrNeedsUpdate", FakeRenderer.class.getField("q"));
+        set("wrTileEntityRenderers", FakeRenderer.class.getField("x"));
         pool().clear();
         inFlight().clear();
     }
@@ -67,6 +108,8 @@ public class VertexMulticoreLifecycleTest
         set("tessIsDrawing", null);
         set("tessSetTranslation", null);
         set("queue", savedQueue);
+        set("wrNeedsUpdate", savedNeedsUpdate);
+        set("wrTileEntityRenderers", savedTileEntityRenderers);
         set("workers", null);
         Field tornDown = VertexMulticore.class.getDeclaredField("tornDown");
         tornDown.setAccessible(true);
@@ -147,13 +190,37 @@ public class VertexMulticoreLifecycleTest
         assertNull(get("queue"));
     }
 
+    @Test
+    public void discardRestoresTheTileEntityListFromBeforeTheWorkerBuild() throws Exception
+    {
+        Object previous = new Object();
+        Object uncommitted = new Object();
+        FakeRenderer renderer = new FakeRenderer();
+        renderer.x.add(uncommitted);
+        VertexMulticore.ChunkBuild build = newBuild(renderer);
+        build.previousTileEntityRenderers = new ArrayList<Object>();
+        build.previousTileEntityRenderers.add(previous);
+
+        BuildQueue.Sink sink = (BuildQueue.Sink)get("SINK");
+        sink.discard(build);
+
+        assertEquals(1, renderer.x.size());
+        assertTrue(renderer.x.get(0) == previous);
+        assertTrue("the vanilla path must rebuild the discarded section", renderer.q);
+    }
+
     private static VertexMulticore.ChunkBuild newBuild() throws Exception
+    {
+        return newBuild(new Object());
+    }
+
+    private static VertexMulticore.ChunkBuild newBuild(Object renderer) throws Exception
     {
         java.lang.reflect.Constructor<VertexMulticore.ChunkBuild> ctor =
             VertexMulticore.ChunkBuild.class.getDeclaredConstructor(
                 Object.class, int.class, int.class, Object.class, int.class, int.class, int.class);
         ctor.setAccessible(true);
-        return ctor.newInstance(new Object(), 0, 0, null, 0, 0, 0);
+        return ctor.newInstance(renderer, 0, 0, null, 0, 0, 0);
     }
 
     private static Object[] tessellators(VertexMulticore.ChunkBuild build) throws Exception

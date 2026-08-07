@@ -464,10 +464,19 @@ public final class VertexMulticore
         {
             ChunkBuild chunkBuild = (ChunkBuild)build;
             inFlight.remove(chunkBuild.renderer);
-            releaseBuild(chunkBuild);
 
             try
             {
+                // The worker changes the renderer tile-entity list. A discarded build does
+                // not publish its global-list capture. Restore the previous reconciliation
+                // baseline, but keep the list object that the renderer owns.
+                if (chunkBuild.previousTileEntityRenderers != null)
+                {
+                    List<Object> rendererTiles = (List<Object>)wrTileEntityRenderers.get(chunkBuild.renderer);
+                    rendererTiles.clear();
+                    rendererTiles.addAll(chunkBuild.previousTileEntityRenderers);
+                }
+
                 if (chunkBuild.renderer instanceof ImmediateMarker)
                 {
                     wrNeedsUpdate.setBoolean(chunkBuild.renderer, true);
@@ -476,6 +485,10 @@ public final class VertexMulticore
             catch (Exception e)
             {
                 disable("discard", e);
+            }
+            finally
+            {
+                releaseBuild(chunkBuild);
             }
         }
     };
