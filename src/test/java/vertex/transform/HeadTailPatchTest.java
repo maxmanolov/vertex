@@ -44,6 +44,20 @@ public class HeadTailPatchTest
         assertTrue(cls.getField("ran").getBoolean(null));
     }
 
+    @Test
+    public void headAndTailInstancePatchesGuardBothSidesOfABoundary() throws Exception
+    {
+        byte[] bytes = TransformerHarness.voidMethodClass("target3", "run", "()V");
+        bytes = HeadInstanceCallPatch.apply(bytes, "run", "()V", PROBE, "head");
+        bytes = TailInstanceCallPatch.apply(bytes, "run", "()V", PROBE, "head");
+        Class<?> cls = new ByteLoader().add("target3", bytes).loadClass("target3");
+        Object instance = cls.newInstance();
+        cls.getMethod("run").invoke(instance);
+        assertEquals(2, Probe.headCalls);
+        assertSame(instance, Probe.received);
+        assertTrue(cls.getField("ran").getBoolean(null));
+    }
+
     @Test(expected = IllegalStateException.class)
     public void tailPatchRefusesMissingTargets() throws Exception
     {

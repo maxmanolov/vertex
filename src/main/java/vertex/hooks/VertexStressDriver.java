@@ -18,6 +18,7 @@ import vertex.Mappings;
 public final class VertexStressDriver
 {
     private static final boolean STRESS = Boolean.getBoolean("vertex.test.stress");
+    private static final boolean POISON_TESSELLATOR = Boolean.getBoolean("vertex.test.poisonMainTessellator");
     private static final long QUIT_AFTER_MS = Long.getLong("vertex.test.quitAfterMs", 0L).longValue();
 
     private static final long[] PHASE_ENDS_MS = {45000L, 75000L, 105000L, 110000L, 115000L};
@@ -137,6 +138,19 @@ public final class VertexStressDriver
                     {
                         rejoinDone = true;
                         LogWrapper.info("[Vertex] Stress world exit (autoJoin re-enters)");
+
+                        if (POISON_TESSELLATOR)
+                        {
+                            // Fault injection for #69: begin a draw on the main tessellator
+                            // and abandon it, exactly the state a mid-teardown render
+                            // failure leaves behind. Without recovery the next rejoin dies
+                            // with "Already tesselating!"; with it, a logged recovery.
+                            Object tessellator = VertexTessellator.get();
+                            Method startQuads = tessellator.getClass().getMethod("b");
+                            startQuads.invoke(tessellator);
+                            LogWrapper.info("[Vertex] Stress poison: abandoned a main-tessellator draw before exit");
+                        }
+
                         loadWorld.invoke(minecraft, new Object[] {null});
                         // Vanilla's quit-to-title pairs loadWorld(null) with showing the main
                         // menu; omitting the screen leaves a torn GUI whose render NPEs
