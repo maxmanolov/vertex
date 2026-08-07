@@ -197,6 +197,21 @@ public final class VertexMulticore
         return stamp == null ? 0 : stamp.intValue();
     }
 
+    /**
+     * Head guard on WorldRenderer.updateRendererSort: true = skip this frame's resort.
+     * The vanilla build body (running on a worker while this renderer is in flight)
+     * nulls vertexState early in the rebuild, and the resort reads the field twice -
+     * null guard, then use - so the worker's write landing between them fed null into
+     * Tessellator.setVertexState (#92: NPE at bmh line 135, caught by the promotion
+     * fly-through over ocean). The in-flight set is written only on the client thread,
+     * so this check cannot itself race. Skipping is harmless: the in-flight build's
+     * replay installs a fresh vertexState and the next camera movement resorts.
+     */
+    public static boolean interceptSort(Object renderer, Object entity)
+    {
+        return ENABLED && !disabled && inFlight.containsKey(renderer);
+    }
+
     /** Pending build-queue depth for diagnostics; 0 when multicore is off. */
     public static int pendingDepth()
     {
