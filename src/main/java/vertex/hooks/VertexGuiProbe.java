@@ -23,7 +23,11 @@ import vertex.Mappings;
  */
 public final class VertexGuiProbe
 {
-    private static final boolean ENABLED = Boolean.getBoolean("vertex.test.guiProbe");
+    // "true"/"chatOptions" probes the Chat Settings screen (button 250); "videoSettings"
+    // probes the Video Settings screen (button 252). Any other value leaves it off.
+    private static final String PROBE_SCREEN = System.getProperty("vertex.test.guiProbe");
+    private static final boolean VIDEO = "videoSettings".equals(PROBE_SCREEN);
+    private static final boolean ENABLED = VIDEO || "true".equals(PROBE_SCREEN) || "chatOptions".equals(PROBE_SCREEN);
     private static final String SHOT_DIR = System.getProperty("vertex.test.shotDir", ".");
     private static final int MENU_WARMUP_FRAMES = 150;
     private static final int SETTLE_FRAMES = 40;
@@ -59,14 +63,14 @@ public final class VertexGuiProbe
             }
             else if (stage == 1 && ++settle >= SETTLE_FRAMES)
             {
-                shot("gui-chat-options-initial");
-                clickButton(250);
+                shot(VIDEO ? "gui-video-settings-initial" : "gui-chat-options-initial");
+                clickButton(VIDEO ? 252 : 250);
                 stage = 2;
                 settle = 0;
             }
             else if (stage == 2 && ++settle >= SETTLE_FRAMES)
             {
-                shot("gui-chat-options-toggled");
+                shot(VIDEO ? "gui-video-settings-toggled" : "gui-chat-options-toggled");
                 done = true;
                 LogWrapper.info("[Vertex] GUI probe complete, shutting down");
                 shutdown(minecraft);
@@ -84,7 +88,7 @@ public final class VertexGuiProbe
     private static void openChatOptions(Object minecraft) throws Exception
     {
         ClassLoader loader = minecraft.getClass().getClassLoader();
-        Class<?> screenClass = loader.loadClass(Mappings.SCREEN_CHAT_OPTIONS);
+        Class<?> screenClass = loader.loadClass(VIDEO ? Mappings.GUI_VIDEO_SETTINGS : Mappings.SCREEN_CHAT_OPTIONS);
         Class<?> buttonClass = loader.loadClass(Mappings.GUI_BUTTON);
         Constructor<?> ctor = screenClass.getConstructors()[0];
         Field gameSettings = minecraft.getClass().getDeclaredField(Mappings.MC_GAME_SETTINGS);
