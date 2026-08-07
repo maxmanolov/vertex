@@ -83,6 +83,41 @@ public final class VertexFrameCapture
     private static Field capabilities;
     private static Field disableDamage;
     private static Field serverPlayers;
+    private static boolean gateTimeoutLogged = false;
+
+    /** One-shot sample of the stuck-dirty set for the fullbright gate investigation. */
+    private static void dumpStuckDirty(Object renderGlobal) throws Exception
+    {
+        Field listField = renderGlobal.getClass().getDeclaredField(Mappings.RG_WORLD_RENDERERS_TO_UPDATE);
+        listField.setAccessible(true);
+        java.util.List<?> list = (java.util.List<?>) listField.get(renderGlobal);
+        int logged = 0;
+
+        for (Object renderer : list)
+        {
+            if (!(renderer instanceof vertex.api.ImmediateMarker)
+                || !((vertex.api.ImmediateMarker) renderer).vertex$isDirty())
+            {
+                continue;
+            }
+
+            Class<?> wr = renderer.getClass();
+            Field px = wr.getDeclaredField(Mappings.WR_POS_X); px.setAccessible(true);
+            Field py = wr.getDeclaredField(Mappings.WR_POS_Y); py.setAccessible(true);
+            Field pz = wr.getDeclaredField(Mappings.WR_POS_Z); pz.setAccessible(true);
+            Field inFrustum = wr.getDeclaredField("l"); inFrustum.setAccessible(true);
+            LogWrapper.info("[VertexStuck] pos=" + px.getInt(renderer) + "," + py.getInt(renderer)
+                + "," + pz.getInt(renderer) + " inFrustum=" + inFrustum.getBoolean(renderer)
+                + " inFlight=" + VertexMulticore.isInFlight(renderer));
+
+            if (++logged >= 12)
+            {
+                break;
+            }
+        }
+
+        LogWrapper.info("[VertexStuck] listSize=" + list.size() + " sampled=" + logged);
+    }
 
     static boolean active()
     {
@@ -241,7 +276,14 @@ public final class VertexFrameCapture
                 LogWrapper.info("[VertexPinDebug] tick=" + pinDebugTicks
                     + " clientDifficulty=" + difficulty.get(gameSettings.get(minecraft))
                     + " serverWorldDifficulty=" + serverDifficulty
-                    + " settleFrames=" + settleFrames + " angle=" + angleIndex);
+                    + " settleFrames=" + settleFrames + " angle=" + angleIndex
+                    + " pending=" + VertexHooks.pendingUpdates(renderGlobalField.get(minecraft))
+                    + " drainedFrames=" + drainedFrames);
+
+                if (pinDebugTicks == 10000)
+                {
+                    dumpStuckDirty(renderGlobalField.get(minecraft));
+                }
             }
             // The focusless test window would auto-pause into GuiIngameMenu, which is
             // what earlier captures actually photographed; keep every screen closed.
@@ -316,7 +358,24 @@ public final class VertexFrameCapture
             {
                 int pending = VertexHooks.pendingUpdates(renderGlobalField.get(minecraft));
 
-                if (pending != 0)
+                // Illustrative captures can cap the gate: under fullbright at pinned
+                // midnight the dirty queue plateaus (cycling ground sections saturate
+                // vanilla's out-of-frustum processing lane and empty sky sections starve
+                // behind them - full forensics on the tracking issue), so the strict
+                // fully-built-world gate never opens. Comparison-grade runs keep the
+                // strict default (no timeout); a capped run logs that it proceeded.
+                long gateTimeout = Long.getLong("vertex.test.gateTimeoutMs", 0L).longValue();
+
+                if (pending != 0 && gateTimeout > 0L && now - worldSeenMs >= SETTLE_MS + gateTimeout)
+                {
+                    if (!gateTimeoutLogged)
+                    {
+                        gateTimeoutLogged = true;
+                        LogWrapper.warning("[Vertex] Frame capture gate timed out with pending=" + pending
+                            + "; capturing a possibly incomplete far field");
+                    }
+                }
+                else if (pending != 0)
                 {
                     drainedFrames = 0;
                     return;
