@@ -45,11 +45,11 @@ Vanilla marks a changed block's 3x3x3 chunk-section neighborhood dirty and leave
 
 Vertex promotes the section containing an *interactive* change - one within 8 blocks of the view entity - to an immediate rebuild that runs ahead of the vanilla budget, capped at 4 sections per frame. Blocks on a section boundary also promote the face-adjacent section (never diagonals), so no stale face or hole lingers at the seam. Server-driven changes (pistons, fluids, redstone, other players) stay on the vanilla throttled path and cannot bypass the budget.
 
-### Multi-core chunk building (experimental opt-in)
+### Multi-core chunk building (default-on)
 
-Implemented and dark-launched: a pool of CPU workers tessellates chunk geometry into per-build Tessellator instances while the client thread compiles the results into display lists. The global `Tessellator.instance` read is redirected to a per-thread instance across all rendering classes at load time. Worker output is structurally verified against the vanilla path (identical per-section build audits, matching frame captures — see docs/benchmarks/multicore-status.md).
+A pool of CPU workers tessellates chunk geometry into per-build Tessellator instances while the client thread compiles the results into display lists. The global `Tessellator.instance` read is redirected to a per-thread instance across all rendering classes at load time. Worker output is structurally verified against the vanilla path (identical per-section build audits, matching frame captures), the lifecycle is hardened end to end, and the promotion gate closed with a human fly-through on the fixed pipeline — see docs/benchmarks/multicore-status.md for the full verification history.
 
-Off by default in 0.3.x; enable with `-Dvertex.multicore=true`. It flips to default-on after the remaining promotion gate (a human fly-through pass, TESTING.md) closes. Self-disables cleanly on any failure without costing the session.
+On by default since 0.3.2; set `multicore=false` in vertex.properties to opt out (restart to apply). Self-disables cleanly on any failure without costing the session.
 
 ## How it works
 
