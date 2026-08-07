@@ -75,10 +75,60 @@ public class VertexConfigDefaultsTest
         assertFalse(VertexConfig.enabled("fog"));
     }
 
+    @Test
+    public void invalidBooleanValuesUseDeclaredDefaults() throws Exception
+    {
+        write("betterGrass=disabled\nfog=disabled\n");
+        assertFalse(VertexConfig.enabled("betterGrass"));
+        assertTrue(VertexConfig.enabled("fog"));
+    }
+
+    @Test
+    public void booleanParsingTable() throws Exception
+    {
+        // Values that must parse as their literal meaning, whatever the key's default.
+        String[] trueSpellings = {"true", "TRUE", "True", " true ", "\ttrue"};
+        String[] falseSpellings = {"false", "FALSE", "FaLsE", " false ", "false\t"};
+        // Everything else must fall back to the key's declared default - never literal
+        // true, or a typo could switch on a default-off feature (#85).
+        String[] invalid = {"", " ", "yes", "no", "on", "off", "1", "0", "enabled",
+            "disabled", "tru", "fals", "truefalse", " true", "t rue", "null"};
+
+        for (String spelling : trueSpellings)
+        {
+            write("betterGrass=" + spelling + "\nfog=" + spelling + "\n");
+            assertTrue("'" + spelling + "' must enable a default-off key", VertexConfig.enabled("betterGrass"));
+            assertTrue("'" + spelling + "' must keep a default-on key on", VertexConfig.enabled("fog"));
+        }
+
+        for (String spelling : falseSpellings)
+        {
+            write("betterGrass=" + spelling + "\nfog=" + spelling + "\n");
+            assertFalse("'" + spelling + "' must disable a default-off key", VertexConfig.enabled("betterGrass"));
+            assertFalse("'" + spelling + "' must disable a default-on key", VertexConfig.enabled("fog"));
+        }
+
+        for (String junk : invalid)
+        {
+            write("betterGrass=" + junk + "\ndiagnostics=" + junk + "\nfog=" + junk + "\n");
+            assertFalse("'" + junk + "' must not enable default-off betterGrass", VertexConfig.enabled("betterGrass"));
+            assertFalse("'" + junk + "' must not enable default-off diagnostics", VertexConfig.enabled("diagnostics"));
+            assertTrue("'" + junk + "' must leave default-on fog at its default", VertexConfig.enabled("fog"));
+        }
+    }
+
     private static void write(String content) throws Exception
     {
         FileOutputStream out = new FileOutputStream(new File(Launch.minecraftHome, "vertex.properties"));
         out.write(content.getBytes("UTF-8"));
         out.close();
+        // Defeat the once-per-second refresh throttle and mtime granularity so every
+        // write in a loop is observed by the very next enabled() call.
+        Field lastCheck = VertexConfig.class.getDeclaredField("lastCheck");
+        lastCheck.setAccessible(true);
+        lastCheck.setLong(null, 0L);
+        Field lastModified = VertexConfig.class.getDeclaredField("lastModified");
+        lastModified.setAccessible(true);
+        lastModified.setLong(null, -1L);
     }
 }

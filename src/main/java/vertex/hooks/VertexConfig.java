@@ -58,7 +58,21 @@ public final class VertexConfig
             return declaredDefault(key);
         }
 
-        return !value.trim().equalsIgnoreCase("false");
+        String normalized = value.trim();
+
+        if (normalized.equalsIgnoreCase("true"))
+        {
+            return true;
+        }
+
+        if (normalized.equalsIgnoreCase("false"))
+        {
+            return false;
+        }
+
+        // Invalid text must not enable an option by accident. Use the same declared
+        // default as an absent value until the user corrects the file (#85).
+        return declaredDefault(key);
     }
 
     private static boolean declaredDefault(String key)
