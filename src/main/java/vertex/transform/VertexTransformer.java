@@ -43,6 +43,8 @@ public class VertexTransformer implements IClassTransformer
                 result = RenderGlobalPatch.apply(result);
                 result = HeadInstanceCallPatch.apply(result, Mappings.RG_LOAD_RENDERERS, Mappings.RG_LOAD_RENDERERS_DESC,
                     "vertex/hooks/VertexMulticore", "onRenderersReloadedHook");
+                result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
+                    "vertex/hooks/VertexFullbright", "interceptLightRemark", HeadGuardPatch.THIS_ONLY);
                 // Tail hooks BEFORE head skips: a skip guard adds a synthetic early RETURN,
                 // and a tail call attached to it would run the feature while its pass is
                 // disabled - custom sky layers were observed drawing 5,928/min with the
@@ -121,6 +123,14 @@ public class VertexTransformer implements IClassTransformer
                 result = RerouteStaticInMethodPatch.apply(result, Mappings.GI_RENDER_SCOREBOARD, Mappings.GI_RENDER_SCOREBOARD_DESC,
                     Mappings.GUI, Mappings.GUI_DRAW_RECT, Mappings.GUI_DRAW_RECT_DESC,
                     "vertex/hooks/VertexHud", "scoreboardRect");
+            }
+            else if (Mappings.GUI_VIDEO_SETTINGS.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching GuiVideoSettings (" + name + ")");
+                result = TailInstanceCallPatch.apply(result, Mappings.SCREEN_INIT_GUI, Mappings.SCREEN_INIT_GUI_DESC,
+                    "vertex/hooks/VertexHud", "videoOptionsInit");
+                result = HeadGuardPatch.apply(result, Mappings.SCREEN_ACTION_PERFORMED, Mappings.SCREEN_ACTION_PERFORMED_DESC,
+                    "vertex/hooks/VertexHud", "videoOptionsAction", HeadGuardPatch.THIS_AND_OBJECT);
             }
             else if (Mappings.SCREEN_CHAT_OPTIONS.equals(name))
             {
