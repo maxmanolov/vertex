@@ -22,7 +22,6 @@ public final class VertexHud
 {
     private static final int CHAT_BG_BUTTON_ID = 250;
     private static final int SCORE_BG_BUTTON_ID = 251;
-    private static final int FULLBRIGHT_BUTTON_ID = 252;
 
     private static Field buttonList;
     private static Field screenWidth;
@@ -124,71 +123,6 @@ public final class VertexHud
             // The screen must keep working even if injection fails; disable, never crash.
             guiBroken = true;
             LogWrapper.warning("[Vertex] Chat options button injection disabled after failure: " + t);
-        }
-    }
-
-    /** Tail of GuiVideoSettings.initGui: append the Fullbright toggle (#116). */
-    public static void videoOptionsInit(Object screen)
-    {
-        if (guiBroken)
-        {
-            return;
-        }
-
-        try
-        {
-            resolve(screen);
-            @SuppressWarnings("unchecked")
-            List<Object> buttons = (List<Object>) buttonList.get(screen);
-            int width = screenWidth.getInt(screen);
-            int doneY = 0;
-
-            for (Object button : buttons)
-            {
-                doneY = Math.max(doneY, buttonY.getInt(button));
-            }
-
-            // This screen's option grid lives inside a scrolling row-list widget, NOT in
-            // buttonList (which holds only Done) - a floating button "above Done" lands
-            // on whatever row is scrolled there (caught by the GUI probe screenshot).
-            // The one patch of screen the list never covers is Done's own row; sit to
-            // Done's right, sized for the ~110px flank at the minimum scaled width.
-            buttons.add(buttonCtor.newInstance(FULLBRIGHT_BUTTON_ID, width / 2 + 104, doneY, 115, 20,
-                label("Fullbright", "fullbright")));
-        }
-        catch (Throwable t)
-        {
-            guiBroken = true;
-            LogWrapper.warning("[Vertex] Video options button injection disabled after failure: " + t);
-        }
-    }
-
-    /** Head guard on GuiVideoSettings.actionPerformed: true = the click was ours. */
-    public static boolean videoOptionsAction(Object screen, Object button)
-    {
-        if (guiBroken || button == null)
-        {
-            return false;
-        }
-
-        try
-        {
-            resolve(screen);
-
-            if (buttonId.getInt(button) != FULLBRIGHT_BUTTON_ID)
-            {
-                return false;
-            }
-
-            VertexConfig.setAndSave("fullbright", !VertexConfig.enabled("fullbright"));
-            buttonDisplay.set(button, label("Fullbright", "fullbright"));
-            return true;
-        }
-        catch (Throwable t)
-        {
-            guiBroken = true;
-            LogWrapper.warning("[Vertex] Video options button handling disabled after failure: " + t);
-            return false;
         }
     }
 
