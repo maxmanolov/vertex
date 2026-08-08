@@ -529,7 +529,7 @@ public final class VertexMulticore
                     || wrPosY.getInt(chunkBuild.renderer) != chunkBuild.posY
                     || wrPosZ.getInt(chunkBuild.renderer) != chunkBuild.posZ)
                 {
-                    discard(build);
+                    discard(build, false);
                     return false;
                 }
 
@@ -542,7 +542,7 @@ public final class VertexMulticore
                     // discarding those put every empty section into an eternal
                     // submit/discard/requeue loop (4,618 sections pinned dirty on the
                     // first managed soak).
-                    discard(build);
+                    discard(build, false);
                     return false;
                 }
 
@@ -555,18 +555,26 @@ public final class VertexMulticore
                 disable("replay", e);
                 // The section's display list may hold half-replayed geometry; re-dirty it
                 // so the vanilla path rebuilds it cleanly after the pipeline tears down.
-                discard(build);
+                discard(build, false);
                 return false;
             }
         }
 
-        public void discard(BuildQueue.Build build)
+        public void discard(BuildQueue.Build build, boolean obsolete)
         {
             ChunkBuild chunkBuild = (ChunkBuild)build;
             inFlight.remove(chunkBuild.renderer);
 
             try
             {
+                if (obsolete)
+                {
+                    // loadRenderers has already destroyed this renderer's grid and reused
+                    // its list allocation. Requeueing the old object would contaminate the
+                    // replacement grid; only its captured resources need disposition.
+                    return;
+                }
+
                 // The worker changes the renderer tile-entity list. A discarded build does
                 // not publish its global-list capture. Restore the previous reconciliation
                 // baseline, but keep the list object that the renderer owns.
