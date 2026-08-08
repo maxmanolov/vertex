@@ -1,5 +1,6 @@
 package vertex.render;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -17,6 +18,14 @@ import org.lwjgl.opengl.GLContext;
  * VBO backend uploads the staged bytes with glBufferData.
  *
  * Everything here is client-thread only, like all GL in Vertex.
+ *
+ * Every position/limit/clear call goes through a {@link Buffer} cast: JDK 9 added
+ * covariant overrides of those methods on the typed buffers, so code compiled on a
+ * newer JDK with only -source/-target 8 emits descriptors like
+ * IntBuffer.clear()Ljava/nio/IntBuffer; that do not exist on the Java 8 runtime the
+ * 1.7.10 client ships with (NoSuchMethodError on renderer=vbo/arena, reported from a
+ * newer-JDK build). The build also passes --release 8 where the compiler supports it;
+ * the casts keep the bytecode safe even if that flag is ever lost.
  */
 public final class Staging
 {
@@ -53,10 +62,10 @@ public final class Staging
 
         bakeInto(mesh.data, usedInts, addX, addY, addZ, scale, bakeScratch);
         ensureCapacity(usedInts * 4);
-        ints.clear();
+        ((Buffer)ints).clear();
         ints.put(bakeScratch, 0, usedInts);
-        bytes.position(0);
-        bytes.limit(usedInts * 4);
+        ((Buffer)bytes).position(0);
+        ((Buffer)bytes).limit(usedInts * 4);
         return bytes;
     }
 
@@ -85,14 +94,14 @@ public final class Staging
     {
         int usedInts = mesh.data.length;
         ensureCapacity(usedInts * 4);
-        ints.clear();
+        ((Buffer)ints).clear();
         ints.put(mesh.data, 0, usedInts);
-        bytes.position(0);
-        bytes.limit(usedInts * 4);
-        floats.position(0);
-        floats.limit(usedInts);
-        shorts.position(0);
-        shorts.limit(usedInts * 2);
+        ((Buffer)bytes).position(0);
+        ((Buffer)bytes).limit(usedInts * 4);
+        ((Buffer)floats).position(0);
+        ((Buffer)floats).limit(usedInts);
+        ((Buffer)shorts).position(0);
+        ((Buffer)shorts).limit(usedInts * 2);
         return bytes;
     }
 
@@ -108,7 +117,7 @@ public final class Staging
 
         if (mesh.hasTexture)
         {
-            floats.position(3);
+            ((Buffer)floats).position(3);
             GL11.glTexCoordPointer(2, MeshData.STRIDE, floats);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
         }
@@ -116,7 +125,7 @@ public final class Staging
         if (mesh.hasBrightness)
         {
             clientActiveTexture(GL_TEXTURE1);
-            shorts.position(14);
+            ((Buffer)shorts).position(14);
             GL11.glTexCoordPointer(2, MeshData.STRIDE, shorts);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
             clientActiveTexture(GL_TEXTURE0);
@@ -124,19 +133,19 @@ public final class Staging
 
         if (mesh.hasColor)
         {
-            bytes.position(20);
+            ((Buffer)bytes).position(20);
             GL11.glColorPointer(4, true, MeshData.STRIDE, bytes);
             GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
         }
 
         if (mesh.hasNormals)
         {
-            bytes.position(24);
+            ((Buffer)bytes).position(24);
             GL11.glNormalPointer(MeshData.STRIDE, bytes);
             GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
         }
 
-        floats.position(0);
+        ((Buffer)floats).position(0);
         GL11.glVertexPointer(3, MeshData.STRIDE, floats);
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
         GL11.glDrawArrays(mesh.drawMode, 0, mesh.vertexCount);

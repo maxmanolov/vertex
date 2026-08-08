@@ -286,12 +286,15 @@ public final class ArenaBackend implements RenderBackend
                 if (this.multiDraw && batch.size > 1)
                 {
                     ensureMultiCapacity(batch.size);
-                    this.multiFirsts.clear();
+                    // Buffer casts: Java 8 has no covariant IntBuffer.clear/flip, and a
+                    // newer-JDK build must not emit descriptors the game's runtime lacks
+                    // (see Staging's class comment).
+                    ((java.nio.Buffer)this.multiFirsts).clear();
                     this.multiFirsts.put(batch.firsts, 0, batch.size);
-                    this.multiFirsts.flip();
-                    this.multiCounts.clear();
+                    ((java.nio.Buffer)this.multiFirsts).flip();
+                    ((java.nio.Buffer)this.multiCounts).clear();
                     this.multiCounts.put(batch.counts, 0, batch.size);
-                    this.multiCounts.flip();
+                    ((java.nio.Buffer)this.multiCounts).flip();
                     GL14.glMultiDrawArrays(batch.drawMode, this.multiFirsts, this.multiCounts);
                     ++this.drawCalls;
                 }
