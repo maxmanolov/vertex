@@ -74,6 +74,7 @@ public final class VertexFrameCapture
     private static Field hideGui;
     private static Field difficulty;
     private static Field posXField;
+    private static Field posYField;
     private static Field posZField;
     private static boolean settingsSnapshotTaken = false;
     private static boolean savedHideGui;
@@ -86,7 +87,59 @@ public final class VertexFrameCapture
     private static Field capabilities;
     private static Field disableDamage;
     private static Field serverPlayers;
+    private static Field serverHandler;
+    private static Method serverTeleport;
     private static boolean gateTimeoutLogged = false;
+
+    /**
+     * Position must be pinned on the SERVER player, exactly like invulnerability: the
+     * per-tick client setPosition is one more placebo on its own. The authoritative
+     * EntityPlayerMP keeps getting shoved by the midnight mob crowd, the server syncs
+     * that drift back down, and the client pin yanks the view entity home again - so the
+     * camera teleports across chunk borders every tick. Each crossing runs RenderGlobal's
+     * grid re-anchor (markRenderersForNewPosition), which re-marks an entire slab of
+     * sections directly into worldRenderersToUpdate, bypassing every mark entry point.
+     * That churn is what held the drain gate at ~3,150 pending forever (#118) - the
+     * plateau tracked mob shoving, not fullbright; the fullbright split in the original
+     * runs was a confound. Teleporting the server player home through its connection
+     * handler (the vanilla anti-cheat path, so the client accepts it) stops the drift at
+     * the source. Gated on actual drift so quiet ticks send no packets. Motion mode
+     * scripts client-side movement by design and keeps its historical behavior.
+     */
+    private static void pinServerPosition(Object serverPlayer) throws Exception
+    {
+        if (MOTION || !anchored)
+        {
+            return;
+        }
+
+        if (serverHandler == null)
+        {
+            // Declared on EntityPlayerMP itself; no hierarchy walk, "a" is too common a
+            // notch name to search for.
+            serverHandler = serverPlayer.getClass().getDeclaredField(Mappings.PLAYER_MP_NET_HANDLER);
+            serverHandler.setAccessible(true);
+            serverTeleport = serverHandler.getType().getMethod(Mappings.NET_HANDLER_SET_PLAYER_LOCATION,
+                double.class, double.class, double.class, float.class, float.class);
+        }
+
+        double dx = posXField.getDouble(serverPlayer) - anchorX;
+        double dy = posYField.getDouble(serverPlayer) - groundY;
+        double dz = posZField.getDouble(serverPlayer) - anchorZ;
+
+        // Quarter-block tolerance, all three axes: the spawn anchor can sit within a
+        // block of a chunk (or section-Y) border, and the re-anchor fires on any chunk
+        // coordinate change - a loose gate would let sub-block shoving oscillate across
+        // that border forever.
+        if (dx * dx + dy * dy + dz * dz < 0.0625D)
+        {
+            return;
+        }
+
+        serverTeleport.invoke(serverHandler.get(serverPlayer), Double.valueOf(anchorX),
+            Double.valueOf(groundY), Double.valueOf(anchorZ),
+            Float.valueOf(YAWS[angleIndex]), Float.valueOf(10.0F));
+    }
 
     /** One-shot sample of the stuck-dirty set for the fullbright gate investigation. */
     private static void dumpStuckDirty(Object renderGlobal) throws Exception
@@ -248,6 +301,7 @@ public final class VertexFrameCapture
                     for (Object serverPlayer : (java.util.List<?>)serverPlayers.get(pinWorlds[0]))
                     {
                         disableDamage.setBoolean(capabilities.get(serverPlayer), true);
+                        pinServerPosition(serverPlayer);
                     }
                 }
             }
@@ -361,12 +415,13 @@ public final class VertexFrameCapture
             {
                 int pending = VertexHooks.pendingUpdates(renderGlobalField.get(minecraft));
 
-                // Illustrative captures can cap the gate: under fullbright at pinned
-                // midnight the dirty queue plateaus (cycling ground sections saturate
-                // vanilla's out-of-frustum processing lane and empty sky sections starve
-                // behind them - full forensics on the tracking issue), so the strict
-                // fully-built-world gate never opens. Comparison-grade runs keep the
-                // strict default (no timeout); a capped run logs that it proceeded.
+                // Safety escape only. The midnight plateau this once papered over (#118)
+                // was mob shoving drifting the SERVER player while the client pin held -
+                // the camera teleported across chunk borders every tick and the grid
+                // re-anchor re-marked section slabs forever; pinServerPosition removes
+                // the cause and the strict gate opens on its own. The timeout stays for
+                // genuinely unquiet worlds (external servers, mods), and a capped run
+                // logs that it proceeded.
                 long gateTimeout = Long.getLong("vertex.test.gateTimeoutMs", 0L).longValue();
 
                 if (pending != 0 && gateTimeout > 0L && now - worldSeenMs >= SETTLE_MS + gateTimeout)
@@ -609,6 +664,8 @@ public final class VertexFrameCapture
         posXField.setAccessible(true);
         posZField = entity.getDeclaredField(Mappings.ENTITY_POS_Z);
         posZField.setAccessible(true);
+        posYField = entity.getDeclaredField(Mappings.ENTITY_POS_Y);
+        posYField.setAccessible(true);
         renderGlobalField = minecraft.getClass().getDeclaredField(Mappings.MC_RENDER_GLOBAL);
         renderGlobalField.setAccessible(true);
         renderDistanceField = gameSettings.get(minecraft).getClass().getDeclaredField(Mappings.GS_RENDER_DISTANCE);
