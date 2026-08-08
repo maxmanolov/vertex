@@ -34,10 +34,9 @@ public final class VertexFrameCapture
     private static final int MOTION_SHOTS = 24;
     private static final int MOTION_FRAME_STRIDE = 40;
     private static final double MOTION_SPEED = 0.25D;
-    private static int motionFrames = 0;
-    private static int motionCaptured = 0;
+    private static final MotionCaptureSchedule MOTION_SCHEDULE =
+        new MotionCaptureSchedule(MOTION_FRAME_STRIDE, MOTION_SHOTS);
     private static double motionZ = 0.0D;
-    private static final java.util.List<byte[]> motionRaws = new java.util.ArrayList<byte[]>();
     // Day-clock tick the capture pins (6000 = noon). Fullbright evidence needs a dark
     // scene - noon under open sky is lightmap-max everywhere and shows no delta - so
     // -Dvertex.test.pinTime=18000 shoots the same fixture at midnight.
@@ -400,6 +399,33 @@ public final class VertexFrameCapture
 
             if (now - worldSeenMs < SETTLE_MS)
             {
+                return;
+            }
+
+            if (MOTION)
+            {
+                if (!MOTION_SCHEDULE.advanceFrame())
+                {
+                    return;
+                }
+
+                int shot = MOTION_SCHEDULE.capturedCount();
+
+                if (shot == 0)
+                {
+                    auditGrid(minecraft);
+                }
+
+                capture(shot);
+
+                if (MOTION_SCHEDULE.recordCapture())
+                {
+                    done = true;
+                    LogWrapper.info("[Vertex] Motion frame capture complete ("
+                        + MOTION_SHOTS + " frames)");
+                    restorePinnedSettings(minecraft);
+                }
+
                 return;
             }
 
