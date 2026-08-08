@@ -83,7 +83,7 @@ frame-time numbers from the diagnostics counters.
 redundancy at ~140 redundant calls/frame - microseconds of driver time against the 5%
 frame-time threshold. See docs/benchmarks/fastrender.md.
 
-## 5b. Renderer backend program (in flight on feature/render-backend)
+## 5b. Renderer backend program (stages 1-3 merged, opt-in since 0.4.0)
 
 **Design (fixed in docs/RENDERER.md):** staged migration
 `legacy display lists -> managed section meshes -> per-section VBOs -> shared arenas
@@ -94,7 +94,7 @@ section, linear). Geometry production is separated from GPU representation behin
 every GL byte; everything is opt-in behind the `renderer` key with `legacy` weaving
 nothing.
 
-**Merge gate (stages 1-2, the open PR):** zero self-disables across RD8/RD16 soaks and
+**Merge gate (stages 1-2, met - PR #122):** zero self-disables across RD8/RD16 soaks and
 churn stress; structural build-audit parity with legacy within the method's control
 noise; frame times neutral under `displaylist` and improved under `vbo`; full teardown
 across world/RD changes; the disable path re-marks and heals through the vanilla
@@ -107,6 +107,10 @@ stress (26-28% steady, 56% under teleport storms settling back, compaction drain
 under genuine churn), and the same structural-parity and zero-disable soak bars as
 stage 2 - including the stress-driver gauntlet's render-distance flips, resource
 reloads and world rejoins.
+
+**Remaining:** real-world miles on the opt-in backends, then a default-on decision
+through the same promotion gate multicore passed (human fly-through sign-off on top of
+the automated bars).
 
 ## 6. Dynamic lights
 

@@ -1,4 +1,4 @@
-# Manual test checklist - Vertex 0.3.0
+# Manual test checklist - Vertex 0.4.0
 
 Automated coverage (unit tests, autonomous soaks, stress cycles) runs via the harness
 flags documented in docs/ARCHITECTURE.md. The items below are the ones that need eyes.
@@ -25,6 +25,14 @@ The checklist below is retained for regression sign-off on future renderer chang
    rebuilds, lighting seams. Break and place blocks near chunk borders.
 4. Exit to title, rejoin, repeat briefly.
 
+## Renderer backend spot check (opt-in, 0.4.0)
+
+Set `renderer=displaylist`, `vbo`, or `arena` in vertex.properties (restart to apply)
+and run the same four-step fly-through above - the checklist is identical because the
+backends must be visually indistinguishable from legacy. With `diagnostics=true` the
+once-per-minute summary reports backend health (uploads, draw batches, arena occupancy);
+any failure self-disables back to the vanilla path and logs once.
+
 ## Feature spot checks (5 minutes total)
 
 - `vertex.properties`: toggle sky/clouds/weather/fog false while in-world; each pass
@@ -36,6 +44,10 @@ The checklist below is retained for regression sign-off on future renderer chang
   skyN.properties layers render and fade with the day clock (check the 3x2 UV layout
   looks correct - known-unconfirmed item).
 - Better grass: enable, confirm hillside grass sides render as grass.
+- Fullbright: toggle the Video Settings button (or `fullbright=true`); the world renders
+  at max brightness within a second and dark areas are fully visible; toggle off and
+  confirm normal lighting returns. The state must keep following the toggle even after
+  a renderer-reload failure (reload loss is logged, brightness keeps working).
 - HUD backgrounds: on a server (or via /scoreboard in a world with cheats) display a
   sidebar objective, toggle Scoreboard BG in Chat Settings; the sidebar's translucent
   backdrop disappears while its text and score numbers stay. Chat Background is covered

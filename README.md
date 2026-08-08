@@ -27,10 +27,11 @@ justification. Architecture and the clean-room policy live in
 
 `vertex.properties` is created in the game directory on first run. Every key defaults to
 vanilla behavior; set a key to `false` to skip that work for performance. Edits hot-reload
-within a second — no restart. The generated file documents every key with a comment; the
-authoritative list lives there and in [FEATURES.md](FEATURES.md) (17 keys as of 0.3.x,
-covering render passes, pack visual features, dynamic lights, HUD backgrounds and
-diagnostics).
+within a second — no restart, except the two pipeline keys (`multicore`, `renderer`),
+which apply at the next launch. The generated file documents every key with a comment; the
+authoritative list lives there and in [FEATURES.md](FEATURES.md) (20 keys as of 0.4.0,
+covering render passes, pack visual features, dynamic lights, the chunk-build and
+renderer pipelines, fullbright, HUD backgrounds and diagnostics).
 
 ### Render-pass controls (active)
 
@@ -44,6 +45,14 @@ enabled and removes the pass entirely when disabled.
 Vanilla marks a changed block's 3x3x3 chunk-section neighborhood dirty and leaves the rebuild to a distance-sorted, per-frame-budgeted queue. When that queue is busy (chunk loading while moving), the section containing a block you just broke or placed can wait many frames, so the world visibly lags your click.
 
 Vertex promotes the section containing an *interactive* change - one within 8 blocks of the view entity - to an immediate rebuild that runs ahead of the vanilla budget, capped at 4 sections per frame. Blocks on a section boundary also promote the face-adjacent section (never diagonals), so no stale face or hole lingers at the seam. Server-driven changes (pistons, fluids, redstone, other players) stay on the vanilla throttled path and cannot bypass the budget.
+
+### Fullbright and HUD backgrounds (active)
+
+`fullbright` (default off, with a button in Video Settings) renders the world at maximum
+brightness and skips light-triggered chunk rebuilds while active. `chatBackground` and
+`scoreboardBackground` remove the translucent backdrops behind chat lines and the
+scoreboard sidebar, with ON/OFF buttons in the vanilla Chat Settings screen. All three
+persist to vertex.properties like every other key.
 
 ### Multi-core chunk building (default-on)
 

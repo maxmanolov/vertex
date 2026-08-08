@@ -1,4 +1,4 @@
-# Known limitations - Vertex 0.3.2
+# Known limitations - Vertex 0.4.0
 
 - **Multi-core chunk building is now DEFAULT-ON** (`multicore=false` in
   vertex.properties opts out; restart to apply). The promotion gate closed 2026-08-06
@@ -7,6 +7,13 @@
   fly-through that surfaced the last in-motion race (client translucent resort vs
   worker vertexState write, #92), fixed at root and A/B-verified before a clean
   fly-through sign-off on the fixed pipeline.
+- **The renderer backends (`displaylist`/`vbo`/`arena`) are experimental and opt-in**
+  (`renderer=legacy` stays the default; restart to apply). They passed structural parity,
+  soak, churn and stress gates (docs/benchmarks/renderer-backends.md) but have not yet
+  accumulated the real-world miles that promoted multicore; default-on follows the same
+  gate. GPU buffer memory is explicit and reported in diagnostics under these backends
+  (~239MB at RD16 under `vbo`; arena blocks peaked at 336MB with 241MB live in the RD16
+  soak) - the legacy display-list equivalent existed but was driver-hidden.
 - **Workers still execute against the live WorldRenderer**: reposition races are
   caught by build stamps, the resort race by the in-flight guard, and transient
   `skipRenderPass` writes remain observable mid-build (worst case a one-frame flicker
