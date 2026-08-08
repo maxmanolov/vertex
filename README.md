@@ -51,6 +51,19 @@ A pool of CPU workers tessellates chunk geometry into per-build Tessellator inst
 
 On by default since 0.3.2; set `multicore=false` in vertex.properties to opt out (restart to apply). Self-disables cleanly on any failure without costing the session.
 
+### Renderer backends (experimental, opt-in)
+
+Phase profiling showed the stock renderer is submission-bound: at render distance 16,
+three quarters of frame time goes into executing one display list per visible section
+(docs/benchmarks/renderer-baseline.md). The `renderer` key selects the terrain backend:
+`legacy` (default — the vanilla path, untouched), `displaylist` (the managed
+section-mesh pipeline with vanilla visuals and performance; workers produce
+backend-neutral geometry, one install path owns all GL), or `vbo` (per-section vertex
+buffers, the second migration stage). Restart to apply. The design, stage ladder toward
+shared-buffer batched submission, and lifecycle rules live in
+[docs/RENDERER.md](docs/RENDERER.md). Like every Vertex subsystem it self-disables to
+the vanilla path on any failure.
+
 ## How it works
 
 | Piece | Role |

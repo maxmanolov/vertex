@@ -92,7 +92,11 @@ first soak, and only an instrumented run showed the icon dispatch was live all a
   keeps the GUI drawn during frame captures, `-Dvertex.test.markAudit=true` attributes
   every section re-mark and every direct worldRenderersToUpdate addition to its caller
   (10-second counters per mark entry point plus sampled stacks; the instrument that
-  root-caused #118), and `-Dvertex.test.guiProbe=true` (with
+  root-caused #118), `-Dvertex.profileRender=true` brackets the four client-thread
+  renderer phases (frustum clip, sortAndRender walk, glCallLists submission, rebuild
+  pass) and logs a 10-second `[VertexProf]` split plus vanilla's per-frame section
+  counters (the baseline instrument for the render-backend work), and
+  `-Dvertex.test.guiProbe=true` (with
   `-Dvertex.test.shotDir`) runs an autonomous GUI check from the title screen: it opens
   the Chat Settings screen, screenshots the injected Vertex buttons, clicks Chat
   Background through the real patched actionPerformed path, screenshots the flipped

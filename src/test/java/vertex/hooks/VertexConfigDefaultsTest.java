@@ -133,6 +133,28 @@ public class VertexConfigDefaultsTest
         }
     }
 
+    @Test
+    public void stringValuesResolveWithDeclaredDefaults() throws Exception
+    {
+        write("renderer=displaylist\n");
+        org.junit.Assert.assertEquals("displaylist", VertexConfig.value("renderer", "unused"));
+
+        write("renderer=  vbo  \n");
+        org.junit.Assert.assertEquals("value() must trim", "vbo", VertexConfig.value("renderer", "unused"));
+
+        write("");
+        org.junit.Assert.assertEquals("absent declared key resolves to its declared default",
+            "legacy", VertexConfig.value("renderer", "unused"));
+
+        write("renderer=\n");
+        org.junit.Assert.assertEquals("blank value resolves to the declared default",
+            "legacy", VertexConfig.value("renderer", "unused"));
+
+        write("");
+        org.junit.Assert.assertEquals("undeclared keys use the caller fallback",
+            "fallback", VertexConfig.value("noSuchKey", "fallback"));
+    }
+
     private static void write(String content) throws Exception
     {
         FileOutputStream out = new FileOutputStream(new File(Launch.minecraftHome, "vertex.properties"));

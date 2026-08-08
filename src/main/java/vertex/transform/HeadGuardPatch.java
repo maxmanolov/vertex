@@ -23,6 +23,7 @@ final class HeadGuardPatch implements Opcodes
     static final int THIS_ONLY = 0;
     static final int THIS_AND_INT = 1;
     static final int THIS_AND_OBJECT = 2;
+    static final int THIS_INT_DOUBLE = 3;
 
     static byte[] apply(byte[] basicClass, String method, String desc, String hookOwner, String hookName, int shape)
     {
@@ -53,6 +54,12 @@ final class HeadGuardPatch implements Opcodes
                 {
                     head.add(new VarInsnNode(ALOAD, 1));
                     hookDesc = "(Ljava/lang/Object;Ljava/lang/Object;)Z";
+                }
+                else if (shape == THIS_INT_DOUBLE)
+                {
+                    head.add(new VarInsnNode(ILOAD, 1));
+                    head.add(new VarInsnNode(DLOAD, 2));
+                    hookDesc = "(Ljava/lang/Object;ID)Z";
                 }
                 else
                 {

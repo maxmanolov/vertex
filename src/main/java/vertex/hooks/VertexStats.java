@@ -73,6 +73,7 @@ public final class VertexStats
             + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " emptyReplays=" + emptyReplays + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " buildQ=" + VertexMulticore.pendingDepth()
             + " fbSkippedRemarks=" + VertexFullbright.skippedRemarks
+            + VertexRenderer.drainReport()
             + VertexFrameStats.drainReport()
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
         drainAll();

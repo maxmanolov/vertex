@@ -83,6 +83,27 @@ frame-time numbers from the diagnostics counters.
 redundancy at ~140 redundant calls/frame - microseconds of driver time against the 5%
 frame-time threshold. See docs/benchmarks/fastrender.md.
 
+## 5b. Renderer backend program (in flight on feature/render-backend)
+
+**Design (fixed in docs/RENDERER.md):** staged migration
+`legacy display lists -> managed section meshes -> per-section VBOs -> shared arenas
+with per-region batched submission`, motivated by the measured baseline
+(docs/benchmarks/renderer-baseline.md: 67-76% of wall time in glCallLists, ~6.7 us per
+section, linear). Geometry production is separated from GPU representation behind
+`MeshData`/`RenderBackend`; workers stay GL-free; one client-thread install path owns
+every GL byte; everything is opt-in behind the `renderer` key with `legacy` weaving
+nothing.
+
+**Merge gate (stages 1-2, the open PR):** zero self-disables across RD8/RD16 soaks and
+churn stress; structural build-audit parity with legacy within the method's control
+noise; frame times neutral under `displaylist` and improved under `vbo`; full teardown
+across world/RD changes; the disable path re-marks and heals through the vanilla
+renderer.
+
+**Merge gate (stage 3, future):** arena submission approaching O(visible regions) per
+pass, stable memory under fragmentation stress (allocator already landed with tests),
+and the same structural-parity and soak bars as stage 2.
+
 ## 6. Dynamic lights
 
 **Design:** each frame, collect dynamic sources (held or dropped light-emitting items,

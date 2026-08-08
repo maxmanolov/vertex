@@ -147,6 +147,16 @@ public final class VertexHooks
         VertexSkyBridge.publish(renderGlobal);
         VertexMulticore.drainFinished();
 
+        if (VertexRenderProfiler.ACTIVE)
+        {
+            VertexRenderProfiler.frame(renderGlobal);
+        }
+
+        if (VertexRenderer.MANAGED)
+        {
+            VertexRenderer.clientTick(renderGlobal);
+        }
+
         try
         {
             List<?> queue = (List<?>)worldRenderersToUpdate.get(renderGlobal);
