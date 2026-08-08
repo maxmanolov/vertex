@@ -58,6 +58,19 @@ public final class TransformerHarness implements Opcodes
             return guardResult;
         }
 
+        public static int virtualCalls;
+        public static Object virtualReceiver;
+        public static float virtualA;
+        public static float virtualB;
+
+        public static void virtualHook(Object receiver, float a, float b)
+        {
+            ++virtualCalls;
+            virtualReceiver = receiver;
+            virtualA = a;
+            virtualB = b;
+        }
+
         public static void reset()
         {
             headCalls = 0;
@@ -66,6 +79,10 @@ public final class TransformerHarness implements Opcodes
             exitCalls = 0;
             lastPhase = -1;
             received = null;
+            virtualCalls = 0;
+            virtualReceiver = null;
+            virtualA = 0.0F;
+            virtualB = 0.0F;
         }
     }
 
@@ -148,6 +165,69 @@ public final class TransformerHarness implements Opcodes
         compute.visitInsn(IRETURN);
         compute.visitMaxs(0, 0);
         compute.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /**
+     * A class with: public void c(FF)V bumping a static call counter and recording both
+     * floats; the reroute target stand-in shaped like an obfuscated instance method.
+     */
+    public static byte[] virtualTarget(String internalName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "calls", "I", null, null).visitEnd();
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "ax", "F", null, null).visitEnd();
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "ay", "F", null, null).visitEnd();
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor c = cw.visitMethod(ACC_PUBLIC, "c", "(FF)V", null, null);
+        c.visitCode();
+        c.visitFieldInsn(GETSTATIC, internalName, "calls", "I");
+        c.visitInsn(ICONST_1);
+        c.visitInsn(IADD);
+        c.visitFieldInsn(PUTSTATIC, internalName, "calls", "I");
+        c.visitVarInsn(FLOAD, 1);
+        c.visitFieldInsn(PUTSTATIC, internalName, "ax", "F");
+        c.visitVarInsn(FLOAD, 2);
+        c.visitFieldInsn(PUTSTATIC, internalName, "ay", "F");
+        c.visitInsn(RETURN);
+        c.visitMaxs(0, 0);
+        c.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /**
+     * A caller with: public static void m(T, float, float) containing the requested
+     * number of INVOKEVIRTUAL T.c(FF)V sites, mirroring updateCameraAndRender's pair of
+     * mouse-look call sites.
+     */
+    public static byte[] virtualCaller(String internalName, String targetName, int sites)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "m",
+            "(L" + targetName + ";FF)V", null, null);
+        m.visitCode();
+
+        for (int i = 0; i < sites; ++i)
+        {
+            m.visitVarInsn(ALOAD, 0);
+            m.visitVarInsn(FLOAD, 1);
+            m.visitVarInsn(FLOAD, 2);
+            m.visitMethodInsn(INVOKEVIRTUAL, targetName, "c", "(FF)V", false);
+        }
+
+        m.visitInsn(RETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
         cw.visitEnd();
         return cw.toByteArray();
     }
