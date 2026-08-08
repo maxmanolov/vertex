@@ -3,6 +3,14 @@
 Automated coverage (unit tests, autonomous soaks, stress cycles) runs via the harness
 flags documented in docs/ARCHITECTURE.md. The items below are the ones that need eyes.
 
+The standalone cross-client benchmark has a separate test task:
+
+```text
+./gradlew benchmarkTest
+```
+
+See `bench/README.md` for local profile comparisons.
+
 ## Multi-core visual sign-off - GATE CLOSED (2026-08-06)
 
 Multicore is default-on since 0.3.2. The gate did its job on the first attempt: the

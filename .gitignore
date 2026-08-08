@@ -7,3 +7,5 @@ out/
 run/
 logs/
 vertex.properties
+benchmark-results/
+bench/*.local.json

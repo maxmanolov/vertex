@@ -67,13 +67,21 @@ Vertex targets the obfuscated vanilla 1.7.10 client only. In any other environme
 
 ## Build
 
-JDK 8+ and the Gradle wrapper:
+Use JDK 17 and the Gradle wrapper. The wrapper supports JDK 8 through JDK 23. The
+output runs on JDK 8.
 
 ```
 ./gradlew build
 ```
 
 Output: `build/libs/vertex-<version>.jar` - both the mod library and the installer executable.
+
+## Compare clients locally
+
+Use the [local client benchmark](bench/README.md) to compare vanilla 1.7.10, Vertex,
+OptiFine, Lunar Client, or another profile. The standalone harness uses the same external
+frame collector for each client. It keeps raw CSV data and writes JSON, CSV, and Markdown
+reports.
 
 ## License
 

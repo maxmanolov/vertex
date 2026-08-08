@@ -7,7 +7,7 @@ set -euo pipefail
 JAVA=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home/bin/java
 CACHE="$HOME/.cache/vertex-run"
 GD="$HOME/.minecraft-vertex"
-VERTEX_JAR=$(ls -t "$HOME"/vertex/build/libs/vertex-*.jar 2>/dev/null | head -1)
+VERTEX_JAR=$(ls -t "$HOME"/vertex/build/libs/vertex-[0-9]*.jar 2>/dev/null | head -1)
 LW="$HOME/.gradle/caches/modules-2/files-2.1/net.minecraft/launchwrapper/1.12/111e7bea9c968cdb3d06ef4632bf7ff0824d0f36/launchwrapper-1.12.jar"
 
 if [ -z "$VERTEX_JAR" ]; then
