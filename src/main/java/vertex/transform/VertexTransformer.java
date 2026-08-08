@@ -46,6 +46,15 @@ public class VertexTransformer implements IClassTransformer
                 result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
                     "vertex/hooks/VertexFullbright", "interceptLightRemark", HeadGuardPatch.THIS_ONLY);
 
+                if (vertex.hooks.VertexRenderer.MANAGED)
+                {
+                    // Managed section-mesh pipeline: a backend that owns submission draws
+                    // the pass here instead of vanilla's glCallLists batches. Woven before
+                    // the profiler brackets so the brackets time whichever path runs.
+                    result = HeadGuardPatch.apply(result, Mappings.RG_RENDER_ALL_LISTS, Mappings.RG_RENDER_ALL_LISTS_DESC,
+                        "vertex/hooks/VertexRenderer", "interceptSubmit", HeadGuardPatch.THIS_INT_DOUBLE);
+                }
+
                 if (vertex.hooks.VertexRenderProfiler.ACTIVE)
                 {
                     // Render-phase baselines for the backend work: time frustum clip,

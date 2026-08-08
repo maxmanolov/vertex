@@ -99,6 +99,15 @@ public final class VertexMulticore
         final Object[] passTessellators = new Object[2];
         final int[] passListIds = new int[2];
         final int[] passIndices = new int[2];
+        // Managed section-mesh pipeline: workers extract backend-neutral geometry (plus
+        // the translucent sort state) here and pool their tessellator immediately; the
+        // camera snapshot is taken at submit on the client thread.
+        final vertex.render.MeshData[] meshes = new vertex.render.MeshData[2];
+        final Object[] vertexStates = new Object[2];
+        float cameraX;
+        float cameraY;
+        float cameraZ;
+        boolean managedCapture;
         int capturedPasses;
         int completedPasses;
         Object savedTileEntities;
@@ -119,6 +128,13 @@ public final class VertexMulticore
     /** Head guard on WorldRenderer.updateRenderer: true = skip the vanilla body. */
     public static boolean interceptUpdate(Object renderer, Object entity)
     {
+        if (VertexRenderer.MANAGED && currentBuild.get() == null)
+        {
+            // Client thread entering a rebuild body: the capture path needs the entity
+            // the body will hand to postRenderBlocks (translucent sort camera).
+            VertexRenderer.noteClientEntity(entity);
+        }
+
         if (!ENABLED)
         {
             return false;
@@ -185,6 +201,17 @@ public final class VertexMulticore
         {
             ChunkBuild build = new ChunkBuild(renderer, stampOf(renderer), queue.generation(), entity,
                 wrPosX.getInt(renderer), wrPosY.getInt(renderer), wrPosZ.getInt(renderer));
+
+            if (VertexRenderer.MANAGED && entity != null)
+            {
+                // Submit-time camera snapshot for the worker's translucent sort; vanilla
+                // uses the raw (uninterpolated) entity position the same way.
+                resolveEntityFields(entity);
+                build.cameraX = (float)entityPosX.getDouble(entity);
+                build.cameraY = (float)entityPosY.getDouble(entity);
+                build.cameraZ = (float)entityPosZ.getDouble(entity);
+            }
+
             inFlight.put(renderer, build);
             queue.submit(build);
             return true;
@@ -227,6 +254,12 @@ public final class VertexMulticore
      */
     public static boolean interceptSort(Object renderer, Object entity)
     {
+        if (VertexRenderer.MANAGED)
+        {
+            // Resorts run only on the client thread; the capture needs this entity.
+            VertexRenderer.noteClientEntity(entity);
+        }
+
         return ENABLED && !disabled && inFlight.containsKey(renderer);
     }
 
@@ -249,7 +282,9 @@ public final class VertexMulticore
 
         if (build == null)
         {
-            return false;
+            // Client thread: under a managed backend the capture owns the GL half here
+            // too, so synchronous rebuilds and resorts feed the same mesh path.
+            return VertexRenderer.MANAGED ? VertexRenderer.clientPre(renderer, listId) : false;
         }
 
         try
@@ -287,15 +322,56 @@ public final class VertexMulticore
 
         if (build == null)
         {
-            return false;
+            return VertexRenderer.MANAGED ? VertexRenderer.clientPost(renderer, pass) : false;
         }
 
         if (build.completedPasses < build.capturedPasses)
         {
-            build.passIndices[build.completedPasses++] = pass;
+            int slot = build.completedPasses++;
+            build.passIndices[slot] = pass;
+
+            if (VertexRenderer.managed())
+            {
+                // Managed pipeline: copy the geometry out while it is hot and pool the
+                // tessellator on this worker instead of shipping it to the client.
+                try
+                {
+                    VertexRenderer.workerCapture(build, renderer, build.passTessellators[slot], pass, slot);
+                    releaseCapturedSlot(build, slot);
+                }
+                catch (Exception e)
+                {
+                    build.failed = true;
+                    VertexRenderer.disable("workerCapture", e);
+                }
+            }
         }
 
         return true;
+    }
+
+    /** Worker-side: a managed capture copied the geometry out; pool the tessellator now. */
+    private static void releaseCapturedSlot(ChunkBuild build, int slot)
+    {
+        Object tessellator = build.passTessellators[slot];
+        build.passTessellators[slot] = null;
+
+        if (tessellator == null)
+        {
+            return;
+        }
+
+        try
+        {
+            tessReset.invoke(tessellator);
+            tessIsDrawing.setBoolean(tessellator, false);
+            tessSetTranslation.invoke(tessellator, Double.valueOf(0.0D), Double.valueOf(0.0D), Double.valueOf(0.0D));
+            recycleTessellator(tessellator);
+        }
+        catch (Exception sanitizeFailed)
+        {
+            LogWrapper.warning("[Vertex] Dropped a pass tessellator that resisted sanitization: " + sanitizeFailed);
+        }
     }
 
     /** Called from the worker loop around the vanilla body. */
@@ -351,6 +427,12 @@ public final class VertexMulticore
         if (renderGlobalRef == null || renderGlobalRef.get() != renderGlobal)
         {
             renderGlobalRef = new java.lang.ref.WeakReference<Object>(renderGlobal);
+        }
+
+        if (VertexRenderer.MANAGED)
+        {
+            // Every renderer object and section mesh this grid handed out is now dead.
+            VertexRenderer.onGridReset();
         }
 
         onRenderersReloaded();
@@ -447,6 +529,19 @@ public final class VertexMulticore
                     || wrPosY.getInt(chunkBuild.renderer) != chunkBuild.posY
                     || wrPosZ.getInt(chunkBuild.renderer) != chunkBuild.posZ)
                 {
+                    discard(build);
+                    return false;
+                }
+
+                if (chunkBuild.capturedPasses > 0 && chunkBuild.managedCapture != VertexRenderer.managed())
+                {
+                    // Captured under one pipeline, draining under the other (a managed
+                    // disable landed in between): neither install path fits this build.
+                    // Zero-pass builds are exempt: a fully empty section never calls
+                    // preRenderBlocks, so it carries no geometry and no capture regime -
+                    // discarding those put every empty section into an eternal
+                    // submit/discard/requeue loop (4,618 sections pinned dirty on the
+                    // first managed soak).
                     discard(build);
                     return false;
                 }
@@ -580,10 +675,47 @@ public final class VertexMulticore
         build.savedTileEntities = null;
         build.capturedTileEntities = null;
         build.previousTileEntityRenderers = null;
+        java.util.Arrays.fill(build.meshes, null);
+        java.util.Arrays.fill(build.vertexStates, null);
+    }
+
+    /** Applies a validated build: managed mesh install, or the vanilla GL replay. */
+    private static void replay(ChunkBuild build) throws Exception
+    {
+        Object renderer = build.renderer;
+
+        if (build.managedCapture)
+        {
+            VertexRenderer.installWorkerBuild(build);
+        }
+        else
+        {
+            legacyReplay(build);
+        }
+
+        // Tile-entity reconciliation deferred from the worker: removals are the renderers
+        // the rebuild dropped; additions are what the vanilla body put in the capture list.
+        List<Object> global = (List<Object>)build.savedTileEntities;
+
+        if (global != null)
+        {
+            HashSet<Object> removed = new HashSet<Object>(build.previousTileEntityRenderers);
+            removed.removeAll((List<?>)wrTileEntityRenderers.get(renderer));
+            global.removeAll(removed);
+            global.addAll(build.capturedTileEntities);
+        }
+
+        // Deliberately do NOT clear needsUpdate here. The vanilla body already cleared it
+        // when the worker build started; if it is true again now, a block changed after the
+        // snapshot and this replay is already stale - clearing the mark would discard that
+        // newer change and leave stale geometry until an unrelated event re-marks the
+        // section (kyrofx #34). The re-mark also re-queued the renderer, so leaving the
+        // flag alone lets the normal path rebuild with fresh data.
+        VertexStats.rebuild();
     }
 
     /** The exact GL sequence of the vanilla boundary methods, replayed on the client. */
-    private static void replay(ChunkBuild build) throws Exception
+    private static void legacyReplay(ChunkBuild build) throws Exception
     {
         Object renderer = build.renderer;
 
@@ -678,25 +810,6 @@ public final class VertexMulticore
             }
         }
 
-        // Tile-entity reconciliation deferred from the worker: removals are the renderers
-        // the rebuild dropped; additions are what the vanilla body put in the capture list.
-        List<Object> global = (List<Object>)build.savedTileEntities;
-
-        if (global != null)
-        {
-            HashSet<Object> removed = new HashSet<Object>(build.previousTileEntityRenderers);
-            removed.removeAll((List<?>)wrTileEntityRenderers.get(renderer));
-            global.removeAll(removed);
-            global.addAll(build.capturedTileEntities);
-        }
-
-        // Deliberately do NOT clear needsUpdate here. The vanilla body already cleared it
-        // when the worker build started; if it is true again now, a block changed after the
-        // snapshot and this replay is already stale - clearing the mark would discard that
-        // newer change and leave stale geometry until an unrelated event re-marks the
-        // section (kyrofx #34). The re-mark also re-queued the renderer, so leaving the
-        // flag alone lets the normal path rebuild with fresh data.
-        VertexStats.rebuild();
     }
 
     private static final boolean BUILD_AUDIT = Boolean.getBoolean("vertex.test.buildAudit");

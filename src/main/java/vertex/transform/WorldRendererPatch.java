@@ -27,6 +27,7 @@ import vertex.Mappings;
 final class WorldRendererPatch implements Opcodes
 {
     private static final String MARKER_IFACE = "vertex/api/ImmediateMarker";
+    private static final String MESH_HOST_IFACE = "vertex/api/MeshHost";
 
     static byte[] apply(byte[] basicClass)
     {
@@ -35,6 +36,24 @@ final class WorldRendererPatch implements Opcodes
 
         cls.interfaces.add(MARKER_IFACE);
         cls.fields.add(new FieldNode(ACC_PUBLIC | ACC_VOLATILE, Mappings.ADDED_IMMEDIATE_FIELD, "Z", null, null));
+
+        // MeshHost: one opaque slot for the managed render backend's per-section GPU
+        // state, reachable without reflection from both sides of the loader split.
+        cls.interfaces.add(MESH_HOST_IFACE);
+        cls.fields.add(new FieldNode(ACC_PUBLIC, Mappings.ADDED_MESH_FIELD, "Ljava/lang/Object;", null, null));
+
+        MethodNode meshGet = new MethodNode(ACC_PUBLIC, "vertex$mesh", "()Ljava/lang/Object;", null, null);
+        meshGet.instructions.add(new VarInsnNode(ALOAD, 0));
+        meshGet.instructions.add(new FieldInsnNode(GETFIELD, cls.name, Mappings.ADDED_MESH_FIELD, "Ljava/lang/Object;"));
+        meshGet.instructions.add(new InsnNode(ARETURN));
+        cls.methods.add(meshGet);
+
+        MethodNode meshSet = new MethodNode(ACC_PUBLIC, "vertex$setMesh", "(Ljava/lang/Object;)V", null, null);
+        meshSet.instructions.add(new VarInsnNode(ALOAD, 0));
+        meshSet.instructions.add(new VarInsnNode(ALOAD, 1));
+        meshSet.instructions.add(new FieldInsnNode(PUTFIELD, cls.name, Mappings.ADDED_MESH_FIELD, "Ljava/lang/Object;"));
+        meshSet.instructions.add(new InsnNode(RETURN));
+        cls.methods.add(meshSet);
 
         // void vertex$markImmediate() { this.needsUpdate = true; this.vertex$immediate = true; }
         MethodNode mark = new MethodNode(ACC_PUBLIC, "vertex$markImmediate", "()V", null, null);

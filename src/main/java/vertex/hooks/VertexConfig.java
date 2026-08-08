@@ -35,6 +35,7 @@ public final class VertexConfig
         {"customSky", "true", "Draw pack-defined custom sky layers"},
         {"connectedTextures", "true", "Connected textures from a pack's mcpatcher/ctm rules"},
         {"multicore", "true", "Build chunk geometry on CPU worker threads (restart required)"},
+        {"renderer", "legacy", "Terrain renderer backend: legacy (vanilla display lists) or displaylist (managed section-mesh pipeline, same visuals); restart required"},
         {"fullbright", "false", "Render everything at full brightness and skip light-triggered chunk rebuilds"},
         {"chatBackground", "true", "Draw the translucent background behind chat lines"},
         {"scoreboardBackground", "true", "Draw the translucent background behind the scoreboard sidebar"},
@@ -94,6 +95,32 @@ public final class VertexConfig
     public static boolean skip(String key)
     {
         return !enabled(key);
+    }
+
+    /**
+     * Free-form string keys (e.g. the renderer backend selector). A missing or blank
+     * value resolves to the key's declared default, falling back to the caller's default
+     * for undeclared keys - the same never-enable-by-accident posture as enabled().
+     */
+    public static synchronized String value(String key, String fallback)
+    {
+        refresh();
+        String value = values.getProperty(key);
+
+        if (value == null || value.trim().isEmpty())
+        {
+            for (String[] entry : KEYS)
+            {
+                if (entry[0].equals(key))
+                {
+                    return entry[1];
+                }
+            }
+
+            return fallback;
+        }
+
+        return value.trim();
     }
 
     /**

@@ -177,9 +177,17 @@ public final class Mappings
     public static final String ENTITY_POS_X = "s";
     public static final String ENTITY_POS_Y = "t";
     public static final String ENTITY_POS_Z = "u";
+    /* Entity.prevPosX/Y/Z = field_70142_S / field_70137_T / field_70136_U - the
+     * interpolation anchors renderSortedRenderers uses for the camera position. */
+    public static final String ENTITY_PREV_POS_X = "S";
+    public static final String ENTITY_PREV_POS_Y = "T";
+    public static final String ENTITY_PREV_POS_Z = "U";
 
     /** Field added to WorldRenderer by the transformer. */
     public static final String ADDED_IMMEDIATE_FIELD = "vertex$immediate";
+
+    /** Backend slot field added to WorldRenderer by the transformer (see MeshHost). */
+    public static final String ADDED_MESH_FIELD = "vertex$mesh";
 
     /*
      * Render-control targets (all void, patched with config-gated head skips):
@@ -219,6 +227,8 @@ public final class Mappings
     public static final String WR_GL_RENDER_LIST = "z";
     public static final String WR_BYTES_DRAWN = "D";
     public static final String WR_VERTEX_STATE = "y";
+    /** WorldRenderer.skipRenderPass = field_78928_m: true per pass = nothing to draw. */
+    public static final String WR_SKIP_RENDER_PASS = "m";
     public static final String WR_TILE_ENTITIES = "C";
     public static final String WR_TILE_ENTITY_RENDERERS = "x";
     public static final String WR_PRE_RENDER_BLOCKS = "b";
@@ -233,6 +243,26 @@ public final class Mappings
     /* Tessellator.reset=func_78379_d=d()V (private), isDrawing=field_78415_z=x */
     public static final String TESS_RESET = "d";
     public static final String TESS_IS_DRAWING = "x";
+    /* Tessellator geometry fields for MeshData extraction, srg-verified and cross-checked
+     * against the pointer setup in draw() (bmh.a()I) bytecode:
+     * rawBuffer=field_78405_h=f, vertexCount=field_78406_i=g,
+     * rawBufferIndex=field_147569_p=p, drawMode=field_78409_u=s,
+     * hasColor=field_78399_n=l, hasTexture=field_78400_o=m,
+     * hasBrightness=field_78414_p=n, hasNormals=field_78413_q=o. */
+    public static final String TESS_RAW_BUFFER = "f";
+    public static final String TESS_VERTEX_COUNT = "g";
+    public static final String TESS_RAW_BUFFER_INDEX = "p";
+    public static final String TESS_DRAW_MODE = "s";
+    public static final String TESS_HAS_COLOR = "l";
+    public static final String TESS_HAS_TEXTURE = "m";
+    public static final String TESS_HAS_BRIGHTNESS = "n";
+    public static final String TESS_HAS_NORMALS = "o";
+    /* Minecraft.entityRenderer=field_71460_t=p; EntityRenderer.enableLightmap=
+     * func_78463_b=b(D)V and disableLightmap=func_78483_a=a(D)V bracket vanilla's
+     * renderAllRenderLists submission and must bracket a managed backend's too. */
+    public static final String MC_ENTITY_RENDERER = "p";
+    public static final String ER_ENABLE_LIGHTMAP = "b";
+    public static final String ER_DISABLE_LIGHTMAP = "a";
     public static final String ENTITY_RENDERER = "blt";
     public static final String TEXTURE_MAP = "bpz";
     public static final String WORLD_CLIENT = "bjf";

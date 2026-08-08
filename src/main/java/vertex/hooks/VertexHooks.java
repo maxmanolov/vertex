@@ -152,6 +152,11 @@ public final class VertexHooks
             VertexRenderProfiler.frame(renderGlobal);
         }
 
+        if (VertexRenderer.MANAGED)
+        {
+            VertexRenderer.clientTick(renderGlobal);
+        }
+
         try
         {
             List<?> queue = (List<?>)worldRenderersToUpdate.get(renderGlobal);

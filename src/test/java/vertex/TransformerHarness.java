@@ -46,6 +46,18 @@ public final class TransformerHarness implements Opcodes
             lastPhase = phase;
         }
 
+        public static boolean guardResult;
+        public static int guardInt;
+        public static double guardDouble;
+
+        public static boolean guardIntDouble(Object instance, int i, double d)
+        {
+            received = instance;
+            guardInt = i;
+            guardDouble = d;
+            return guardResult;
+        }
+
         public static void reset()
         {
             headCalls = 0;
