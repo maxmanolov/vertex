@@ -18,6 +18,9 @@ public final class TransformerHarness implements Opcodes
     {
         public static int headCalls;
         public static int tailCalls;
+        public static int enterCalls;
+        public static int exitCalls;
+        public static int lastPhase = -1;
         public static Object received;
 
         public static void head(Object instance)
@@ -31,10 +34,25 @@ public final class TransformerHarness implements Opcodes
             ++tailCalls;
         }
 
+        public static void enter(int phase)
+        {
+            ++enterCalls;
+            lastPhase = phase;
+        }
+
+        public static void exit(int phase)
+        {
+            ++exitCalls;
+            lastPhase = phase;
+        }
+
         public static void reset()
         {
             headCalls = 0;
             tailCalls = 0;
+            enterCalls = 0;
+            exitCalls = 0;
+            lastPhase = -1;
             received = null;
         }
     }
@@ -92,6 +110,32 @@ public final class TransformerHarness implements Opcodes
         run.visitInsn(RETURN);
         run.visitMaxs(0, 0);
         run.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /**
+     * A class with: public static int compute(int x) { if (x < 0) return -1; return x * 2; }
+     * Two return sites and a non-void return type, for bracket-patch coverage.
+     */
+    public static byte[] intMethodClass(String internalName, String methodName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor compute = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, "(I)I", null, null);
+        compute.visitCode();
+        org.objectweb.asm.Label positive = new org.objectweb.asm.Label();
+        compute.visitVarInsn(ILOAD, 0);
+        compute.visitJumpInsn(IFGE, positive);
+        compute.visitInsn(ICONST_M1);
+        compute.visitInsn(IRETURN);
+        compute.visitLabel(positive);
+        compute.visitVarInsn(ILOAD, 0);
+        compute.visitInsn(ICONST_2);
+        compute.visitInsn(IMUL);
+        compute.visitInsn(IRETURN);
+        compute.visitMaxs(0, 0);
+        compute.visitEnd();
         cw.visitEnd();
         return cw.toByteArray();
     }

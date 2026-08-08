@@ -132,6 +132,27 @@ public final class Mappings
      * (block changes) and markBlockRangeForRenderUpdate. Skippable under fullbright. */
     public static final String RG_MARK_BLOCK_FOR_RENDER_UPDATE = "b";
     public static final String RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC = "(III)V";
+    /* Render-phase profiling surface (all RenderGlobal=bma, resolved from joined.srg):
+     * sortAndRender=func_72719_a=a(Lsv;ID)I walks the pass's renderers and groups the
+     * visible ones into the four RenderLists; renderAllRenderLists=func_72733_a=a(ID)V
+     * (called from its tail via renderSortedRenderers=func_72724_a) issues the actual
+     * glCallLists batches; clipRenderersByFrustum=func_72729_a=a(Lbmv;F)V is the
+     * per-frame visibility pass. Debug counters, reset each pass-0 walk:
+     * renderersLoaded=field_72751_K=Y, renderersBeingClipped=field_72744_L=Z,
+     * renderersBeingOccluded=field_72745_M=aa, renderersBeingRendered=field_72746_N=ab,
+     * renderersSkippingRenderPass=field_72747_O=ac; glRenderLists=field_72755_R=af. */
+    public static final String RG_SORT_AND_RENDER = "a";
+    public static final String RG_SORT_AND_RENDER_DESC = "(Lsv;ID)I";
+    public static final String RG_RENDER_ALL_LISTS = "a";
+    public static final String RG_RENDER_ALL_LISTS_DESC = "(ID)V";
+    public static final String RG_CLIP_FRUSTUM = "a";
+    public static final String RG_CLIP_FRUSTUM_DESC = "(Lbmv;F)V";
+    public static final String RG_DBG_LOADED = "Y";
+    public static final String RG_DBG_CLIPPED = "Z";
+    public static final String RG_DBG_OCCLUDED = "aa";
+    public static final String RG_DBG_RENDERED = "ab";
+    public static final String RG_DBG_SKIPPED_PASS = "ac";
+    public static final String RG_GL_RENDER_LISTS = "af";
     public static final String RG_MC = "A";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
