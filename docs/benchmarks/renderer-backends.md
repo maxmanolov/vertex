@@ -50,6 +50,50 @@ Buffer memory is now first-class and accounted: 70 MB at RD8, 239 MB at RD16
   to the stage-1 result.
 - Zero self-disables across every vbo run (RD8, RD16, churn, capture).
 
+## Stage 3: shared arenas (`renderer=arena`)
+
+Sections hold (buffer, offset, count) ranges in per-(1024-region, pass) arena blocks;
+the section transform is baked into the vertices at staging, so a pass submits a
+handful of region batches via glMultiDrawArrays (opaque merges freely; translucent
+merges only consecutive walk-order runs, preserving vanilla's back-to-front order
+exactly).
+
+| steady state              | legacy    | vbo          | arena        |
+|---------------------------|-----------|--------------|--------------|
+| RD8 fps                   | ~248      | ~730         | ~1,080       |
+| RD8 submit per frame      | 2.72 ms   | 0.42 ms      | 0.072 ms     |
+| RD8 draw commands/frame   | ~440 (via lists) | ~440   | ~3.7 batches |
+| RD8 ftP50 / ftP99         | 3.7 / ~7 ms | 1.2 / 3.2 ms | 0.7 / 2.2 ms |
+| RD16 fps                  | ~92       | ~306         | ~562         |
+| RD16 submit per frame     | 8.26 ms   | 1.98 ms      | 0.30 ms      |
+| RD16 draw commands/frame  | ~1,700    | ~1,700       | ~51          |
+| RD16 ftP50 / ftP99        | ~10 / ~18 ms | 2.7 / 5.2 ms | 1.7 / 3.2 ms |
+| RD16 per-section submit   | 6.6 us    | 1.33 us      | ~0.20 us     |
+
+Submission reached the design target: O(visible regions) for opaque (3-4 batches per
+pass) with translucent run-splitting accounting for most of the remaining commands at
+RD16. Arena memory: 96 MB reserved / 70 MB live (26% fragmentation) at RD8, 336 / 241
+(28%) at RD16 - block-granular over-provisioning vs the VBO backend's exact 239 MB.
+
+Verification (zero self-disables in every leg):
+
+- Churn (RD8, ~480 interactive rebuilds/min): drained queue, ftMax 4.6 ms, zero
+  compaction drains, fragmentation flat at 26%.
+- Stress-driver gauntlet, two full cycles (teleport storms at 43k rebuilds/min and
+  869 MB/min of uploads, render-distance flips, mass updates, resource reloads, world
+  exit/rejoin): three legitimate drain events under teleport churn, fragmentation
+  56% under load settling to 23%, buffer memory resetting across world transitions.
+- OptiFine-modes soak (fullbright + dynamicLights on, sky and clouds skipped): clean
+  coexistence at ~1,270 fps.
+- Structural parity: 1,292/1,296 sections byte-identical vs legacy - the same 4
+  resort-accumulator water sections as stages 1 and 2, far inside the 140-section
+  control noise.
+- The harness caught a real design bug before it shipped: creating a block dips arena
+  occupancy below the 50% compaction threshold, and the fresh block is always the
+  emptiest - the first soak thrashed at 27,535 drains and 3.2 GB of re-uploads per
+  minute. Fixed structurally (the allocation-frontier block is never a drain candidate;
+  a candidate must be under 25% full) and locked with a unit test of the exact shape.
+
 ## Reading, and what stage 3 attacks
 
 VBO submission removed the display-list interpretive overhead (~6.7 us -> ~1.2 us per

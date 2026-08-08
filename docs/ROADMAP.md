@@ -100,9 +100,13 @@ noise; frame times neutral under `displaylist` and improved under `vbo`; full te
 across world/RD changes; the disable path re-marks and heals through the vanilla
 renderer.
 
-**Merge gate (stage 3, future):** arena submission approaching O(visible regions) per
-pass, stable memory under fragmentation stress (allocator already landed with tests),
-and the same structural-parity and soak bars as stage 2.
+**Merge gate (stage 3, met - see docs/benchmarks/renderer-backends.md):** arena
+submission approaching O(visible regions) per pass (measured 3.7 batches/frame at RD8,
+~51 commands/frame at RD16 vs ~1,700 per-section), stable memory under fragmentation
+stress (26-28% steady, 56% under teleport storms settling back, compaction drains only
+under genuine churn), and the same structural-parity and zero-disable soak bars as
+stage 2 - including the stress-driver gauntlet's render-distance flips, resource
+reloads and world rejoins.
 
 ## 6. Dynamic lights
 
