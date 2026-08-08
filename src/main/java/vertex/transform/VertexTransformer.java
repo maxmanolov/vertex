@@ -101,6 +101,19 @@ public class VertexTransformer implements IClassTransformer
                     new SkipMethodPatch.Target(Mappings.ER_ADD_RAIN_PARTICLES, Mappings.ER_ADD_RAIN_PARTICLES_DESC, "weather"),
                 });
                 result = TailCallPatch.apply(result, Mappings.ER_SETUP_FOG, Mappings.ER_SETUP_FOG_DESC, "vertex/hooks/VertexHooks", "afterFogSetup");
+                // Freelook: divert the two mouse-look setAngles call sites so a held key
+                // freezes the player's heading while the orbit absorbs the deltas, and
+                // bracket renderWorld so the view entity's rotation quartet is spoofed
+                // for exactly the camera/world-render window (aim picking in getMouseOver
+                // runs outside it and always reads the true heading).
+                result = RerouteVirtualInMethodPatch.apply(result,
+                    Mappings.ER_UPDATE_CAMERA_AND_RENDER, Mappings.ER_UPDATE_CAMERA_AND_RENDER_DESC,
+                    Mappings.ENTITY_CLIENT_PLAYER, Mappings.ENTITY_SET_ANGLES, Mappings.ENTITY_SET_ANGLES_DESC,
+                    "vertex/hooks/VertexFreelook", "setAngles");
+                result = HeadInstanceCallPatch.apply(result, Mappings.ER_RENDER_WORLD, Mappings.ER_RENDER_WORLD_DESC,
+                    "vertex/hooks/VertexFreelook", "beginRenderWorld");
+                result = TailInstanceCallPatch.apply(result, Mappings.ER_RENDER_WORLD, Mappings.ER_RENDER_WORLD_DESC,
+                    "vertex/hooks/VertexFreelook", "endRenderWorld");
             }
             else if (Mappings.TEXTURE_MAP.equals(name))
             {
