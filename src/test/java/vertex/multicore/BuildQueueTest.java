@@ -19,6 +19,7 @@ public class BuildQueueTest
     {
         final List<Build> applied = new ArrayList<Build>();
         final List<Build> discarded = new ArrayList<Build>();
+        final List<Boolean> obsolete = new ArrayList<Boolean>();
 
         public boolean apply(Build build)
         {
@@ -26,9 +27,10 @@ public class BuildQueueTest
             return true;
         }
 
-        public void discard(Build build)
+        public void discard(Build build, boolean obsolete)
         {
             this.discarded.add(build);
+            this.obsolete.add(Boolean.valueOf(obsolete));
         }
     }
 
@@ -65,6 +67,8 @@ public class BuildQueueTest
         queue.complete(good);
         assertEquals(1, queue.drain(sink, 1));
         assertEquals(2, sink.discarded.size());
+        assertEquals(Boolean.TRUE, sink.obsolete.get(0));
+        assertEquals(Boolean.FALSE, sink.obsolete.get(1));
         assertSame(good, sink.applied.get(0));
     }
 

@@ -79,9 +79,16 @@ public class VertexMulticoreLifecycleTest
         }
     }
 
+    public static final class FakeRenderGlobal
+    {
+        public final List<Object> t = new ArrayList<Object>();
+    }
+
     private Object savedQueue;
     private Object savedNeedsUpdate;
     private Object savedTileEntityRenderers;
+    private Object savedRenderGlobalRef;
+    private Object savedRenderersToUpdateField;
 
     @Before
     public void arm() throws Exception
@@ -95,6 +102,8 @@ public class VertexMulticoreLifecycleTest
         savedQueue = get("queue");
         savedNeedsUpdate = get("wrNeedsUpdate");
         savedTileEntityRenderers = get("wrTileEntityRenderers");
+        savedRenderGlobalRef = get("renderGlobalRef");
+        savedRenderersToUpdateField = get("renderersToUpdateField");
         set("wrNeedsUpdate", FakeRenderer.class.getField("q"));
         set("wrTileEntityRenderers", FakeRenderer.class.getField("x"));
         pool().clear();
@@ -110,6 +119,8 @@ public class VertexMulticoreLifecycleTest
         set("queue", savedQueue);
         set("wrNeedsUpdate", savedNeedsUpdate);
         set("wrTileEntityRenderers", savedTileEntityRenderers);
+        set("renderGlobalRef", savedRenderGlobalRef);
+        set("renderersToUpdateField", savedRenderersToUpdateField);
         set("workers", null);
         Field tornDown = VertexMulticore.class.getDeclaredField("tornDown");
         tornDown.setAccessible(true);
@@ -202,11 +213,28 @@ public class VertexMulticoreLifecycleTest
         build.previousTileEntityRenderers.add(previous);
 
         BuildQueue.Sink sink = (BuildQueue.Sink)get("SINK");
-        sink.discard(build);
+        sink.discard(build, false);
 
         assertEquals(1, renderer.x.size());
         assertTrue(renderer.x.get(0) == previous);
         assertTrue("the vanilla path must rebuild the discarded section", renderer.q);
+    }
+
+    @Test
+    public void obsoleteBuildDoesNotEnterTheReplacementGrid() throws Exception
+    {
+        FakeRenderer renderer = new FakeRenderer();
+        VertexMulticore.ChunkBuild build = newBuild(renderer);
+        FakeRenderGlobal renderGlobal = new FakeRenderGlobal();
+        set("renderGlobalRef", new java.lang.ref.WeakReference<Object>(renderGlobal));
+        set("renderersToUpdateField", null);
+
+        BuildQueue.Sink sink = (BuildQueue.Sink)get("SINK");
+        sink.discard(build, true);
+
+        assertFalse("a retired renderer must not be marked dirty", renderer.q);
+        assertTrue("a retired renderer must not enter the new update list",
+            renderGlobal.t.isEmpty());
     }
 
     private static VertexMulticore.ChunkBuild newBuild() throws Exception

@@ -38,7 +38,8 @@ public final class BuildQueue
     {
         boolean apply(Build build);
 
-        void discard(Build build);
+        /** Releases a build; obsolete means its renderer belongs to a retired grid. */
+        void discard(Build build, boolean obsolete);
     }
 
     private final Object lock = new Object();
@@ -149,13 +150,23 @@ public final class BuildQueue
 
             this.finished.poll();
 
-            if (!build.failed && build.generation == this.generation && sink.apply(build))
+            if (build.failed)
+            {
+                sink.discard(build, false);
+            }
+            else if (build.generation != this.generation)
+            {
+                // A generation change accompanies a complete renderer-grid replacement.
+                // The old renderer must be released, never requeued into the new grid.
+                sink.discard(build, true);
+            }
+            else if (sink.apply(build))
             {
                 ++applied;
             }
             else
             {
-                sink.discard(build);
+                sink.discard(build, false);
             }
         }
 
@@ -173,7 +184,9 @@ public final class BuildQueue
 
             while ((build = this.pending.pollFirst()) != null)
             {
-                sink.discard(build);
+                // clearAll is the self-disable path: these renderers still belong to the
+                // current grid and need a vanilla rebuild after the workers stop.
+                sink.discard(build, false);
             }
         }
 
@@ -181,7 +194,7 @@ public final class BuildQueue
 
         while ((finishedBuild = this.finished.poll()) != null)
         {
-            sink.discard(finishedBuild);
+            sink.discard(finishedBuild, false);
         }
     }
 
