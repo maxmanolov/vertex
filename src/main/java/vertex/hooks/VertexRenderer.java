@@ -34,6 +34,7 @@ public final class VertexRenderer
 {
     public static final int LEGACY = 0;
     public static final int DISPLAY_LIST = 1;
+    public static final int VBO = 2;
 
     public static final int MODE = resolveMode();
     /** Weave gate; also the zero-cost fast-path check on legacy sessions. */
@@ -89,6 +90,11 @@ public final class VertexRenderer
         if (value.equals("displaylist") || value.equals("dl"))
         {
             return DISPLAY_LIST;
+        }
+
+        if (value.equals("vbo"))
+        {
+            return VBO;
         }
 
         if (!value.isEmpty() && !value.equals("legacy"))
@@ -409,6 +415,21 @@ public final class VertexRenderer
 
     private static RenderBackend createBackend()
     {
+        if (MODE == VBO)
+        {
+            try
+            {
+                return new vertex.render.VboBackend();
+            }
+            catch (Exception unavailable)
+            {
+                // Pre-GL1.5 hardware: the managed pipeline still works, just without
+                // buffer objects. Same meshes, display-list representation.
+                LogWrapper.warning("[Vertex] VBO backend unavailable (" + unavailable.getMessage()
+                    + "); using the display-list backend");
+            }
+        }
+
         return new DisplayListBackend();
     }
 
