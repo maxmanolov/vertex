@@ -74,15 +74,7 @@ public final class VertexStressDriver
             if (QUIT_AFTER_MS > 0L && now - startMs >= QUIT_AFTER_MS)
             {
                 LogWrapper.info("[Vertex] Stress driver: quitAfter reached, shutting down cleanly");
-
-                if (renderDistanceSaved)
-                {
-                    // Undo the render-distance phase before the game persists settings
-                    // on shutdown (#115: pinned test values must never outlive the run).
-                    renderDistance.setInt(gameSettings.get(minecraft), savedRenderDistance);
-                    LogWrapper.info("[Vertex] Stress driver restored render distance " + savedRenderDistance);
-                }
-
+                restoreRenderDistance(minecraft);
                 shutdown.invoke(minecraft);
                 disabled = true;
                 return;
@@ -197,9 +189,36 @@ public final class VertexStressDriver
         }
         catch (Throwable e)
         {
-            disabled = true;
-            LogWrapper.severe("[Vertex] Stress driver disabled after failure");
-            e.printStackTrace();
+            disableAfterFailure(minecraft, e);
+        }
+    }
+
+    static void disableAfterFailure(Object minecraft, Throwable failure)
+    {
+        restoreRenderDistance(minecraft);
+        disabled = true;
+        LogWrapper.severe("[Vertex] Stress driver disabled after failure");
+        failure.printStackTrace();
+    }
+
+    /** Restores at most once so later game-setting changes cannot be overwritten. */
+    private static void restoreRenderDistance(Object minecraft)
+    {
+        if (!renderDistanceSaved)
+        {
+            return;
+        }
+
+        try
+        {
+            renderDistance.setInt(gameSettings.get(minecraft), savedRenderDistance);
+            renderDistanceSaved = false;
+            LogWrapper.info("[Vertex] Stress driver restored render distance " + savedRenderDistance);
+        }
+        catch (Exception restoreFailure)
+        {
+            LogWrapper.warning("[Vertex] Stress driver could not restore render distance: "
+                + restoreFailure);
         }
     }
 
