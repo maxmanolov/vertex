@@ -14,6 +14,8 @@ public class VertexRendererModeTest
         assertEquals(VertexRenderer.DISPLAY_LIST, VertexRenderer.parseMode(" DisplayList "));
         assertEquals(VertexRenderer.VBO, VertexRenderer.parseMode("vbo"));
         assertEquals(VertexRenderer.VBO, VertexRenderer.parseMode(" VBO "));
+        assertEquals(VertexRenderer.ARENA, VertexRenderer.parseMode("arena"));
+        assertEquals(VertexRenderer.ARENA, VertexRenderer.parseMode(" Arena "));
         assertEquals(VertexRenderer.LEGACY, VertexRenderer.parseMode("legacy"));
         assertEquals(VertexRenderer.LEGACY, VertexRenderer.parseMode("LEGACY"));
         // Never surprise-enable: unknown, empty and null all stay legacy.

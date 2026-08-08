@@ -58,10 +58,12 @@ three quarters of frame time goes into executing one display list per visible se
 (docs/benchmarks/renderer-baseline.md). The `renderer` key selects the terrain backend:
 `legacy` (default — the vanilla path, untouched), `displaylist` (the managed
 section-mesh pipeline with vanilla visuals and performance; workers produce
-backend-neutral geometry, one install path owns all GL), or `vbo` (per-section vertex
-buffers, the second migration stage). Restart to apply. The design, stage ladder toward
-shared-buffer batched submission, and lifecycle rules live in
-[docs/RENDERER.md](docs/RENDERER.md). Like every Vertex subsystem it self-disables to
+backend-neutral geometry, one install path owns all GL), `vbo` (per-section vertex
+buffers), or `arena` (shared per-region buffers with baked section transforms and
+multi-draw batched submission — the stage the ladder was built for). Restart to apply.
+The design, stage ladder, and lifecycle rules live in
+[docs/RENDERER.md](docs/RENDERER.md); measured results per stage in
+docs/benchmarks/renderer-backends.md. Like every Vertex subsystem it self-disables to
 the vanilla path on any failure.
 
 ## How it works

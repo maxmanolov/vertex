@@ -32,6 +32,54 @@ public final class Staging
     private static boolean multiTexResolved = false;
     private static boolean useCoreGL13 = false;
 
+    private static int[] bakeScratch = new int[0];
+
+    /**
+     * Arena staging: loads the mesh with the section transform BAKED into the position
+     * floats, so an arena batch draws with a single region translate and no per-section
+     * matrix work. The transform folds vanilla's list interior exactly: the 1.000001
+     * anti-crack scale about the section center (8,8,8), then the clip-space offset -
+     * p' = (p - 8) * scale + 8 + add, precomputed as p * scale + (8 * (1 - scale) + add).
+     * addX/addZ are clip coordinates (origin & 1023), addY the full origin Y.
+     */
+    public static ByteBuffer loadBaked(MeshData mesh, float addX, float addY, float addZ, float scale)
+    {
+        int usedInts = mesh.data.length;
+
+        if (bakeScratch.length < usedInts)
+        {
+            bakeScratch = new int[Integer.highestOneBit(Math.max(usedInts - 1, 1)) * 2];
+        }
+
+        bakeInto(mesh.data, usedInts, addX, addY, addZ, scale, bakeScratch);
+        ensureCapacity(usedInts * 4);
+        ints.clear();
+        ints.put(bakeScratch, 0, usedInts);
+        bytes.position(0);
+        bytes.limit(usedInts * 4);
+        return bytes;
+    }
+
+    /** The pure bake transform, exact to the float ops loadBaked performs (unit-tested). */
+    static void bakeInto(int[] src, int usedInts, float addX, float addY, float addZ, float scale, int[] dst)
+    {
+        float baseX = 8.0F * (1.0F - scale) + addX;
+        float baseY = 8.0F * (1.0F - scale) + addY;
+        float baseZ = 8.0F * (1.0F - scale) + addZ;
+
+        for (int i = 0; i < usedInts; i += MeshData.INTS_PER_VERTEX)
+        {
+            dst[i] = Float.floatToRawIntBits(Float.intBitsToFloat(src[i]) * scale + baseX);
+            dst[i + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(src[i + 1]) * scale + baseY);
+            dst[i + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(src[i + 2]) * scale + baseZ);
+            dst[i + 3] = src[i + 3];
+            dst[i + 4] = src[i + 4];
+            dst[i + 5] = src[i + 5];
+            dst[i + 6] = src[i + 6];
+            dst[i + 7] = src[i + 7];
+        }
+    }
+
     /** Loads the mesh into the staging buffer; views are positioned at 0 with tight limits. */
     public static ByteBuffer load(MeshData mesh)
     {
