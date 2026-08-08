@@ -1,5 +1,6 @@
 package vertex.render;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -17,6 +18,14 @@ import org.lwjgl.opengl.GLContext;
  * VBO backend uploads the staged bytes with glBufferData.
  *
  * Everything here is client-thread only, like all GL in Vertex.
+ *
+ * Every position/limit/clear call goes through a {@link Buffer} cast: JDK 9 added
+ * covariant overrides of those methods on the typed buffers, so code compiled on a
+ * newer JDK with only -source/-target 8 emits descriptors like
+ * IntBuffer.clear()Ljava/nio/IntBuffer; that do not exist on the Java 8 runtime the
+ * 1.7.10 client ships with (NoSuchMethodError on renderer=vbo/arena, reported from a
+ * newer-JDK build). The build also passes --release 8 where the compiler supports it;
+ * the casts keep the bytecode safe even if that flag is ever lost.
  */
 public final class Staging
 {
@@ -32,19 +41,67 @@ public final class Staging
     private static boolean multiTexResolved = false;
     private static boolean useCoreGL13 = false;
 
+    private static int[] bakeScratch = new int[0];
+
+    /**
+     * Arena staging: loads the mesh with the section transform BAKED into the position
+     * floats, so an arena batch draws with a single region translate and no per-section
+     * matrix work. The transform folds vanilla's list interior exactly: the 1.000001
+     * anti-crack scale about the section center (8,8,8), then the clip-space offset -
+     * p' = (p - 8) * scale + 8 + add, precomputed as p * scale + (8 * (1 - scale) + add).
+     * addX/addZ are clip coordinates (origin & 1023), addY the full origin Y.
+     */
+    public static ByteBuffer loadBaked(MeshData mesh, float addX, float addY, float addZ, float scale)
+    {
+        int usedInts = mesh.data.length;
+
+        if (bakeScratch.length < usedInts)
+        {
+            bakeScratch = new int[Integer.highestOneBit(Math.max(usedInts - 1, 1)) * 2];
+        }
+
+        bakeInto(mesh.data, usedInts, addX, addY, addZ, scale, bakeScratch);
+        ensureCapacity(usedInts * 4);
+        ((Buffer)ints).clear();
+        ints.put(bakeScratch, 0, usedInts);
+        ((Buffer)bytes).position(0);
+        ((Buffer)bytes).limit(usedInts * 4);
+        return bytes;
+    }
+
+    /** The pure bake transform, exact to the float ops loadBaked performs (unit-tested). */
+    static void bakeInto(int[] src, int usedInts, float addX, float addY, float addZ, float scale, int[] dst)
+    {
+        float baseX = 8.0F * (1.0F - scale) + addX;
+        float baseY = 8.0F * (1.0F - scale) + addY;
+        float baseZ = 8.0F * (1.0F - scale) + addZ;
+
+        for (int i = 0; i < usedInts; i += MeshData.INTS_PER_VERTEX)
+        {
+            dst[i] = Float.floatToRawIntBits(Float.intBitsToFloat(src[i]) * scale + baseX);
+            dst[i + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(src[i + 1]) * scale + baseY);
+            dst[i + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(src[i + 2]) * scale + baseZ);
+            dst[i + 3] = src[i + 3];
+            dst[i + 4] = src[i + 4];
+            dst[i + 5] = src[i + 5];
+            dst[i + 6] = src[i + 6];
+            dst[i + 7] = src[i + 7];
+        }
+    }
+
     /** Loads the mesh into the staging buffer; views are positioned at 0 with tight limits. */
     public static ByteBuffer load(MeshData mesh)
     {
         int usedInts = mesh.data.length;
         ensureCapacity(usedInts * 4);
-        ints.clear();
+        ((Buffer)ints).clear();
         ints.put(mesh.data, 0, usedInts);
-        bytes.position(0);
-        bytes.limit(usedInts * 4);
-        floats.position(0);
-        floats.limit(usedInts);
-        shorts.position(0);
-        shorts.limit(usedInts * 2);
+        ((Buffer)bytes).position(0);
+        ((Buffer)bytes).limit(usedInts * 4);
+        ((Buffer)floats).position(0);
+        ((Buffer)floats).limit(usedInts);
+        ((Buffer)shorts).position(0);
+        ((Buffer)shorts).limit(usedInts * 2);
         return bytes;
     }
 
@@ -60,7 +117,7 @@ public final class Staging
 
         if (mesh.hasTexture)
         {
-            floats.position(3);
+            ((Buffer)floats).position(3);
             GL11.glTexCoordPointer(2, MeshData.STRIDE, floats);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
         }
@@ -68,7 +125,7 @@ public final class Staging
         if (mesh.hasBrightness)
         {
             clientActiveTexture(GL_TEXTURE1);
-            shorts.position(14);
+            ((Buffer)shorts).position(14);
             GL11.glTexCoordPointer(2, MeshData.STRIDE, shorts);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
             clientActiveTexture(GL_TEXTURE0);
@@ -76,19 +133,19 @@ public final class Staging
 
         if (mesh.hasColor)
         {
-            bytes.position(20);
+            ((Buffer)bytes).position(20);
             GL11.glColorPointer(4, true, MeshData.STRIDE, bytes);
             GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
         }
 
         if (mesh.hasNormals)
         {
-            bytes.position(24);
+            ((Buffer)bytes).position(24);
             GL11.glNormalPointer(MeshData.STRIDE, bytes);
             GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
         }
 
-        floats.position(0);
+        ((Buffer)floats).position(0);
         GL11.glVertexPointer(3, MeshData.STRIDE, floats);
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
         GL11.glDrawArrays(mesh.drawMode, 0, mesh.vertexCount);

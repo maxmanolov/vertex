@@ -10,6 +10,16 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+// -source/-target alone still compile against the running JDK's class library, so a
+// JDK 9+ build emits covariant NIO descriptors (e.g. IntBuffer.clear()Ljava/nio/IntBuffer;)
+// that crash the game's Java 8 runtime with NoSuchMethodError. --release compiles
+// against the real Java 8 API; a JDK 8 compiler needs (and accepts) no flag.
+tasks.withType(JavaCompile).configureEach {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release = 8
+    }
+}
+
 repositories {
     maven { url = 'https://libraries.minecraft.net' }
     mavenCentral()

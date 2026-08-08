@@ -561,7 +561,9 @@ public final class VertexFrameCapture
 
         for (int y = 0; y < height; ++y)
         {
-            buffer.position((height - 1 - y) * width * 3);
+            // Buffer cast: no covariant ByteBuffer.position(int) on the Java 8 runtime
+            // (see Staging's class comment on newer-JDK builds).
+            ((java.nio.Buffer)buffer).position((height - 1 - y) * width * 3);
             buffer.get(row);
             System.arraycopy(row, 0, raw, y * width * 3, row.length);
         }

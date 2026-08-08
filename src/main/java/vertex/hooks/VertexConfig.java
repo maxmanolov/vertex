@@ -35,7 +35,7 @@ public final class VertexConfig
         {"customSky", "true", "Draw pack-defined custom sky layers"},
         {"connectedTextures", "true", "Connected textures from a pack's mcpatcher/ctm rules"},
         {"multicore", "true", "Build chunk geometry on CPU worker threads (restart required)"},
-        {"renderer", "legacy", "Terrain renderer backend: legacy (vanilla display lists), displaylist (managed section-mesh pipeline, same visuals), or vbo (per-section vertex buffers); restart required"},
+        {"renderer", "legacy", "Terrain renderer backend: legacy (vanilla display lists), displaylist (managed section-mesh pipeline, same visuals), vbo (per-section vertex buffers), or arena (shared buffers with batched submission); restart required"},
         {"fullbright", "false", "Render everything at full brightness and skip light-triggered chunk rebuilds"},
         {"chatBackground", "true", "Draw the translucent background behind chat lines"},
         {"scoreboardBackground", "true", "Draw the translucent background behind the scoreboard sidebar"},

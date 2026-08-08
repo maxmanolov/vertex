@@ -60,4 +60,14 @@ public interface RenderBackend
      * [uploads, uploadedBytes, uploadNanos, sectionsDrawn, drawCallsIssued, drawNanos].
      */
     long[] drainCounters();
+
+    /** Backend-specific diagnostics appended to the stats line; empty when none. */
+    String extraReport();
+
+    /**
+     * Sections this backend wants re-marked dirty through the normal rebuild path (the
+     * arena's compaction-by-rebuild). Drained once per frame by the orchestrator's
+     * client tick, which owns the queue mutation; empty for backends that never defer.
+     */
+    List<Object> drainDeferredRemarks();
 }

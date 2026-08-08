@@ -35,6 +35,7 @@ public final class VertexRenderer
     public static final int LEGACY = 0;
     public static final int DISPLAY_LIST = 1;
     public static final int VBO = 2;
+    public static final int ARENA = 3;
 
     public static final int MODE = resolveMode();
     /** Weave gate; also the zero-cost fast-path check on legacy sessions. */
@@ -95,6 +96,11 @@ public final class VertexRenderer
         if (value.equals("vbo"))
         {
             return VBO;
+        }
+
+        if (value.equals("arena"))
+        {
+            return ARENA;
         }
 
         if (!value.isEmpty() && !value.equals("legacy"))
@@ -372,6 +378,20 @@ public final class VertexRenderer
                 }
             }
         }
+
+        RenderBackend live = backend;
+
+        if (live != null && !disabled)
+        {
+            // Arena compaction: sections resident in a draining block re-mark here so
+            // the queue mutation stays on the client thread with the other mark paths.
+            List<Object> deferred = live.drainDeferredRemarks();
+
+            if (!deferred.isEmpty())
+            {
+                markSectionsDirty(renderGlobal, deferred);
+            }
+        }
     }
 
     /** Diagnostics fields for the per-minute stats line; empty when not managed. */
@@ -399,6 +419,7 @@ public final class VertexRenderer
             out.append(" meshBufMB=").append(live.bufferBytes() / (1024L * 1024L));
         }
 
+        out.append(live.extraReport());
         return out.toString();
     }
 
@@ -415,7 +436,20 @@ public final class VertexRenderer
 
     private static RenderBackend createBackend()
     {
-        if (MODE == VBO)
+        if (MODE == ARENA)
+        {
+            try
+            {
+                return new vertex.render.ArenaBackend();
+            }
+            catch (Exception unavailable)
+            {
+                LogWrapper.warning("[Vertex] Arena backend unavailable (" + unavailable.getMessage()
+                    + "); trying per-section VBOs");
+            }
+        }
+
+        if (MODE == VBO || MODE == ARENA)
         {
             try
             {
@@ -508,18 +542,41 @@ public final class VertexRenderer
         try
         {
             Field worldRenderers = accessible(renderGlobal.getClass(), Mappings.RG_WORLD_RENDERERS);
-            Field toUpdateField = accessible(renderGlobal.getClass(), Mappings.RG_WORLD_RENDERERS_TO_UPDATE);
             Object[] grid = (Object[])worldRenderers.get(renderGlobal);
-            @SuppressWarnings("unchecked")
-            List<Object> toUpdate = (List<Object>)toUpdateField.get(renderGlobal);
 
-            if (grid == null || toUpdate == null)
+            if (grid == null)
             {
                 return;
             }
 
-            // Contains-checked adds like every mark path, but set-backed: a 17k-section
-            // grid against an ArrayList contains() would be quadratic.
+            int marked = markSectionsDirty(renderGlobal, java.util.Arrays.asList(grid));
+            LogWrapper.info("[Vertex] Managed renderer fallback: re-marked " + marked + " sections for vanilla rebuild");
+        }
+        catch (Exception e)
+        {
+            LogWrapper.severe("[Vertex] Fallback re-mark failed; stale sections heal as they are touched");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Re-mark the given sections dirty and queue them, set-backed (a 17k-section grid
+     * against an ArrayList contains() would be quadratic). Shared by the disable
+     * fallback (whole grid) and arena compaction (one block's residents).
+     */
+    private static int markSectionsDirty(Object renderGlobal, Iterable<Object> sections)
+    {
+        try
+        {
+            Field toUpdateField = accessible(renderGlobal.getClass(), Mappings.RG_WORLD_RENDERERS_TO_UPDATE);
+            @SuppressWarnings("unchecked")
+            List<Object> toUpdate = (List<Object>)toUpdateField.get(renderGlobal);
+
+            if (toUpdate == null)
+            {
+                return 0;
+            }
+
             IdentityHashMap<Object, Boolean> queued = new IdentityHashMap<Object, Boolean>();
 
             for (Object entry : toUpdate)
@@ -529,7 +586,7 @@ public final class VertexRenderer
 
             int marked = 0;
 
-            for (Object renderer : grid)
+            for (Object renderer : sections)
             {
                 if (renderer instanceof ImmediateMarker && wrNeedsUpdate != null)
                 {
@@ -544,12 +601,12 @@ public final class VertexRenderer
                 }
             }
 
-            LogWrapper.info("[Vertex] Managed renderer fallback: re-marked " + marked + " sections for vanilla rebuild");
+            return marked;
         }
         catch (Exception e)
         {
-            LogWrapper.severe("[Vertex] Fallback re-mark failed; stale sections heal as they are touched");
-            e.printStackTrace();
+            disable("markSectionsDirty", e);
+            return 0;
         }
     }
 

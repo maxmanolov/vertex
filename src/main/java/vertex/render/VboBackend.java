@@ -352,4 +352,16 @@ public final class VboBackend implements RenderBackend
             GL11.glDisableClientState(state);
         }
     }
+
+    @Override
+    public String extraReport()
+    {
+        return "";
+    }
+
+    @Override
+    public List<Object> drainDeferredRemarks()
+    {
+        return java.util.Collections.emptyList();
+    }
 }

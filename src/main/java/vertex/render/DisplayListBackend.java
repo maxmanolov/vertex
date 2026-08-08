@@ -109,4 +109,16 @@ public final class DisplayListBackend implements RenderBackend
         this.uploadNanos = 0L;
         return out;
     }
+
+    @Override
+    public String extraReport()
+    {
+        return "";
+    }
+
+    @Override
+    public List<Object> drainDeferredRemarks()
+    {
+        return java.util.Collections.emptyList();
+    }
 }

@@ -84,7 +84,8 @@ offsets 0/12/20/24/28, both passes, pass-1 ordering via the in-place-sorted extr
 lightmap client-texture pointer on unit 1, dynamic-light rebuilds, cleanup at world
 change/RD change/shutdown.
 
-**Stage 3 - shared arenas + batched submission (designed now, built next).** See §5.
+**Stage 3 - shared arenas + batched submission (`renderer=arena`, built).** See §5;
+results in docs/benchmarks/renderer-backends.md.
 
 ## 4. Lifecycle rules (all stages)
 
@@ -105,7 +106,7 @@ Threading: workers tessellate and extract (CPU only, per-thread tessellators, po
 worker-side); the client thread does every upload, draw, delete and reset. Config and
 mode are load-time constants, so there is no runtime toggling surface to race.
 
-## 5. Shared-arena stage design (decided now so stage 2 leaves nothing to undo)
+## 5. Shared-arena stage design (implemented as `ArenaBackend`; decisions below are load-bearing)
 
 **Partition.** One arena per (1024-block region, pass) actually visible - at RD16 that
 is at most 4 regions x 2 passes. Sections enter the arena of the region their origin
@@ -131,6 +132,11 @@ retire its emptiest block: mark it draining (no new allocations), re-mark the se
 still resident there dirty through the normal path, and delete the block when its last
 range frees - compaction by rebuild, reusing the one code path that already exists,
 instead of a bespoke mesh-moving copier. Worst case cost equals a partial RD change.
+Two guards make this stable (learned from a measured 27,535 drains/min thrash on the
+first arena soak): the allocation-frontier block (the last one, where new and migrated
+meshes land) is never a candidate - a freshly created block is always the emptiest and
+its own creation is what dips occupancy - and a candidate must itself be under 25%
+full, so a well-packed block is never churned through rebuilds for a marginal reclaim.
 
 **Submission.** Per pass: for each visible region arena, one bind + one pointer setup +
 `glMultiDrawArrays(first[], count[])` over the visible resident sections in vanilla's
@@ -142,9 +148,12 @@ execute in array order, so translucency ordering is exactly vanilla's.
 **Translucent resorts** re-upload a section's pass-1 range (same allocate-write-flip);
 sort state stays CPU-side as today (`TesselatorVertexState` on the renderer).
 
-**Why not built yet:** stage 2 must first prove format, ordering, lightmap-unit and
-lifecycle correctness where every section is independently inspectable. The allocator
-(`vertex.render.ArenaAllocator`, pure Java) lands with unit tests ahead of the GL work.
+**Batching regimes (as implemented in `ArenaBatchPlan`, unit-tested):** opaque merges
+any same-(buffer, format, mode, region) sections regardless of walk position - a handful
+of batches per visible region; translucent merges only consecutive runs, so multi-draw
+array order reproduces vanilla's back-to-front walk exactly - deliberately less
+aggressive, never incorrect. Sections resident in a draining block keep drawing until
+their rebuild migrates them, so compaction has no visual gap.
 
 ## 6. Instrumentation and gates
 
