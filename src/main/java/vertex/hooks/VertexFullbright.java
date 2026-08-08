@@ -30,7 +30,9 @@ public final class VertexFullbright
     private static volatile boolean active = false;
     public static long skippedRemarks = 0L;
 
-    private static boolean disabled = false;
+    // A reload failure must not freeze the hot-reloaded feature state. It disables only
+    // future attempts to refresh already-baked geometry; new builds still follow active.
+    private static boolean reloadDisabled = false;
     private static boolean resolved = false;
     private static Field theWorld;
     private static Field renderGlobal;
@@ -57,11 +59,6 @@ public final class VertexFullbright
     /** Once per frame from the harness tick: refresh the flag, reload on transitions. */
     public static void tick(Object minecraft)
     {
-        if (disabled)
-        {
-            return;
-        }
-
         boolean next = VertexConfig.enabled("fullbright");
 
         if (next == active)
@@ -71,6 +68,11 @@ public final class VertexFullbright
 
         active = next;
         LogWrapper.info("[Vertex] Fullbright " + (next ? "enabled" : "disabled"));
+
+        if (reloadDisabled)
+        {
+            return;
+        }
 
         try
         {
@@ -106,7 +108,7 @@ public final class VertexFullbright
         catch (Exception e)
         {
             // The brightness flag keeps working; only the instant refresh is lost.
-            disabled = true;
+            reloadDisabled = true;
             LogWrapper.warning("[Vertex] Fullbright transition reload disabled after failure: " + e);
         }
     }
