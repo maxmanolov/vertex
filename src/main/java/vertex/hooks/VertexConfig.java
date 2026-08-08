@@ -37,6 +37,7 @@ public final class VertexConfig
         {"multicore", "true", "Build chunk geometry on CPU worker threads (restart required)"},
         {"renderer", "legacy", "Terrain renderer backend: legacy (vanilla display lists), displaylist (managed section-mesh pipeline, same visuals), vbo (per-section vertex buffers), or arena (shared buffers with batched submission); restart required"},
         {"fullbright", "false", "Render everything at full brightness and skip light-triggered chunk rebuilds"},
+        {"freelook", "true", "Hold the Freelook key (rebindable in Controls, default Left Alt) to orbit the camera without turning your character"},
         {"chatBackground", "true", "Draw the translucent background behind chat lines"},
         {"scoreboardBackground", "true", "Draw the translucent background behind the scoreboard sidebar"},
         {"diagnostics", "false", "Log a Vertex activity summary once per minute"},
