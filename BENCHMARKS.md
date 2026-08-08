@@ -1,8 +1,11 @@
-# Vertex 0.3.0-rc1 benchmark report
+# Vertex benchmark report
 
 To run a local cross-client comparison, use [bench/README.md](bench/README.md). This
 harness measures each client through the same external frame collector. Do not use the
 Vertex-only diagnostics line as the primary result for a cross-client comparison.
+
+Sections are stamped with the release they were measured at; the environment is the
+same throughout.
 
 All numbers measured on the official Mojang 1.7.10 client, Apple M3 (GL 2.1 on Metal),
 Zulu JDK 8, via the built-in diagnostics (`diagnostics=true`) and autonomous harness.
@@ -10,7 +13,23 @@ Reproduction flags for every scenario are in docs/ARCHITECTURE.md. Pacing, not a
 FPS, is the optimization target; percentiles come from the allocation-free frame
 histogram (0.5ms buckets).
 
-## Frame pacing
+## Renderer backends (0.4.0, opt-in)
+
+Steady state at spawn in the fixture world, uncapped, multicore on. `displaylist`
+(stage 1) is measured frame-time-identical to legacy by design and omitted below. Full
+protocol, parity evidence and per-stage detail: docs/benchmarks/renderer-backends.md.
+
+| steady state | legacy (default) | vbo | arena |
+|---|---|---|---|
+| RD8 fps / submit per frame | ~248 / 2.72 ms | ~730 / 0.42 ms | ~1,080 / 0.07 ms |
+| RD16 fps / submit per frame | ~92 / 8.26 ms | ~306 / 1.98 ms | ~562 / 0.30 ms |
+| RD16 draw commands per frame | ~1,700 (one per section) | ~1,700 (one per section) | ~51 (region batches) |
+
+Arena frame pacing at RD16: ftP50 1.7 ms / ftP99 3.2 ms. Buffer memory is explicit
+under these backends (RD16: ~239 MB vbo; arena 241 MB live against a 336 MB block
+peak) where display-list memory was driver-hidden.
+
+## Frame pacing (multicore program, 0.3.0-0.3.2)
 
 | Scenario | ftP50 | ftP99 | ftMax | frames/min | notes |
 |---|---|---|---|---|---|
@@ -21,7 +40,7 @@ Note: multi-second ftMax spikes during stress windows are vanilla's blocking wor
 save/load on exit/rejoin transitions, annotated in KNOWN-LIMITATIONS.md; steady-state
 windows show the pacing above.
 
-## Chunk-build throughput
+## Chunk-build throughput (multicore program, 0.3.0-0.3.2)
 
 | Path | world-load flood | steady state |
 |---|---|---|
