@@ -19,6 +19,8 @@ public final class BenchmarkWorldDriver
     private static final long MENU_WARMUP_NANOS = 2000000000L;
     private static final long SETTLE_MILLIS = Long.getLong(
         "vertex.benchmark.settleMillis", 20000L).longValue();
+    private static final long PHASE_WARMUP_MILLIS = Math.max(0L, Long.getLong(
+        "vertex.benchmark.phaseWarmupMillis", 5000L).longValue());
     private static final int ENTITY_COUNT = boundedInteger(
         "vertex.benchmark.entityCount", 160, 16, 512);
     private static final int BLOCK_WIDTH = 12;
@@ -29,6 +31,8 @@ public final class BenchmarkWorldDriver
         new FixedRateGate(50000000L);
     private static final FixedRateGate CLIENT_ENVIRONMENT_GATE =
         new FixedRateGate(NANOS_PER_SECOND);
+    private static final ScenarioWarmupGate PHASE_WARMUP =
+        new ScenarioWarmupGate(PHASE_WARMUP_MILLIS * 1000000L);
 
     private static volatile boolean failed;
     private static volatile ScenarioPhase activePhase;
@@ -179,6 +183,7 @@ public final class BenchmarkWorldDriver
                     "scenario=multi-factor-v1\nseed=" + WORLD_SEED
                     + "\nworldType=flat\ntime=" + PIN_TIME
                     + "\nrenderDistance=8\nphases=static,chunks,blocks,entities"
+                    + "\nphaseWarmupMillis=" + PHASE_WARMUP_MILLIS
                     + "\nchunkSpeedBlocksPerSecond=24\nblockUpdatesPerSecond="
                     + (BLOCK_COUNT * 20) + "\nentityCount=" + ENTITY_COUNT + "\n");
                 write(new File(CONTROL, "ready"), "ready\n");
@@ -261,7 +266,13 @@ public final class BenchmarkWorldDriver
                 activateServerPhase(requested, serverWorld, serverPlayer);
             }
 
-            runServerPhase(serverWorld, serverPlayer, System.nanoTime());
+            long phaseNow = System.nanoTime();
+            runServerPhase(serverWorld, serverPlayer, phaseNow);
+
+            if (PHASE_WARMUP.shouldPublish(phaseNow))
+            {
+                publishPhaseReady(activePhase);
+            }
         }
         catch (Throwable error)
         {
@@ -504,6 +515,11 @@ public final class BenchmarkWorldDriver
         }
 
         phaseStartedAtNanos = System.nanoTime();
+        PHASE_WARMUP.start(phaseStartedAtNanos);
+    }
+
+    private static void publishPhaseReady(ScenarioPhase phase)
+    {
         writeServerTicks();
         write(new File(CONTROL, "ready-" + phase.getId()),
             "phase=" + phase.getId() + "\nserverTick=" + serverTicks
