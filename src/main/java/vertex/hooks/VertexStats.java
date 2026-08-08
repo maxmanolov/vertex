@@ -73,6 +73,7 @@ public final class VertexStats
             + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " emptyReplays=" + emptyReplays + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " buildQ=" + VertexMulticore.pendingDepth()
             + " fbSkippedRemarks=" + VertexFullbright.skippedRemarks
+            + " tsLatchFlips=" + VertexToggleSprint.latchFlips
             + VertexRenderer.drainReport()
             + VertexFrameStats.drainReport()
             + " skippedPasses=" + (skips.length() > 0 ? skips.toString() : "none"));
@@ -93,6 +94,7 @@ public final class VertexStats
         VertexGLStats.drain();
         VertexFrameStats.resetWindow();
         VertexFullbright.skippedRemarks = 0L;
+        VertexToggleSprint.latchFlips = 0L;
     }
 
     private VertexStats()

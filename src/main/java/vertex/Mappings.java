@@ -329,6 +329,18 @@ public final class Mappings
     public static final String MC_INGAME_GUI = "r";
     public static final String CHAT_COMPONENT_TEXT = "fq";
 
+    /* ToggleSprint surface (verified against the vanilla 1.7.10 bytecode structure):
+     * GameSettings.keyBindSprint=af, pinned in the bbj constructor - new bal("key.sprint",
+     * 29, "key.categories.gameplay") -> putfield af (Left Ctrl default; the binding
+     * exists in 1.7.10). KeyBinding=bal fields: keyDescription=d defaultCode=e
+     * category=f keyCode=g pressed=h pressTime=i; getIsKeyPressed=d()Z returns h, and
+     * the living-update sprint gate reads it, so holding h high per frame makes every
+     * vanilla sprint condition authoritative. Minecraft.currentScreen=n. */
+    public static final String GS_KEY_BIND_SPRINT = "af";
+    public static final String KB_KEY_CODE = "g";
+    public static final String KB_PRESSED = "h";
+    public static final String MC_CURRENT_SCREEN = "n";
+
     public static final String MC_GAME_SETTINGS = "u";
     public static final String GS_RENDER_DISTANCE = "c";
     public static final String GS_HIDE_GUI = "av";

@@ -52,5 +52,10 @@ any failure self-disables back to the vanilla path and logs once.
   sidebar objective, toggle Scoreboard BG in Chat Settings; the sidebar's translucent
   backdrop disappears while its text and score numbers stay. Chat Background is covered
   by the automated capture diff; a quick eyeball that chat text stays readable is enough.
+- Toggle sprint: set `toggleSprint=true` (hot-reloads); walking forward sprints with no
+  key held, and sprint resumes by itself after stopping, jumping, and bumping into a
+  block. Tap Left Ctrl once - sprint pauses (walk speed); tap again - resumes. Open chat
+  and type a Ctrl shortcut: the latch must not flip. Hunger below 3 shanks must still
+  stop the sprint (vanilla gate stays in charge).
 - Installer: `java -jar vertex-<v>.jar install` into a fresh .minecraft with vanilla
   1.7.10 present; profile appears and launches.
