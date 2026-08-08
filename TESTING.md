@@ -48,6 +48,13 @@ any failure self-disables back to the vanilla path and logs once.
   at max brightness within a second and dark areas are fully visible; toggle off and
   confirm normal lighting returns. The state must keep following the toggle even after
   a renderer-reload failure (reload loss is logged, brightness keeps working).
+- Freelook: hold Left Alt while walking forward - the camera detaches into a third-person
+  orbit while the character keeps walking in the original direction; spin a full circle
+  (yaw must not stop at 360), pitch stops at straight up/down; release - view snaps back
+  to first person and the original heading instantly, and the crosshair still points
+  where it did before the hold. Rebind the "Freelook" entry in Controls (Miscellaneous),
+  restart, confirm the new key persisted. Held while a chest/chat is open: nothing
+  happens; releasing mid-GUI still snaps back on close.
 - HUD backgrounds: on a server (or via /scoreboard in a world with cheats) display a
   sidebar objective, toggle Scoreboard BG in Chat Settings; the sidebar's translucent
   backdrop disappears while its text and score numbers stay. Chat Background is covered

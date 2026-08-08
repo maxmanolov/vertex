@@ -339,6 +339,35 @@ public final class Mappings
     public static final String GS_KEY_BIND_SPRINT = "af";
     public static final String KB_KEY_CODE = "g";
     public static final String KB_PRESSED = "h";
+    /* Freelook surface (verified against the vanilla 1.7.10 bytecode structure; the
+     * KeyBinding field layout is documented on the ToggleSprint block above):
+     * EntityRenderer.updateCameraAndRender=func_78480_b=b(F)V holds the client's only
+     * two mouse-look call sites (plain and cinematic branch on GameSettings.smoothCamera
+     * =aB), both shaped GETFIELD bao.h -> INVOKEVIRTUAL bjk.c(FF)V. That callee is
+     * Entity.setAngles=func_70082_c, declared on sa (yaw += dx*0.15, pitch -= dy*0.15
+     * clamped +/-90, prev fields shifted by the same wrap); the call sites record the
+     * receiver's static type bjk (EntityClientPlayerMP). EntityRenderer.renderWorld=
+     * func_78471_a=a(FJ)V; orientCamera=h(F)V reads the view entity (bao.i) and
+     * GameSettings.thirdPersonView=aw three times (>0 orbit, ==2 mirror). Entity
+     * rotation quartet: rotationYaw=y prevRotationYaw=A rotationPitch=z
+     * prevRotationPitch=B (prev names pinned by setAngles' tail adjustment).
+     * KeyBinding=bal: the (String,int,String) ctor self-registers in the static binding
+     * list, the key-code hash and the category set; static b()V rebuilds the key hash
+     * (resetKeyBindingArrayAndHash). GameSettings.keyBindings=as is the full [Lbal;
+     * array that loadOptions/saveOptions/Controls iterate (ar is the 9-slot hotbar
+     * sub-array). */
+    public static final String ENTITY_CLIENT_PLAYER = "bjk";
+    public static final String ENTITY_SET_ANGLES = "c";
+    public static final String ENTITY_SET_ANGLES_DESC = "(FF)V";
+    public static final String ENTITY_PREV_ROTATION_YAW = "A";
+    public static final String ENTITY_PREV_ROTATION_PITCH = "B";
+    public static final String ER_UPDATE_CAMERA_AND_RENDER = "b";
+    public static final String ER_UPDATE_CAMERA_AND_RENDER_DESC = "(F)V";
+    public static final String ER_RENDER_WORLD = "a";
+    public static final String ER_RENDER_WORLD_DESC = "(FJ)V";
+    public static final String GS_THIRD_PERSON_VIEW = "aw";
+    public static final String GS_KEY_BINDINGS = "as";
+    public static final String KB_RESET_HASH = "b";
     public static final String MC_CURRENT_SCREEN = "n";
 
     public static final String MC_GAME_SETTINGS = "u";

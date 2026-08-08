@@ -52,6 +52,7 @@ public final class VertexTestHarness
         VertexDynamicLightsCollector.tick(minecraft);
         VertexPackLoader.tick(minecraft);
         VertexFullbright.tick(minecraft);
+        VertexFreelook.tick(minecraft);
         VertexToggleSprint.tick(minecraft);
 
         if (VertexGuiProbe.active())
