@@ -41,6 +41,9 @@ client. It creates a new offline world with a fixed seed for each run. It tests:
 - 1,920 block and lighting updates per second.
 - 160 moving pigs with AI, pathfinding, and collision.
 
+Each workload runs for five untimed seconds after its setup and the preceding
+scenario's cleanup before frame intervals are recorded.
+
 The report shows each scenario separately. It also shows an equal-weight
 combined index. The combined index is not an FPS value.
 
