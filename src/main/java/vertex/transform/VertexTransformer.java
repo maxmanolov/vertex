@@ -45,6 +45,19 @@ public class VertexTransformer implements IClassTransformer
                     "vertex/hooks/VertexMulticore", "onRenderersReloadedHook");
                 result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
                     "vertex/hooks/VertexFullbright", "interceptLightRemark", HeadGuardPatch.THIS_ONLY);
+
+                if (vertex.hooks.VertexMarkAudit.ACTIVE)
+                {
+                    // #118 forensics: attribute every section re-mark to its entry point.
+                    result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_UPDATE, Mappings.RG_MARK_BLOCK_FOR_UPDATE_DESC,
+                        "vertex/hooks/VertexMarkAudit", "onMarkUpdate", HeadGuardPatch.THIS_ONLY);
+                    result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
+                        "vertex/hooks/VertexMarkAudit", "onMarkLight", HeadGuardPatch.THIS_ONLY);
+                    result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_RANGE_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_RANGE_FOR_RENDER_UPDATE_DESC,
+                        "vertex/hooks/VertexMarkAudit", "onMarkRange", HeadGuardPatch.THIS_ONLY);
+                    result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCKS_FOR_UPDATE, Mappings.RG_MARK_BLOCKS_FOR_UPDATE_DESC,
+                        "vertex/hooks/VertexMarkAudit", "onFunnel", HeadGuardPatch.THIS_ONLY);
+                }
                 // Tail hooks BEFORE head skips: a skip guard adds a synthetic early RETURN,
                 // and a tail call attached to it would run the feature while its pass is
                 // disabled - custom sky layers were observed drawing 5,928/min with the

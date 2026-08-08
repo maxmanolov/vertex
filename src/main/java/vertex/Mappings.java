@@ -111,6 +111,18 @@ public final class Mappings
     public static final String RG_MARK_BLOCK_FOR_UPDATE_DESC = "(III)V";
     public static final String RG_MARK_BLOCKS_FOR_UPDATE = "b";
     public static final String RG_MARK_BLOCKS_FOR_UPDATE_DESC = "(IIIIII)V";
+    /* RenderGlobal.markBlockRangeForRenderUpdate=func_147585_a=a(IIIIII)V - the public
+     * range entry (IWorldAccess), distinct from the private markBlocksForUpdate funnel
+     * b(IIIIII)V that all mark entries share. */
+    public static final String RG_MARK_BLOCK_RANGE_FOR_RENDER_UPDATE = "a";
+    public static final String RG_MARK_BLOCK_RANGE_FOR_RENDER_UPDATE_DESC = "(IIIIII)V";
+
+    /* EntityPlayerMP.playerNetServerHandler=field_71135_a=a; its
+     * NetHandlerPlayServer.setPlayerLocation=func_147364_a=a(DDDFF)V is the vanilla
+     * server-authoritative teleport, the one path a position pin can use that the
+     * client will not fight. */
+    public static final String PLAYER_MP_NET_HANDLER = "a";
+    public static final String NET_HANDLER_SET_PLAYER_LOCATION = "a";
     public static final String RG_UPDATE_RENDERERS = "a";
     public static final String RG_UPDATE_RENDERERS_DESC = "(Lsv;Z)Z";
     public static final String RG_LOAD_RENDERERS = "a";

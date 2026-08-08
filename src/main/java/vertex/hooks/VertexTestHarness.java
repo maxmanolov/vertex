@@ -72,6 +72,12 @@ public final class VertexTestHarness
 
             Object world = theWorld.get(minecraft);
 
+            if (world != null && VertexMarkAudit.ACTIVE)
+            {
+                // #118 forensics: attribute queue additions that bypass the mark methods.
+                VertexMarkAudit.ensureWrapped(renderGlobal.get(minecraft));
+            }
+
             if (AUTO_JOIN != null && !joinIssued && world == null)
             {
                 if (++menuFrames >= MENU_WARMUP_FRAMES)

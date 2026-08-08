@@ -345,9 +345,14 @@ public final class VertexMulticore
      * sections went empty. The CheatBreaker-era design invalidated on loadRenderers;
      * the wrap port was missing this hook.
      */
-    /** Adapter for the head hook on RenderGlobal.loadRenderers (instance arg unused). */
+    /** Head hook on RenderGlobal.loadRenderers; also captures the instance for requeue(). */
     public static void onRenderersReloadedHook(Object renderGlobal)
     {
+        if (renderGlobalRef == null || renderGlobalRef.get() != renderGlobal)
+        {
+            renderGlobalRef = new java.lang.ref.WeakReference<Object>(renderGlobal);
+        }
+
         onRenderersReloaded();
     }
 
@@ -480,6 +485,14 @@ public final class VertexMulticore
                 if (chunkBuild.renderer instanceof ImmediateMarker)
                 {
                     wrNeedsUpdate.setBoolean(chunkBuild.renderer, true);
+                    // Re-queue directly instead of leaving the dirty flag for vanilla's
+                    // needsUpdate sweep in sortAndRender to notice: that sweep walks 10
+                    // renderers per frame round-robin, so on a full grid a discarded
+                    // section could render stale or hollow for up to a whole lap
+                    // (~10,000 renderers / 10 per frame, tens of seconds) before being
+                    // rebuilt. Mirrors the vanilla mark path: dirty flag plus a
+                    // contains-checked add, on the client thread (#118).
+                    requeue(chunkBuild.renderer);
                 }
             }
             catch (Exception e)
@@ -492,6 +505,36 @@ public final class VertexMulticore
             }
         }
     };
+
+    private static java.lang.ref.WeakReference<Object> renderGlobalRef;
+    private static java.lang.reflect.Field renderersToUpdateField;
+
+    /** Client thread only (drain and teardown both run there, like the vanilla adds). */
+    private static void requeue(Object renderer) throws Exception
+    {
+        Object renderGlobal = renderGlobalRef != null ? renderGlobalRef.get() : null;
+
+        if (renderGlobal == null)
+        {
+            // No loadRenderers has run in this session's lifetime of the reference; the
+            // sweep fallback still re-queues within a lap, so this is a soft miss.
+            return;
+        }
+
+        if (renderersToUpdateField == null)
+        {
+            renderersToUpdateField = renderGlobal.getClass().getDeclaredField(Mappings.RG_WORLD_RENDERERS_TO_UPDATE);
+            renderersToUpdateField.setAccessible(true);
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Object> toUpdate = (List<Object>)renderersToUpdateField.get(renderGlobal);
+
+        if (toUpdate != null && !toUpdate.contains(renderer))
+        {
+            toUpdate.add(renderer);
+        }
+    }
 
     /**
      * The one terminal path for a build's captured resources, idempotent so success,

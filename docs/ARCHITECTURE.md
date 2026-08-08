@@ -89,7 +89,10 @@ first soak, and only an instrumented run showed the icon dispatch was live all a
 
   Companion flags: `-Dvertex.test.chatSpam=N` prints a fresh chat line every second
   in-world (keeps chat visible for HUD capture comparisons), `-Dvertex.test.showHud=true`
-  keeps the GUI drawn during frame captures, and `-Dvertex.test.guiProbe=true` (with
+  keeps the GUI drawn during frame captures, `-Dvertex.test.markAudit=true` attributes
+  every section re-mark and every direct worldRenderersToUpdate addition to its caller
+  (10-second counters per mark entry point plus sampled stacks; the instrument that
+  root-caused #118), and `-Dvertex.test.guiProbe=true` (with
   `-Dvertex.test.shotDir`) runs an autonomous GUI check from the title screen: it opens
   the Chat Settings screen, screenshots the injected Vertex buttons, clicks Chat
   Background through the real patched actionPerformed path, screenshots the flipped
