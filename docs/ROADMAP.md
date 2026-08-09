@@ -83,7 +83,7 @@ frame-time numbers from the diagnostics counters.
 redundancy at ~140 redundant calls/frame - microseconds of driver time against the 5%
 frame-time threshold. See docs/benchmarks/fastrender.md.
 
-## 5b. Renderer backend program (stages 1-3 merged, opt-in since 0.4.0)
+## 5b. Renderer backend program (stages 1-3 merged; arena default since 2026-08-08)
 
 **Design (fixed in docs/RENDERER.md):** staged migration
 `legacy display lists -> managed section meshes -> per-section VBOs -> shared arenas
@@ -108,9 +108,10 @@ under genuine churn), and the same structural-parity and zero-disable soak bars 
 stage 2 - including the stress-driver gauntlet's render-distance flips, resource
 reloads and world rejoins.
 
-**Remaining:** real-world miles on the opt-in backends, then a default-on decision
-through the same promotion gate multicore passed (human fly-through sign-off on top of
-the automated bars).
+**Promoted:** the arena backend became the default renderer on 2026-08-08 through the
+same gate multicore passed - the automated bars above plus real-session miles and
+maintainer sign-off. `vbo`, `displaylist` and `legacy` remain selectable via the
+`renderer` key; any runtime failure self-disables down the ladder to the vanilla path.
 
 ## 6. Dynamic lights
 

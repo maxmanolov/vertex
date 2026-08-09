@@ -13,13 +13,13 @@ Reproduction flags for every scenario are in docs/ARCHITECTURE.md. Pacing, not a
 FPS, is the optimization target; percentiles come from the allocation-free frame
 histogram (0.5ms buckets).
 
-## Renderer backends (0.4.0, opt-in)
+## Renderer backends (measured at 0.4.0; arena is the default since 2026-08-08)
 
 Steady state at spawn in the fixture world, uncapped, multicore on. `displaylist`
 (stage 1) is measured frame-time-identical to legacy by design and omitted below. Full
 protocol, parity evidence and per-stage detail: docs/benchmarks/renderer-backends.md.
 
-| steady state | legacy (default) | vbo | arena |
+| steady state | legacy (vanilla path) | vbo | arena (default) |
 |---|---|---|---|
 | RD8 fps / submit per frame | ~248 / 2.72 ms | ~730 / 0.42 ms | ~1,080 / 0.07 ms |
 | RD16 fps / submit per frame | ~92 / 8.26 ms | ~306 / 1.98 ms | ~562 / 0.30 ms |

@@ -25,13 +25,14 @@ The checklist below is retained for regression sign-off on future renderer chang
    rebuilds, lighting seams. Break and place blocks near chunk borders.
 4. Exit to title, rejoin, repeat briefly.
 
-## Renderer backend spot check (opt-in, 0.4.0)
+## Renderer backend spot check (arena default)
 
-Set `renderer=displaylist`, `vbo`, or `arena` in vertex.properties (restart to apply)
-and run the same four-step fly-through above - the checklist is identical because the
-backends must be visually indistinguishable from legacy. With `diagnostics=true` the
-once-per-minute summary reports backend health (uploads, draw batches, arena occupancy);
-any failure self-disables back to the vanilla path and logs once.
+The arena backend is the default; `renderer=vbo`, `displaylist` or `legacy` in
+vertex.properties select the other rungs (restart to apply). Run the same four-step
+fly-through above on any rung - the checklist is identical because the backends must be
+visually indistinguishable from legacy. With `diagnostics=true` the once-per-minute
+summary reports backend health (uploads, draw batches, arena occupancy); any failure
+self-disables down the ladder to the vanilla path and logs once.
 
 ## Feature spot checks (5 minutes total)
 
