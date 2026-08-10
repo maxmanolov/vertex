@@ -64,5 +64,12 @@ any failure self-disables back to the vanilla path and logs once.
   block. Tap Left Ctrl once - sprint pauses (walk speed); tap again - resumes. Open chat
   and type a Ctrl shortcut: the latch must not flip. Hunger below 3 shanks must still
   stop the sprint (vanilla gate stays in charge).
+- Video Settings menu: open Options > Video Settings; six pages (Video, Details,
+  Animations, Quality, Performance, Other) in the OptiFine layout. Toggle a vanilla
+  option, a Vertex option (Fullbright, Dynamic Lights), drag a slider, navigate into a
+  sub-page and back via Done and via Esc, change GUI Scale on the main page (screen
+  re-centers), and confirm values survive a restart. Greyed rows are reference slots
+  with no Vertex backing and must do nothing. Automated placement evidence:
+  `-Dvertex.test.guiProbe=videoPages` screenshots all six pages.
 - Installer: `java -jar vertex-<v>.jar install` into a fresh .minecraft with vanilla
   1.7.10 present; profile appears and launches.

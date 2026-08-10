@@ -177,10 +177,14 @@ public class VertexTransformer implements IClassTransformer
             else if (Mappings.GUI_VIDEO_SETTINGS.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching GuiVideoSettings (" + name + ")");
+                // The six-page OptiFine-layout menu: the init tail rebuilds the screen's
+                // content per page, the action guard dispatches every click except Done
+                // (id 200 falls through to vanilla's save-and-return-to-parent).
+                result = VideoSettingsKeyPatch.apply(result);
                 result = TailInstanceCallPatch.apply(result, Mappings.SCREEN_INIT_GUI, Mappings.SCREEN_INIT_GUI_DESC,
-                    "vertex/hooks/VertexHud", "videoOptionsInit");
+                    "vertex/hooks/VertexVideoMenu", "initScreen");
                 result = HeadGuardPatch.apply(result, Mappings.SCREEN_ACTION_PERFORMED, Mappings.SCREEN_ACTION_PERFORMED_DESC,
-                    "vertex/hooks/VertexHud", "videoOptionsAction", HeadGuardPatch.THIS_AND_OBJECT);
+                    "vertex/hooks/VertexVideoMenu", "actionPerformed", HeadGuardPatch.THIS_AND_OBJECT);
             }
             else if (Mappings.SCREEN_CHAT_OPTIONS.equals(name))
             {

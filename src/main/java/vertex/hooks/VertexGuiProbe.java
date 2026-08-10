@@ -24,10 +24,13 @@ import vertex.Mappings;
 public final class VertexGuiProbe
 {
     // "true"/"chatOptions" probes the Chat Settings screen (button 250); "videoSettings"
-    // probes the Video Settings screen (button 252). Any other value leaves it off.
+    // probes the Video Settings screen; "videoPages" walks all six video-menu pages
+    // through the real nav buttons (including Done back-navigation) and screenshots
+    // each. Any other value leaves it off.
     private static final String PROBE_SCREEN = System.getProperty("vertex.test.guiProbe");
     private static final boolean VIDEO = "videoSettings".equals(PROBE_SCREEN);
-    private static final boolean ENABLED = VIDEO || "true".equals(PROBE_SCREEN) || "chatOptions".equals(PROBE_SCREEN);
+    private static final boolean PAGES = "videoPages".equals(PROBE_SCREEN);
+    private static final boolean ENABLED = VIDEO || PAGES || "true".equals(PROBE_SCREEN) || "chatOptions".equals(PROBE_SCREEN);
     private static final String SHOT_DIR = System.getProperty("vertex.test.shotDir", ".");
     private static final int MENU_WARMUP_FRAMES = 150;
     private static final int SETTLE_FRAMES = 40;
@@ -40,6 +43,14 @@ public final class VertexGuiProbe
     private static Method actionPerformed;
     private static Field buttonListField;
     private static Field buttonIdField;
+    private static Field currentScreenField;
+
+    // videoPages walk: click (-1 = none, 200 = Done/back, 30x = nav), settle, shoot.
+    private static final int[] PAGE_CLICKS = {-1, 301, 200, 302, 200, 303, 200, 304, 200, 305};
+    private static final String[] PAGE_SHOTS = {"video", "details", null, "animations",
+        null, "quality", null, "performance", null, "other"};
+    private static int pageStep = 0;
+    private static boolean pageClicked = false;
 
     static boolean active()
     {
@@ -55,6 +66,12 @@ public final class VertexGuiProbe
 
         try
         {
+            if (PAGES)
+            {
+                pagesTick(minecraft);
+                return;
+            }
+
             if (stage == 0)
             {
                 openChatOptions(minecraft);
@@ -64,7 +81,8 @@ public final class VertexGuiProbe
             else if (stage == 1 && ++settle >= SETTLE_FRAMES)
             {
                 shot(VIDEO ? "gui-video-settings-initial" : "gui-chat-options-initial");
-                clickButton(VIDEO ? 252 : 250);
+                // 406 = the Fullbright slot on the reworked video page (layout-test-pinned).
+                clickButton(VIDEO ? 406 : 250);
                 stage = 2;
                 settle = 0;
             }
@@ -85,10 +103,56 @@ public final class VertexGuiProbe
         }
     }
 
+    /** Walks the six video-menu pages: nav in, screenshot, Done back out, next page. */
+    private static void pagesTick(Object minecraft) throws Exception
+    {
+        if (stage == 0)
+        {
+            openChatOptions(minecraft);
+            currentScreenField = minecraft.getClass().getDeclaredField(Mappings.MC_CURRENT_SCREEN);
+            currentScreenField.setAccessible(true);
+            stage = 1;
+            settle = 0;
+            return;
+        }
+
+        if (pageStep >= PAGE_CLICKS.length)
+        {
+            done = true;
+            LogWrapper.info("[Vertex] GUI probe: all video pages captured, shutting down");
+            shutdown(minecraft);
+            return;
+        }
+
+        if (!pageClicked)
+        {
+            if (PAGE_CLICKS[pageStep] >= 0)
+            {
+                screen = currentScreenField.get(minecraft);
+                clickButton(PAGE_CLICKS[pageStep]);
+            }
+
+            pageClicked = true;
+            settle = 0;
+            return;
+        }
+
+        if (++settle >= SETTLE_FRAMES)
+        {
+            if (PAGE_SHOTS[pageStep] != null)
+            {
+                shot("gui-video-page-" + PAGE_SHOTS[pageStep]);
+            }
+
+            ++pageStep;
+            pageClicked = false;
+        }
+    }
+
     private static void openChatOptions(Object minecraft) throws Exception
     {
         ClassLoader loader = minecraft.getClass().getClassLoader();
-        Class<?> screenClass = loader.loadClass(VIDEO ? Mappings.GUI_VIDEO_SETTINGS : Mappings.SCREEN_CHAT_OPTIONS);
+        Class<?> screenClass = loader.loadClass(VIDEO || PAGES ? Mappings.GUI_VIDEO_SETTINGS : Mappings.SCREEN_CHAT_OPTIONS);
         Class<?> buttonClass = loader.loadClass(Mappings.GUI_BUTTON);
         Constructor<?> ctor = screenClass.getConstructors()[0];
         Field gameSettings = minecraft.getClass().getDeclaredField(Mappings.MC_GAME_SETTINGS);

@@ -80,7 +80,8 @@ public final class VertexConfig
         return declaredDefault(key);
     }
 
-    private static boolean declaredDefault(String key)
+    /** Package-visible for the video menu's Reset button; unknown keys resolve false. */
+    static boolean declaredDefault(String key)
     {
         for (String[] entry : KEYS)
         {

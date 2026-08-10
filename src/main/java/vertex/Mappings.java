@@ -320,6 +320,8 @@ public final class Mappings
     public static final String SCREEN_INIT_GUI_DESC = "()V";
     public static final String SCREEN_ACTION_PERFORMED = "a";
     public static final String SCREEN_ACTION_PERFORMED_DESC = "(Lbcb;)V";
+    public static final String SCREEN_KEY_TYPED = "a";
+    public static final String SCREEN_KEY_TYPED_DESC = "(CI)V";
     public static final String SCREEN_BUTTON_LIST = "n";
     public static final String SCREEN_WIDTH = "l";
     public static final String GUI_BUTTON = "bcb";
@@ -328,6 +330,56 @@ public final class Mappings
     public static final String BUTTON_Y = "i";
     public static final String MC_INGAME_GUI = "r";
     public static final String CHAT_COMPONENT_TEXT = "fq";
+
+    /* Video-settings menu surface (vanilla 1.7.10 bytecode evidence):
+     * GuiVideoSettings=bef fields: parentScreen=f, title=a (protected String, drawn by
+     * its drawScreen), gameSettings=g, options row list=h (Lbch;). initGui=b()V builds
+     * Done as bcb(200, width/2-100, height-27) plus a bck row list; actionPerformed=
+     * a(Lbcb;)V handles only id 200 (saveOptions then displayGuiScreen(parent));
+     * mouseClicked calls super FIRST (buttonList clicks work without the list) and
+     * re-inits the screen when guiScale changed. GuiOptionsRowList=bck, ctor
+     * (Lbao;IIIII[Lbbm;)V, columns at width/2-155 and +160; its factory news
+     * bcn(IIILbbm;)V for float options (GuiOptionSlider) and bcj otherwise with labels
+     * from GameSettings.getKeyBinding=c(Lbbm;)String. Options enum=bbm; constants
+     * pinned by <clinit> ldc order: gamma=d renderDistance=f viewBobbing=g anaglyph=h
+     * advancedOpengl=i framerateLimit=j graphics=m ao=n guiScale=o renderClouds=p
+     * particles=q fullscreen=x showCape=z mipmapLevels=F anisotropicFiltering=G.
+     * GameSettings: setOptionValue=a(Lbbm;I)V, setOptionFloatValue=a(Lbbm;F)V,
+     * getOptionOrdinalValue=b(Lbbm;)Z, saveOptions=b()V; heldItemTooltips=B (a plain
+     * boolean, parsed from "heldItemTooltips" in loadOptions, no Options entry).
+     * Minecraft.displayGuiScreen=a(Lbdw;)V; GuiScreen.mc=k height=m;
+     * GuiButton.enabled=l. GuiVideoSettings does not override GuiScreen.keyTyped=
+     * a(CI)V; the inherited Esc path displays null, so Vertex adds a targeted override. */
+    public static final String VS_PARENT = "f";
+    public static final String VS_TITLE = "a";
+    public static final String VS_ROW_LIST = "h";
+    public static final String OPTIONS_ENUM = "bbm";
+    public static final String OPTIONS_ROW_LIST = "bck";
+    public static final String GUI_OPTION_SLIDER = "bcn";
+    public static final String GS_SET_OPTION = "a";
+    public static final String GS_GET_ORDINAL = "b";
+    public static final String GS_GET_LABEL = "c";
+    public static final String GS_SAVE_OPTIONS = "b";
+    public static final String GS_HELD_ITEM_TOOLTIPS = "B";
+    public static final String MC_DISPLAY_GUI_SCREEN = "a";
+    public static final String SCREEN_MC = "k";
+    public static final String SCREEN_HEIGHT = "m";
+    public static final String BUTTON_ENABLED = "l";
+    public static final String OPT_GAMMA = "d";
+    public static final String OPT_RENDER_DISTANCE = "f";
+    public static final String OPT_VIEW_BOBBING = "g";
+    public static final String OPT_ANAGLYPH = "h";
+    public static final String OPT_ADVANCED_GL = "i";
+    public static final String OPT_FRAMERATE = "j";
+    public static final String OPT_GRAPHICS = "m";
+    public static final String OPT_AO = "n";
+    public static final String OPT_GUI_SCALE = "o";
+    public static final String OPT_CLOUDS = "p";
+    public static final String OPT_PARTICLES = "q";
+    public static final String OPT_FULLSCREEN = "x";
+    public static final String OPT_SHOW_CAPE = "z";
+    public static final String OPT_MIPMAPS = "F";
+    public static final String OPT_ANISO = "G";
 
     /* ToggleSprint surface (verified against the vanilla 1.7.10 bytecode structure):
      * GameSettings.keyBindSprint=af, pinned in the bbj constructor - new bal("key.sprint",
