@@ -151,6 +151,16 @@ public class ArenaBackendLogicTest
         assertNull(ArenaBackend.pickDrainCandidate(healthy));
     }
 
+    @Test
+    public void worldTransitionDeletePolicyDefersOnMacOsOnly()
+    {
+        assertEquals(true, ArenaBackend.shouldDeferDeletes("Mac OS X"));
+        assertEquals(true, ArenaBackend.shouldDeferDeletes("macOS"));
+        assertEquals(false, ArenaBackend.shouldDeferDeletes("Linux"));
+        assertEquals(false, ArenaBackend.shouldDeferDeletes("Windows 11"));
+        assertEquals(false, ArenaBackend.shouldDeferDeletes(null));
+    }
+
     private static void fill(ArenaBackend.ArenaBlock block, int bytes)
     {
         if (block.allocator.allocate(bytes) == null)

@@ -1,6 +1,7 @@
 package vertex.render;
 
 import java.nio.IntBuffer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -40,6 +41,8 @@ public final class ArenaBackend implements RenderBackend
     /** Default arena block: holds hundreds of typical section meshes. */
     private static final int BLOCK_BYTES = 16 * 1024 * 1024;
     private static final int QUANTUM = 1024;
+    private static final int MAC_DELETE_GRACE_TICKS = 8;
+    private static final boolean DEFER_DELETES = shouldDeferDeletes(System.getProperty("os.name"));
 
     static final class ArenaBlock
     {
@@ -71,6 +74,18 @@ public final class ArenaBackend implements RenderBackend
         }
     }
 
+    static final class RetiredBuffer
+    {
+        final int buffer;
+        final int deleteAfterTick;
+
+        RetiredBuffer(int buffer, int deleteAfterTick)
+        {
+            this.buffer = buffer;
+            this.deleteAfterTick = deleteAfterTick;
+        }
+    }
+
     private int generation = 0;
     @SuppressWarnings("unchecked")
     private final Map<Long, RegionArena>[] arenas = new HashMap[] {
@@ -90,6 +105,8 @@ public final class ArenaBackend implements RenderBackend
     private long drawNanos = 0L;
     private long batchesIssued = 0L;
     private long blocksDrained = 0L;
+    private final ArrayDeque<RetiredBuffer> retiredBuffers = new ArrayDeque<RetiredBuffer>();
+    private int clientTick = 0;
 
     public ArenaBackend()
     {
@@ -121,6 +138,7 @@ public final class ArenaBackend implements RenderBackend
     @Override
     public void upload(Object renderer, int pass, MeshData mesh, int originX, int originY, int originZ, int glListBase)
     {
+        flushRetiredBuffers();
         long start = System.nanoTime();
         MeshHost host = (MeshHost)renderer;
         Object parked = host.vertex$mesh();
@@ -200,6 +218,7 @@ public final class ArenaBackend implements RenderBackend
     @Override
     public void drawVisible(List<?> sections, int pass, double camX, double camY, double camZ)
     {
+        flushRetiredBuffers();
         long start = System.nanoTime();
         this.plan.reset();
         boolean ordered = pass == 1;
@@ -328,13 +347,15 @@ public final class ArenaBackend implements RenderBackend
     @Override
     public void reset()
     {
+        flushRetiredBuffers();
+
         for (int pass = 0; pass < 2; ++pass)
         {
             for (RegionArena arena : this.arenas[pass].values())
             {
                 for (int i = 0; i < arena.blocks.size(); ++i)
                 {
-                    GL15.glDeleteBuffers(arena.blocks.get(i).buffer);
+                    retireBuffer(arena.blocks.get(i).buffer);
                 }
             }
 
@@ -402,6 +423,9 @@ public final class ArenaBackend implements RenderBackend
     @Override
     public List<Object> drainDeferredRemarks()
     {
+        ++this.clientTick;
+        flushRetiredBuffers();
+
         if (this.deferredRemarks.isEmpty())
         {
             return java.util.Collections.emptyList();
@@ -465,7 +489,7 @@ public final class ArenaBackend implements RenderBackend
     {
         if (block.draining && block.allocator.liveBytes() == 0)
         {
-            GL15.glDeleteBuffers(block.buffer);
+            retireBuffer(block.buffer);
             arena.blocks.remove(block);
             this.capacityBytes -= block.capacity;
         }
@@ -488,7 +512,7 @@ public final class ArenaBackend implements RenderBackend
         if (candidate.allocator.liveBytes() == 0)
         {
             // Nothing resident: reclaim immediately instead of waiting for a rebuild.
-            GL15.glDeleteBuffers(candidate.buffer);
+            retireBuffer(candidate.buffer);
             arena.blocks.remove(candidate);
             this.capacityBytes -= candidate.capacity;
             ++this.blocksDrained;
@@ -616,5 +640,30 @@ public final class ArenaBackend implements RenderBackend
     {
         int quanta = (bytes + QUANTUM - 1) / QUANTUM;
         return quanta * QUANTUM;
+    }
+
+    static boolean shouldDeferDeletes(String osName)
+    {
+        return osName != null && osName.toLowerCase(java.util.Locale.ROOT).contains("mac");
+    }
+
+    private void retireBuffer(int buffer)
+    {
+        if (DEFER_DELETES)
+        {
+            this.retiredBuffers.addLast(new RetiredBuffer(buffer, this.clientTick + MAC_DELETE_GRACE_TICKS));
+            GL11.glFlush();
+            return;
+        }
+
+        GL15.glDeleteBuffers(buffer);
+    }
+
+    private void flushRetiredBuffers()
+    {
+        while (!this.retiredBuffers.isEmpty() && this.retiredBuffers.peekFirst().deleteAfterTick <= this.clientTick)
+        {
+            GL15.glDeleteBuffers(this.retiredBuffers.removeFirst().buffer);
+        }
     }
 }
