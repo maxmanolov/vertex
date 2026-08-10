@@ -172,9 +172,38 @@ public final class VideoMenuLayoutTest
         assertEquals(W / 2 + 5, VideoMenuLayout.columnX(W, 1));
         assertEquals(H / 6 - 12, VideoMenuLayout.rowY(H, 0));
         assertEquals(H / 6 - 12 + 24, VideoMenuLayout.rowY(H, 1));
-        // Grid-anchored bottom row with the degenerate-height clamp.
+        // Roomy layouts retain the reference's 24-pixel grid and bottom-row anchor.
         assertEquals(VideoMenuLayout.rowY(H, 9) + 4, VideoMenuLayout.bottomRowY(H, 9));
-        assertEquals(240 - 22, VideoMenuLayout.bottomRowY(240, 9));
+        // At vanilla's minimum scaled height the gaps compress instead of overlapping.
+        assertEquals(212, VideoMenuLayout.bottomRowY(240, 9));
+    }
+
+    @Test
+    public void minimumScaledHeightHasNoOverlappingControls()
+    {
+        int width = 427;
+        int height = 240;
+
+        for (int page = 0; page < VideoMenuLayout.PAGE_COUNT; ++page)
+        {
+            List<VideoMenuLayout.Placed> controls = VideoMenuLayout.layout(page, width, height);
+
+            for (int i = 0; i < controls.size(); ++i)
+            {
+                for (int j = i + 1; j < controls.size(); ++j)
+                {
+                    assertTrue("page " + page + " controls " + controls.get(i).id
+                        + " and " + controls.get(j).id + " overlap",
+                        !overlaps(controls.get(i), controls.get(j)));
+                }
+            }
+        }
+    }
+
+    private static boolean overlaps(VideoMenuLayout.Placed a, VideoMenuLayout.Placed b)
+    {
+        return a.x < b.x + b.width && a.x + a.width > b.x
+            && a.y < b.y + b.height && a.y + a.height > b.y;
     }
 
     private static void assertColumn(List<VideoMenuLayout.Placed> page, int x, int[] kinds)

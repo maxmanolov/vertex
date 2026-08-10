@@ -123,14 +123,39 @@ final class VideoMenuLayout
     }
 
     /**
+     * Vanilla's ScaledResolution permits a 240-pixel-tall GUI. Nine 20-pixel controls
+     * on a fixed 24-pixel pitch plus the bottom row do not fit there, so compress only
+     * the inter-row gaps as needed. Twenty is the lower bound: controls may touch but
+     * can never overlap.
+     */
+    private static int rowPitch(int height, int gridRows)
+    {
+        if (gridRows <= 1)
+        {
+            return 24;
+        }
+
+        int top = rowY(height, 0);
+        int lastGridTop = height - 22 - 4 - 20;
+        int availablePitch = (lastGridTop - top) / (gridRows - 1);
+        return Math.max(20, Math.min(24, availablePitch));
+    }
+
+    private static int rowY(int height, int row, int pitch)
+    {
+        return height / 6 - 12 + row * pitch;
+    }
+
+    /**
      * The reference anchors the bottom row to the GRID, not the screen bottom: Done
      * (or the All ON row) sits one small gap below the last grid row, and the Other
-     * page leaves two empty rows before Reset. Clamped so a degenerately small GUI
-     * height overlaps the grid rather than pushing the button off-screen.
+     * page leaves two empty rows before Reset. Compact layouts use the compressed pitch
+     * above; the final clamp only protects dimensions below vanilla's supported minimum.
      */
     static int bottomRowY(int height, int gridRows)
     {
-        return Math.min(rowY(height, gridRows) + 4, height - 22);
+        int pitch = rowPitch(height, gridRows);
+        return Math.min(rowY(height, gridRows, pitch) + 4, height - 22);
     }
 
     static int resetY(int height, int gridRows)
@@ -148,6 +173,7 @@ final class VideoMenuLayout
         List<Placed> placed = new ArrayList<Placed>();
         int slotId = ID_SLOT_BASE;
         int gridRows = Math.max(left.size(), right.size());
+        int pitch = rowPitch(height, gridRows);
 
         for (int column = 0; column < 2; ++column)
         {
@@ -159,7 +185,7 @@ final class VideoMenuLayout
                 int id = slot.kind == KIND_NAV
                     ? ID_NAV_BASE + Integer.parseInt(slot.ref) : slotId++;
                 placed.add(new Placed(slot.kind, slot.label, slot.ref, id,
-                    columnX(width, column), rowY(height, row), 150, 20));
+                    columnX(width, column), rowY(height, row, pitch), 150, 20));
             }
         }
 
