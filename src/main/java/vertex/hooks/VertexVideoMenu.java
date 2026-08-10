@@ -190,6 +190,29 @@ public final class VertexVideoMenu
         }
     }
 
+    /** Added GuiVideoSettings.keyTyped override: Esc saves and walks to this page's parent. */
+    public static boolean keyTyped(Object screen, int keyCode)
+    {
+        if (disabled || keyCode != 1 || !pageOf.containsKey(screen))
+        {
+            return false;
+        }
+
+        try
+        {
+            Object minecraft = screenMcField.get(screen);
+            Object settings = mcGameSettings.get(minecraft);
+            saveOptions.invoke(settings);
+            displayGuiScreen.invoke(minecraft, parentField.get(screen));
+            return true;
+        }
+        catch (Throwable t)
+        {
+            disable(t);
+            return false;
+        }
+    }
+
     // ---- page construction ---------------------------------------------------------
 
     private static void rebuild(Object screen, int page) throws Exception

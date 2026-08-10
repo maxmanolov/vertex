@@ -320,6 +320,8 @@ public final class Mappings
     public static final String SCREEN_INIT_GUI_DESC = "()V";
     public static final String SCREEN_ACTION_PERFORMED = "a";
     public static final String SCREEN_ACTION_PERFORMED_DESC = "(Lbcb;)V";
+    public static final String SCREEN_KEY_TYPED = "a";
+    public static final String SCREEN_KEY_TYPED_DESC = "(CI)V";
     public static final String SCREEN_BUTTON_LIST = "n";
     public static final String SCREEN_WIDTH = "l";
     public static final String GUI_BUTTON = "bcb";
@@ -346,7 +348,8 @@ public final class Mappings
      * getOptionOrdinalValue=b(Lbbm;)Z, saveOptions=b()V; heldItemTooltips=B (a plain
      * boolean, parsed from "heldItemTooltips" in loadOptions, no Options entry).
      * Minecraft.displayGuiScreen=a(Lbdw;)V; GuiScreen.mc=k height=m;
-     * GuiButton.enabled=l. */
+     * GuiButton.enabled=l. GuiVideoSettings does not override GuiScreen.keyTyped=
+     * a(CI)V; the inherited Esc path displays null, so Vertex adds a targeted override. */
     public static final String VS_PARENT = "f";
     public static final String VS_TITLE = "a";
     public static final String VS_ROW_LIST = "h";

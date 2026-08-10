@@ -180,6 +180,7 @@ public class VertexTransformer implements IClassTransformer
                 // The six-page OptiFine-layout menu: the init tail rebuilds the screen's
                 // content per page, the action guard dispatches every click except Done
                 // (id 200 falls through to vanilla's save-and-return-to-parent).
+                result = VideoSettingsKeyPatch.apply(result);
                 result = TailInstanceCallPatch.apply(result, Mappings.SCREEN_INIT_GUI, Mappings.SCREEN_INIT_GUI_DESC,
                     "vertex/hooks/VertexVideoMenu", "initScreen");
                 result = HeadGuardPatch.apply(result, Mappings.SCREEN_ACTION_PERFORMED, Mappings.SCREEN_ACTION_PERFORMED_DESC,
