@@ -13,7 +13,7 @@ Reproduction flags for every scenario are in docs/ARCHITECTURE.md. Pacing, not a
 FPS, is the optimization target; percentiles come from the allocation-free frame
 histogram (0.5ms buckets).
 
-## Renderer backends (measured at 0.4.0; arena is the default since 2026-08-08)
+## Renderer backends (measured at 0.4.0; arena is the new-profile default)
 
 Steady state at spawn in the fixture world, uncapped, multicore on. `displaylist`
 (stage 1) is measured frame-time-identical to legacy by design and omitted below. Full
@@ -24,6 +24,9 @@ protocol, parity evidence and per-stage detail: docs/benchmarks/renderer-backend
 | RD8 fps / submit per frame | ~248 / 2.72 ms | ~730 / 0.42 ms | ~1,080 / 0.07 ms |
 | RD16 fps / submit per frame | ~92 / 8.26 ms | ~306 / 1.98 ms | ~562 / 0.30 ms |
 | RD16 draw commands per frame | ~1,700 (one per section) | ~1,700 (one per section) | ~51 (region batches) |
+
+The default applies when `renderer` is absent or blank. Existing configurations retain
+their explicit value, including the `renderer=legacy` line generated before promotion.
 
 Arena frame pacing at RD16: ftP50 1.7 ms / ftP99 3.2 ms. Buffer memory is explicit
 under these backends (RD16: ~239 MB vbo; arena 241 MB live against a 336 MB block

@@ -9,7 +9,9 @@ spends 76% of wall time executing one display list per visible section (~6.7 us 
 linear), while traversal, visibility and rebuild together stay under 4%.
 
 The `renderer` config key selects the stage; since the 2026-08-08 promotion the shared
-arena is the default, and `renderer=legacy` still weaves nothing (byte-identical vanilla).
+arena is the declared default for new and missing-key configurations, and
+`renderer=legacy` still weaves nothing (byte-identical vanilla). Existing configurations
+retain explicit values, including legacy defaults generated before the promotion.
 Every stage stayed opt-in until it had visual parity, performance evidence and
 real-session miles - the arena promotion closed that gate through the same shape as
 multicore's (automated bars, then maintainer sign-off in real sessions).

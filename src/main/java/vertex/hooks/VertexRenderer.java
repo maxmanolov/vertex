@@ -16,8 +16,9 @@ import vertex.render.RenderBackend;
 /**
  * Orchestrator of the managed section-mesh pipeline (docs/RENDERER.md), selected by the
  * "renderer" config key (or -Dvertex.renderer=), resolved once at class load like the
- * multicore flag. The arena backend is the default since its promotion (2026-08-08);
- * the transformer weaves the managed hooks only when MODE is not legacy, so
+ * multicore flag. The arena backend is the declared default for new and missing-key
+ * configurations since its promotion (2026-08-08); existing explicit values are kept.
+ * The transformer weaves the managed hooks only when MODE is not legacy, so
  * renderer=legacy still runs byte-identical vanilla-shaped code.
  *
  * Data flow when managed: every chunk-section rebuild - worker builds via the multicore

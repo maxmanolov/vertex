@@ -25,10 +25,12 @@ The checklist below is retained for regression sign-off on future renderer chang
    rebuilds, lighting seams. Break and place blocks near chunk borders.
 4. Exit to title, rejoin, repeat briefly.
 
-## Renderer backend spot check (arena default)
+## Renderer backend spot check (arena default for new profiles)
 
-The arena backend is the default; `renderer=vbo`, `displaylist` or `legacy` in
-vertex.properties select the other rungs (restart to apply). Run the same four-step
+The arena backend is the declared default for new or missing-key configurations;
+existing files retain an explicit value, including the `renderer=legacy` line generated
+before promotion. `renderer=vbo`, `displaylist` or `legacy` in vertex.properties select
+the other rungs (restart to apply). Run the same four-step
 fly-through above on any rung - the checklist is identical because the backends must be
 visually indistinguishable from legacy. With `diagnostics=true` the once-per-minute
 summary reports backend health (uploads, draw batches, arena occupancy); any failure

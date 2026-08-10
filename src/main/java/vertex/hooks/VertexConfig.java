@@ -35,7 +35,7 @@ public final class VertexConfig
         {"customSky", "true", "Draw pack-defined custom sky layers"},
         {"connectedTextures", "true", "Connected textures from a pack's mcpatcher/ctm rules"},
         {"multicore", "true", "Build chunk geometry on CPU worker threads (restart required)"},
-        {"renderer", "arena", "Terrain renderer backend: arena (default; shared buffers with batched submission), vbo (per-section vertex buffers), displaylist (managed section-mesh pipeline, vanilla visuals), or legacy (the untouched vanilla display-list path); restart required"},
+        {"renderer", "arena", "Terrain renderer backend: arena (default when this key is missing; shared buffers with batched submission), vbo (per-section vertex buffers), displaylist (managed section-mesh pipeline, vanilla visuals), or legacy (the untouched vanilla display-list path); restart required"},
         {"fullbright", "false", "Render everything at full brightness and skip light-triggered chunk rebuilds"},
         {"freelook", "true", "Hold the Freelook key (rebindable in Controls, default Left Alt) to orbit the camera without turning your character"},
         {"toggleSprint", "false", "Tap the sprint key to toggle continuous sprinting instead of holding it"},

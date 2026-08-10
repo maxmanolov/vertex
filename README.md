@@ -60,12 +60,12 @@ A pool of CPU workers tessellates chunk geometry into per-build Tessellator inst
 
 On by default since 0.3.2; set `multicore=false` in vertex.properties to opt out (restart to apply). Self-disables cleanly on any failure without costing the session.
 
-### Renderer backends (arena default-on)
+### Renderer backends (arena default for new profiles)
 
 Phase profiling showed the stock renderer is submission-bound: at render distance 16,
 three quarters of frame time goes into executing one display list per visible section
 (docs/benchmarks/renderer-baseline.md). Vertex ships a staged replacement, and the
-shared-arena backend is now the **default**: sections live as ranges inside per-region
+shared-arena backend is now the **declared default**: sections live as ranges inside per-region
 vertex buffers with their transforms baked in at build time, so a pass submits a
 handful of glMultiDrawArrays batches instead of one draw per section — measured at
 render distance 16: 8.26 ms → 0.30 ms submission per frame, ~51 draw commands instead
@@ -78,6 +78,11 @@ and maintainer sign-off. The design, stage ladder, and lifecycle rules live in
 [docs/RENDERER.md](docs/RENDERER.md); measured results per stage in
 docs/benchmarks/renderer-backends.md. Any runtime failure self-disables down the ladder
 to the vanilla path without costing the session.
+
+The declared default applies to new profiles and configurations where `renderer` is
+missing or blank. Existing configurations keep their explicit value; profiles generated
+before this promotion normally contain `renderer=legacy` and remain on legacy until that
+line is changed or removed.
 
 ## How it works
 

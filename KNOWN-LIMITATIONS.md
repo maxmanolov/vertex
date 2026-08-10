@@ -7,8 +7,11 @@
   fly-through that surfaced the last in-motion race (client translucent resort vs
   worker vertexState write, #92), fixed at root and A/B-verified before a clean
   fly-through sign-off on the fixed pipeline.
-- **The arena renderer is now the default** (`renderer` key; `vbo`, `displaylist` and
-  `legacy` remain selectable, restart to apply). Promotion mirrored the multicore gate:
+- **The arena renderer is now the declared default for new profiles and configurations
+  with no `renderer` value** (`vbo`, `displaylist` and `legacy` remain selectable,
+  restart to apply). Existing configurations retain explicit values, so profiles whose
+  generated file already says `renderer=legacy` remain on legacy until that line changes.
+  Promotion mirrored the multicore gate:
   structural parity plus zero-disable soak/churn/stress gauntlets at 0.4.0
   (docs/benchmarks/renderer-backends.md), then real-session miles and maintainer
   sign-off (2026-08-08). Any runtime failure self-disables down the ladder to the
