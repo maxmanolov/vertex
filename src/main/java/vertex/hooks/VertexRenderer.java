@@ -16,8 +16,10 @@ import vertex.render.RenderBackend;
 /**
  * Orchestrator of the managed section-mesh pipeline (docs/RENDERER.md), selected by the
  * "renderer" config key (or -Dvertex.renderer=), resolved once at class load like the
- * multicore flag - the transformer weaves the managed hooks only when MODE is not legacy,
- * so the default configuration runs byte-identical vanilla-shaped code.
+ * multicore flag. The arena backend is the declared default for new and missing-key
+ * configurations since its promotion (2026-08-08); existing explicit values are kept.
+ * The transformer weaves the managed hooks only when MODE is not legacy, so
+ * renderer=legacy still runs byte-identical vanilla-shaped code.
  *
  * Data flow when managed: every chunk-section rebuild - worker builds via the multicore
  * capture, synchronous client rebuilds and translucent resorts via the client capture
@@ -114,7 +116,7 @@ public final class VertexRenderer
     private static int resolveMode()
     {
         String property = System.getProperty("vertex.renderer");
-        int mode = parseMode(property != null ? property : VertexConfig.value("renderer", "legacy"));
+        int mode = parseMode(property != null ? property : VertexConfig.value("renderer", "arena"));
 
         if (mode != LEGACY)
         {

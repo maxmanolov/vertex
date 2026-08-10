@@ -60,20 +60,29 @@ A pool of CPU workers tessellates chunk geometry into per-build Tessellator inst
 
 On by default since 0.3.2; set `multicore=false` in vertex.properties to opt out (restart to apply). Self-disables cleanly on any failure without costing the session.
 
-### Renderer backends (experimental, opt-in)
+### Renderer backends (arena default for new profiles)
 
 Phase profiling showed the stock renderer is submission-bound: at render distance 16,
 three quarters of frame time goes into executing one display list per visible section
-(docs/benchmarks/renderer-baseline.md). The `renderer` key selects the terrain backend:
-`legacy` (default — the vanilla path, untouched), `displaylist` (the managed
-section-mesh pipeline with vanilla visuals and performance; workers produce
-backend-neutral geometry, one install path owns all GL), `vbo` (per-section vertex
-buffers), or `arena` (shared per-region buffers with baked section transforms and
-multi-draw batched submission — the stage the ladder was built for). Restart to apply.
-The design, stage ladder, and lifecycle rules live in
+(docs/benchmarks/renderer-baseline.md). Vertex ships a staged replacement, and the
+shared-arena backend is now the **declared default**: sections live as ranges inside per-region
+vertex buffers with their transforms baked in at build time, so a pass submits a
+handful of glMultiDrawArrays batches instead of one draw per section — measured at
+render distance 16: 8.26 ms → 0.30 ms submission per frame, ~51 draw commands instead
+of ~1,700, ~92 → ~562 fps. The `renderer` key still selects the other rungs: `vbo`
+(per-section vertex buffers), `displaylist` (the managed section-mesh pipeline at
+vanilla visuals and performance), or `legacy` (the untouched vanilla path, which weaves
+nothing). Restart to apply. Promotion followed the multicore playbook: structural-parity
+audits and zero-disable soak/churn/stress gauntlets at 0.4.0, then real-session miles
+and maintainer sign-off. The design, stage ladder, and lifecycle rules live in
 [docs/RENDERER.md](docs/RENDERER.md); measured results per stage in
-docs/benchmarks/renderer-backends.md. Like every Vertex subsystem it self-disables to
-the vanilla path on any failure.
+docs/benchmarks/renderer-backends.md. Any runtime failure self-disables down the ladder
+to the vanilla path without costing the session.
+
+The declared default applies to new profiles and configurations where `renderer` is
+missing or blank. Existing configurations keep their explicit value; profiles generated
+before this promotion normally contain `renderer=legacy` and remain on legacy until that
+line is changed or removed.
 
 ## How it works
 

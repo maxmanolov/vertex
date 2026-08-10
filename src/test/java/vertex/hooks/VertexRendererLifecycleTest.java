@@ -180,17 +180,26 @@ public class VertexRendererLifecycleTest
     @Test
     public void contentBuildsFromTheWrongPipelineDiscardAndRequeue() throws Exception
     {
-        // managedCapture=true while the pipeline runs legacy (the disable direction):
-        // the meshes have nowhere to install, so the build discards and the section
-        // re-marks for a vanilla rebuild.
+        // managedCapture=true while the pipeline runs vanilla - since the arena
+        // promotion the ambient mode is managed, so this direction is exactly the
+        // post-disable window: force it, and the meshes have nowhere to install, so
+        // the build discards and the section re-marks for a vanilla rebuild.
         FakeRenderer renderer = new FakeRenderer();
         VertexMulticore.ChunkBuild build = newBuild(renderer);
         build.managedCapture = true;
         setInt(build, "capturedPasses", 1);
         BuildQueue.Sink sink = (BuildQueue.Sink)getStatic(VertexMulticore.class, "SINK");
+        setStatic(VertexRenderer.class, "disabled", Boolean.TRUE);
 
-        assertFalse("mismatched content build must not apply", sink.apply(build));
-        assertTrue("discard must re-dirty the section", renderer.q);
+        try
+        {
+            assertFalse("mismatched content build must not apply", sink.apply(build));
+            assertTrue("discard must re-dirty the section", renderer.q);
+        }
+        finally
+        {
+            setStatic(VertexRenderer.class, "disabled", Boolean.FALSE);
+        }
     }
 
     @Test

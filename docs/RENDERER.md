@@ -8,9 +8,13 @@ justifies the program is docs/benchmarks/renderer-baseline.md: at RD16 the clien
 spends 76% of wall time executing one display list per visible section (~6.7 us each,
 linear), while traversal, visibility and rebuild together stay under 4%.
 
-Everything here is opt-in behind the `renderer` config key (default `legacy`) and weaves
-nothing when off; the legacy path remains the shipped default until a stage has visual
-and performance evidence.
+The `renderer` config key selects the stage; since the 2026-08-08 promotion the shared
+arena is the declared default for new and missing-key configurations, and
+`renderer=legacy` still weaves nothing (byte-identical vanilla). Existing configurations
+retain explicit values, including legacy defaults generated before the promotion.
+Every stage stayed opt-in until it had visual parity, performance evidence and
+real-session miles - the arena promotion closed that gate through the same shape as
+multicore's (automated bars, then maintainer sign-off in real sessions).
 
 ## 1. The vanilla pipeline being replaced (bytecode-verified)
 

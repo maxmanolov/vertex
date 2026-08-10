@@ -142,13 +142,17 @@ public class VertexConfigDefaultsTest
         write("renderer=  vbo  \n");
         org.junit.Assert.assertEquals("value() must trim", "vbo", VertexConfig.value("renderer", "unused"));
 
+        write("renderer=legacy\n");
+        org.junit.Assert.assertEquals("an existing explicit legacy value survives promotion",
+            "legacy", VertexConfig.value("renderer", "unused"));
+
         write("");
         org.junit.Assert.assertEquals("absent declared key resolves to its declared default",
-            "legacy", VertexConfig.value("renderer", "unused"));
+            "arena", VertexConfig.value("renderer", "unused"));
 
         write("renderer=\n");
         org.junit.Assert.assertEquals("blank value resolves to the declared default",
-            "legacy", VertexConfig.value("renderer", "unused"));
+            "arena", VertexConfig.value("renderer", "unused"));
 
         write("");
         org.junit.Assert.assertEquals("undeclared keys use the caller fallback",
