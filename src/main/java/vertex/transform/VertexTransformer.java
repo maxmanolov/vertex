@@ -144,6 +144,11 @@ public class VertexTransformer implements IClassTransformer
                 result = HeadGuardPatch.apply(result, Mappings.RENDER_BIND_ENTITY_TEXTURE, Mappings.RENDER_BIND_ENTITY_TEXTURE_DESC,
                     "vertex/hooks/VertexRandomEntities", "interceptBind", HeadGuardPatch.THIS_AND_OBJECT);
             }
+            else if (Mappings.RENDER_MANAGER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching RenderManager (" + name + ")");
+                result = EntityBrightnessPatch.apply(result);
+            }
             else if (Mappings.COLORIZER_GRASS.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching ColorizerGrass (" + name + ")");

@@ -9,14 +9,13 @@ import vertex.Mappings;
  * Fullbright (#116): render everything at maximum brightness and skip the work that only
  * exists to keep baked lighting visually current.
  *
- * Two halves, both client-render-only. The brightness half overrides every
- * getMixedBrightnessForBlock result with max lightmap coordinates, so geometry bakes
- * fully lit at tessellation time. The performance half skips RenderGlobal's light-only
- * re-mark path (markBlockForRenderUpdate): with brightness ignored, light-level changes
- * no longer invalidate geometry, so the section rebuilds they would have triggered -
- * the cave-mining and dusk/dawn rebuild storms - never happen. World light propagation
- * is untouched (it is game logic shared with the integrated server), so mob spawning,
- * crop growth and true light levels keep working.
+ * Two halves, both client-render-only. The brightness half overrides block-tessellation
+ * and entity-render lightmap values with maximum coordinates. The performance half skips
+ * RenderGlobal's light-only re-mark path (markBlockForRenderUpdate): with baked block
+ * brightness ignored, light-level changes no longer invalidate geometry, so the section
+ * rebuilds they would have triggered - the cave-mining and dusk/dawn rebuild storms -
+ * never happen. World light propagation is untouched (it is game logic shared with the
+ * integrated server), so mob spawning, crop growth and true light levels keep working.
  *
  * The active flag is a volatile refreshed once per frame; the tessellation-path check in
  * VertexDynamicLights.adjust is a single volatile read when off. Toggle transitions
@@ -42,6 +41,12 @@ public final class VertexFullbright
     public static boolean fullbright()
     {
         return active;
+    }
+
+    /** RenderManager lightmap hook: preserve vanilla off, force both coordinates on. */
+    public static int adjustEntityBrightness(int packed)
+    {
+        return active ? FULLBRIGHT_PACKED : packed;
     }
 
     /** Head guard on RenderGlobal.markBlockForRenderUpdate: true = skip the re-mark. */

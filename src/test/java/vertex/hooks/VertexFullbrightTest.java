@@ -8,6 +8,7 @@ import net.minecraft.launchwrapper.Launch;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -67,6 +68,17 @@ public final class VertexFullbrightTest
             VertexFullbright.fullbright());
         assertFalse("light remarks must resume when the user turns fullbright off",
             VertexFullbright.interceptLightRemark(minecraft.g));
+    }
+
+    @Test
+    public void entityBrightnessOnlyChangesWhileFullbrightIsActive() throws Exception
+    {
+        int vanilla = 0x700030;
+        assertEquals(vanilla, VertexFullbright.adjustEntityBrightness(vanilla));
+
+        setFullbright("active", Boolean.TRUE);
+        assertEquals(VertexFullbright.FULLBRIGHT_PACKED,
+            VertexFullbright.adjustEntityBrightness(vanilla));
     }
 
     private void writeConfig(boolean enabled) throws Exception
