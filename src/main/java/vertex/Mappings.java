@@ -9,6 +9,7 @@ package vertex;
  * net.minecraft.client.Minecraft         -                bao
  * net.minecraft.client.renderer.RenderGlobal -            bma
  * net.minecraft.client.renderer.WorldRenderer -           blo
+ * net.minecraft.client.renderer.entity.RenderManager -    bnn
  * net.minecraft.entity.Entity            -                sa
  * net.minecraft.entity.EntityLivingBase  -                sv
  * Minecraft.theWorld                     field_71441_e    f
@@ -43,6 +44,7 @@ public final class Mappings
     public static final String MINECRAFT = "bao";
     public static final String RENDER_GLOBAL = "bma";
     public static final String WORLD_RENDERER = "blo";
+    public static final String RENDER_MANAGER = "bnn";
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
     public static final String BLOCK_REGISTRY = "c";
@@ -59,6 +61,13 @@ public final class Mappings
     public static final String WORLD_GET_TIME = "J";
     public static final String WORLD_CELESTIAL_ANGLE = "c";
     public static final String RENDER_CLASS = "bno";
+    /* RenderManager.renderEntityStatic=func_147939_a=a(Lsa;FZ)Z obtains the packed
+     * entity lightmap value through Entity.getBrightnessForRender=func_70070_b=c(F)I
+     * immediately before passing its two halves to OpenGlHelper. */
+    public static final String RM_RENDER_ENTITY_STATIC = "a";
+    public static final String RM_RENDER_ENTITY_STATIC_DESC = "(Lsa;FZ)Z";
+    public static final String ENTITY_GET_BRIGHTNESS_FOR_RENDER = "c";
+    public static final String ENTITY_GET_BRIGHTNESS_FOR_RENDER_DESC = "(F)I";
     public static final String RENDER_BIND_ENTITY_TEXTURE = "b";
     public static final String RENDER_BIND_ENTITY_TEXTURE_DESC = "(Lsa;)V";
     public static final String RENDER_GET_ENTITY_TEXTURE = "a";
