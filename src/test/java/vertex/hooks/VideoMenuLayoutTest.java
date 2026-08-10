@@ -113,9 +113,10 @@ public final class VideoMenuLayoutTest
             VideoMenuLayout.layout(VideoMenuLayout.PAGE_DETAILS, W, H);
         assertEquals(9 + 8 + 1, details.size());
         assertEquals(3, kindCount(details, VideoMenuLayout.KIND_VERTEX));   // sky, fog, weather
-        assertEquals(2, kindCount(details, VideoMenuLayout.KIND_VANILLA)); // clouds, capes
+        assertEquals(1, kindCount(details, VideoMenuLayout.KIND_CLOUDS));
+        assertEquals("clouds", byKind(details, VideoMenuLayout.KIND_CLOUDS).ref);
+        assertEquals(1, kindCount(details, VideoMenuLayout.KIND_VANILLA)); // capes
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_HELD_TOOLTIPS));
-        assertEquals("p", at(details, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
 
         List<VideoMenuLayout.Placed> quality =
             VideoMenuLayout.layout(VideoMenuLayout.PAGE_QUALITY, W, H);

@@ -46,6 +46,8 @@ final class VideoMenuLayout
     static final int KIND_ALL_OFF = 9;
     static final int KIND_RESET = 10;
     static final int KIND_DONE = 11;
+    /** Effective cloud toggle: vanilla GameSettings and Vertex's pass gate move together. */
+    static final int KIND_CLOUDS = 12;
 
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
@@ -225,7 +227,7 @@ final class VideoMenuLayout
         switch (page)
         {
             case PAGE_DETAILS:
-                left.add(vanilla("p"));                                  // Clouds
+                left.add(new Slot(KIND_CLOUDS, "Clouds", "clouds"));
                 left.add(fixed("Trees: Fast"));
                 left.add(fixed("Water: Fast"));
                 left.add(vertex("Sky", "sky"));

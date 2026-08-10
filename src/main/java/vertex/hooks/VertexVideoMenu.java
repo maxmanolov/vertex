@@ -153,6 +153,13 @@ public final class VertexVideoMenu
                     VertexConfig.setAndSave("multicore", !VertexConfig.enabled("multicore"));
                     buttonDisplayField.set(button, chunkLoadingLabel());
                     return true;
+                case VideoMenuLayout.KIND_CLOUDS:
+                    boolean clouds = effectiveClouds(settings);
+                    setToggle(settings, Mappings.OPT_CLOUDS, !clouds);
+                    VertexConfig.setAndSave("clouds", !clouds);
+                    saveOptions.invoke(settings);
+                    buttonDisplayField.set(button, cloudsLabel(settings));
+                    return true;
                 case VideoMenuLayout.KIND_HELD_TOOLTIPS:
                     heldTooltipsField.setBoolean(settings, !heldTooltipsField.getBoolean(settings));
                     saveOptions.invoke(settings);
@@ -235,6 +242,9 @@ public final class VertexVideoMenu
             case VideoMenuLayout.KIND_CHUNK_LOADING:
                 label = chunkLoadingLabel();
                 break;
+            case VideoMenuLayout.KIND_CLOUDS:
+                label = cloudsLabel(settings);
+                break;
             case VideoMenuLayout.KIND_HELD_TOOLTIPS:
                 label = heldTooltipsLabel(settings);
                 break;
@@ -289,6 +299,22 @@ public final class VertexVideoMenu
         return "Chunk Loading: " + (VertexConfig.enabled("multicore") ? "Multi-Core" : "Default");
     }
 
+    private static String cloudsLabel(Object settings) throws Exception
+    {
+        return "Clouds: " + (effectiveClouds(settings) ? "§aON" : "§cOFF");
+    }
+
+    private static boolean effectiveClouds(Object settings) throws Exception
+    {
+        return effectiveClouds(vanillaToggle(settings, Mappings.OPT_CLOUDS),
+            VertexConfig.enabled("clouds"));
+    }
+
+    static boolean effectiveClouds(boolean vanillaClouds, boolean vertexClouds)
+    {
+        return vanillaClouds && vertexClouds;
+    }
+
     private static String heldTooltipsLabel(Object settings) throws Exception
     {
         return "Held Item Tooltips: "
@@ -323,7 +349,7 @@ public final class VertexVideoMenu
      */
     private static void resetDefaults(Object settings) throws Exception
     {
-        String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "fog", "weather",
+        String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
             "textureAnimations", "voidParticles", "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "multicore"};
 
@@ -337,11 +363,11 @@ public final class VertexVideoMenu
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_FRAMERATE), Float.valueOf(120.0F));
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_MIPMAPS), Float.valueOf(4.0F));
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_ANISO), Float.valueOf(1.0F));
-        resetToggle(settings, Mappings.OPT_VIEW_BOBBING, true);
-        resetToggle(settings, Mappings.OPT_ADVANCED_GL, false);
-        resetToggle(settings, Mappings.OPT_ANAGLYPH, false);
-        resetToggle(settings, Mappings.OPT_CLOUDS, true);
-        resetToggle(settings, Mappings.OPT_SHOW_CAPE, true);
+        setToggle(settings, Mappings.OPT_VIEW_BOBBING, true);
+        setToggle(settings, Mappings.OPT_ADVANCED_GL, false);
+        setToggle(settings, Mappings.OPT_ANAGLYPH, false);
+        setToggle(settings, Mappings.OPT_CLOUDS, true);
+        setToggle(settings, Mappings.OPT_SHOW_CAPE, true);
 
         if (!heldTooltipsField.getBoolean(settings))
         {
@@ -351,13 +377,16 @@ public final class VertexVideoMenu
         saveOptions.invoke(settings);
     }
 
-    private static void resetToggle(Object settings, String ref, boolean target) throws Exception
+    private static boolean vanillaToggle(Object settings, String ref) throws Exception
     {
-        Object opt = option(ref);
+        return ((Boolean)getOptionOrdinal.invoke(settings, option(ref))).booleanValue();
+    }
 
-        if (((Boolean) getOptionOrdinal.invoke(settings, opt)).booleanValue() != target)
+    private static void setToggle(Object settings, String ref, boolean target) throws Exception
+    {
+        if (vanillaToggle(settings, ref) != target)
         {
-            setOptionValue.invoke(settings, opt, Integer.valueOf(1));
+            setOptionValue.invoke(settings, option(ref), Integer.valueOf(1));
         }
     }
 
