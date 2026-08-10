@@ -50,6 +50,7 @@ public final class LegacyClientLauncher
         Path javaExecutable = new LegacyJavaLocator().find(installation.getMinecraftDirectory());
         List<String> command = new ArrayList<String>();
         command.add(javaExecutable.toString());
+        addPlatformJvmArguments(command, System.getProperty("os.name"));
         command.add("-Xms512m");
         command.add("-Xmx2048m");
         command.add("-Djava.library.path=" + natives.toAbsolutePath());
@@ -104,6 +105,14 @@ public final class LegacyClientLauncher
         Process process = builder.start();
         process.getOutputStream().close();
         return process;
+    }
+
+    static void addPlatformJvmArguments(List<String> command, String osName)
+    {
+        if (osName.toLowerCase(Locale.ROOT).contains("mac"))
+        {
+            command.add("-XstartOnFirstThread");
+        }
     }
 
     static void extractNatives(Path archive, Path target) throws IOException
