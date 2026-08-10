@@ -4,16 +4,41 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class LegacyClientLauncherTest
 {
+    @Test
+    public void startsMacOSClientsOnTheFirstThread()
+    {
+        List<String> command = new ArrayList<String>();
+
+        LegacyClientLauncher.addPlatformJvmArguments(command, "Mac OS X");
+
+        assertEquals(1, command.size());
+        assertEquals("-XstartOnFirstThread", command.get(0));
+    }
+
+    @Test
+    public void leavesOtherPlatformCommandsUnchanged()
+    {
+        List<String> command = new ArrayList<String>();
+
+        LegacyClientLauncher.addPlatformJvmArguments(command, "Linux");
+        LegacyClientLauncher.addPlatformJvmArguments(command, "Windows 11");
+
+        assertTrue(command.isEmpty());
+    }
+
     @Test
     public void extractsNativeFilesInsideTarget() throws Exception
     {

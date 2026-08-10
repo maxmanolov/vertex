@@ -17,7 +17,7 @@ fi
 
 DEPS=$(tr '\n' ':' < "$CACHE/deps.txt" | sed 's/:$//')
 
-exec "$JAVA" -Xmx2G -Djava.library.path="$CACHE/natives" "$@" \
+exec "$JAVA" -XstartOnFirstThread -Xmx2G -Djava.library.path="$CACHE/natives" "$@" \
     -cp "$VERTEX_JAR:$LW:$CACHE/minecraft-1.7.10.jar:$CACHE/lwjgl-2.9.4.jar:$CACHE/lwjgl_util-2.9.4.jar:$DEPS" \
     net.minecraft.launchwrapper.Launch --tweakClass vertex.VertexTweaker \
     --username Max --version 1.7.10-Vertex --accessToken 0 --userProperties '{}' \
