@@ -176,6 +176,11 @@ public class VertexTransformer implements IClassTransformer
                 result = TailInstanceCallPatch.apply(result, Mappings.MC_LOAD_WORLD, Mappings.MC_LOAD_WORLD_DESC,
                     "vertex/hooks/VertexTessellator", "sanitizeOnWorldChange");
                 result = HeadInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC, "vertex/hooks/VertexTestHarness", "tick");
+                // Debug profiler: every showDebugProfilerChart read gates on the key,
+                // so vanilla's own conjunction stops profiler collection when off.
+                result = FieldReadReroutePatch.apply(result,
+                    Mappings.GAME_SETTINGS, Mappings.GS_SHOW_DEBUG_CHART, "Z",
+                    "vertex/hooks/VertexHud", "debugChartEnabled");
             }
             else if (Mappings.RENDER_BLOCKS.equals(name))
             {
@@ -240,6 +245,9 @@ public class VertexTransformer implements IClassTransformer
                 result = RerouteStaticInMethodPatch.apply(result, Mappings.GI_RENDER_SCOREBOARD, Mappings.GI_RENDER_SCOREBOARD_DESC,
                     Mappings.GUI, Mappings.GUI_DRAW_RECT, Mappings.GUI_DRAW_RECT_DESC,
                     "vertex/hooks/VertexHud", "scoreboardRect");
+                // Show FPS + lagometer draw at the overlay tail, inside the GUI ortho.
+                result = TailInstanceCallPatch.apply(result, Mappings.GI_RENDER_OVERLAY, Mappings.GI_RENDER_OVERLAY_DESC,
+                    "vertex/hooks/VertexHud", "afterOverlay");
             }
             else if (Mappings.GUI_VIDEO_SETTINGS.equals(name))
             {
@@ -267,6 +275,18 @@ public class VertexTransformer implements IClassTransformer
                 result = SkipMethodPatch.apply(result, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.WC_DO_VOID_FOG_PARTICLES, Mappings.WC_DO_VOID_FOG_PARTICLES_DESC, "voidParticles"),
                 });
+                // Time override: an added client-only getCelestialAngle override; the
+                // integrated server's Worlds keep the vanilla method untouched.
+                result = AddFloatOverridePatch.apply(result,
+                    Mappings.WORLD_CELESTIAL_ANGLE, Mappings.WORLD_CELESTIAL_ANGLE_DESC,
+                    "vertex/hooks/VertexWorldVisuals", "celestialAngle");
+            }
+            else if (Mappings.MC_SERVER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching MinecraftServer (" + name + ")");
+                // Autosave interval: the tick's single %900 site becomes configurable.
+                result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
+                    900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
             }
             else if (Mappings.WORLD_PROVIDER.equals(name))
             {

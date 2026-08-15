@@ -57,6 +57,10 @@ final class VideoMenuLayout
 
     static final int KIND_AO_LEVEL = 16;
 
+    static final int KIND_AUTOSAVE = 17;
+
+    static final int KIND_TIME = 18;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -302,14 +306,14 @@ final class VideoMenuLayout
                 right.add(fixed("Lazy Chunk Loading: §cOFF"));
                 return;
             case PAGE_OTHER:
-                left.add(fixed("Lagometer: §cOFF"));
-                left.add(fixed("Show FPS: §cOFF"));
+                left.add(vertex("Lagometer", "lagometer"));
+                left.add(vertex("Show FPS", "showFps"));
                 left.add(vertex("Weather", "weather"));
                 left.add(vanilla("x"));                                  // Fullscreen
                 left.add(vanilla("h"));                                  // 3D Anaglyph
-                right.add(fixed("Debug Profiler: §cOFF"));
-                right.add(fixed("Autosave: 3min"));
-                right.add(fixed("Time: Default"));
+                right.add(vertex("Debug Profiler", "debugProfiler"));
+                right.add(new Slot(KIND_AUTOSAVE, "Autosave", "autosave"));
+                right.add(new Slot(KIND_TIME, "Time", "timeOverride"));
                 right.add(fixed("Fullscreen Mode: Default"));
                 return;
             default:                                                     // PAGE_VIDEO
@@ -430,6 +434,34 @@ final class VideoMenuLayout
     static String aoLevelLabel(int percent)
     {
         return "Smooth Lighting Level: " + (percent == 0 ? "§cOFF" : percent + "%");
+    }
+
+    /** Autosave cycle: 45s (vanilla) -> 3min -> 30min -> 45s. */
+    static String nextAutosave(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        return trimmed.equals("45") ? "180" : trimmed.equals("180") ? "1800" : "45";
+    }
+
+    static String autosaveLabel(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        String value = trimmed.equals("180") ? "3min" : trimmed.equals("1800") ? "30min" : "45s";
+        return "Autosave: " + value;
+    }
+
+    /** Time cycle: Default -> Day -> Night -> Default. */
+    static String nextTimeOverride(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        return trimmed.equals("default") ? "day" : trimmed.equals("day") ? "night" : "default";
+    }
+
+    static String timeOverrideLabel(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        String value = trimmed.equals("day") ? "Day" : trimmed.equals("night") ? "Night" : "Default";
+        return "Time: " + value;
     }
 
     private VideoMenuLayout()

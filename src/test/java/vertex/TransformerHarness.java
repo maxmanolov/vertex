@@ -92,6 +92,23 @@ public final class TransformerHarness implements Opcodes
             return value * 2.0D;
         }
 
+        public static int floatCalls;
+
+        /** Float override hook: super's result plus one. */
+        public static float adjustFloat(float value)
+        {
+            ++floatCalls;
+            return value + 1.0F;
+        }
+
+        public static int intConstValue = 600;
+
+        /** Int-const replacement hook. */
+        public static int intConst()
+        {
+            return intConstValue;
+        }
+
         public static void reset()
         {
             headCalls = 0;
@@ -252,6 +269,61 @@ public final class TransformerHarness implements Opcodes
         m.visitInsn(RETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A class with public static int <methodName>() returning SIPUSH <constant>. */
+    public static byte[] intConstMethodClass(String internalName, String methodName, int constant)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, "()I", null, null);
+        m.visitCode();
+        m.visitIntInsn(SIPUSH, constant);
+        m.visitInsn(IRETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A superclass with public float c(float) returning its argument doubled. */
+    public static byte[] floatSuperClass(String internalName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor c = cw.visitMethod(ACC_PUBLIC, "c", "(F)F", null, null);
+        c.visitCode();
+        c.visitVarInsn(FLOAD, 1);
+        c.visitInsn(FCONST_2);
+        c.visitInsn(FMUL);
+        c.visitInsn(FRETURN);
+        c.visitMaxs(0, 0);
+        c.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A subclass of floatSuperClass that does not override c(float). */
+    public static byte[] floatSubClass(String internalName, String superName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, superName, null);
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, superName, "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
         cw.visitEnd();
         return cw.toByteArray();
     }
