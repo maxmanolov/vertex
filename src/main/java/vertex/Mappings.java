@@ -331,6 +331,30 @@ public final class Mappings
     public static final String PLAYER_FOV_MULTIPLIER = "t";
     public static final String PLAYER_FOV_MULTIPLIER_DESC = "()F";
 
+    // --- Other-page surface (javap bbv GuiIngame, bao, qi Profiler, MinecraftServer) --
+    // GuiIngame holds Minecraft at bbv.k and its overlay pass is bbv.a(FZII)V; HUD
+    // strings draw through the FontRenderer at bao.l (Lbbu;), with-shadow variant
+    // bbu.b(Ljava/lang/String;III)I. The profiler gate: runGameLoop sets qi.a
+    // (profilingEnabled) from showDebugInfo (bbj.ax) && showDebugProfilerChart
+    // (bbj.ay) at offsets 336-398; bao reads ay at three sites, all profiler-related.
+    // The integrated server autosaves when tickCounter % 900 == 0 inside
+    // MinecraftServer.u()V - the only sipush 900 in the class, which keeps its real
+    // name in 1.7.10. WorldClient (bjf extends ahb) does not override
+    // getCelestialAngle c(F)F, so a client-visual override can be added safely.
+    public static final String GI_RENDER_OVERLAY = "a";
+    public static final String GI_RENDER_OVERLAY_DESC = "(FZII)V";
+    public static final String GI_MC = "k";
+    public static final String MC_FONT_RENDERER = "l";
+    public static final String FONT_DRAW_SHADOW = "b";
+    public static final String GS_SHOW_DEBUG_CHART = "ay";
+    public static final String MC_PROFILER = "z";
+    public static final String PROFILER_ENABLED = "a";
+    public static final String MC_SERVER = "net.minecraft.server.MinecraftServer";
+    public static final String MC_SERVER_TICK = "u";
+    public static final String MC_SERVER_TICK_DESC = "()V";
+    public static final String WORLD_CLASS = "ahb";
+    public static final String WORLD_CELESTIAL_ANGLE_DESC = "(F)F";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";

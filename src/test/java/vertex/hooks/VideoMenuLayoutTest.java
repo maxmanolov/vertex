@@ -179,11 +179,17 @@ public final class VideoMenuLayoutTest
         assertEquals(VideoMenuLayout.rowY(H, 7), reset.y);
         assertEquals(reset.y + 32, done.y);
 
-        // Real backing: fullscreen + 3D anaglyph (vanilla), weather (Vertex key,
-        // the same key as the Details page's Rain & Snow), reset, done.
+        // Real backing: fullscreen + 3D anaglyph (vanilla); lagometer, show FPS,
+        // weather and debug profiler (Vertex keys); autosave and time cycles. The
+        // only inert slot left is Fullscreen Mode.
         assertEquals(2, kindCount(page, VideoMenuLayout.KIND_VANILLA));
-        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_VERTEX));
-        assertEquals("weather", byKind(page, VideoMenuLayout.KIND_VERTEX).ref);
+        assertEquals(4, kindCount(page, VideoMenuLayout.KIND_VERTEX));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_AUTOSAVE));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_TIME));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_STATIC));
+        assertEquals("lagometer", at(page, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
+        assertEquals("showFps", at(page, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
+        assertEquals("debugProfiler", at(page, RIGHT, VideoMenuLayout.rowY(H, 0)).ref);
     }
 
     @Test

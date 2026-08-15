@@ -201,6 +201,18 @@ public final class VertexVideoMenu
                     buttonDisplayField.set(button, aoLevelLabel());
                     VertexRenderer.requestSettingsRemark();
                     return true;
+                case VideoMenuLayout.KIND_AUTOSAVE:
+                    VertexConfig.setAndSaveValue("autosave",
+                        VideoMenuLayout.nextAutosave(VertexConfig.value("autosave", "45")));
+                    buttonDisplayField.set(button,
+                        VideoMenuLayout.autosaveLabel(VertexConfig.value("autosave", "45")));
+                    return true;
+                case VideoMenuLayout.KIND_TIME:
+                    VertexConfig.setAndSaveValue("timeOverride",
+                        VideoMenuLayout.nextTimeOverride(VertexConfig.value("timeOverride", "default")));
+                    buttonDisplayField.set(button,
+                        VideoMenuLayout.timeOverrideLabel(VertexConfig.value("timeOverride", "default")));
+                    return true;
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
@@ -322,6 +334,12 @@ public final class VertexVideoMenu
                 break;
             case VideoMenuLayout.KIND_AO_LEVEL:
                 label = aoLevelLabel();
+                break;
+            case VideoMenuLayout.KIND_AUTOSAVE:
+                label = VideoMenuLayout.autosaveLabel(VertexConfig.value("autosave", "45"));
+                break;
+            case VideoMenuLayout.KIND_TIME:
+                label = VideoMenuLayout.timeOverrideLabel(VertexConfig.value("timeOverride", "default"));
                 break;
             default:
                 label = slot.label;
@@ -457,7 +475,7 @@ public final class VertexVideoMenu
         String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
             "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
-            "sunMoon", "stars", "depthFog", "dynamicFov"};
+            "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler"};
         boolean remark = false;
 
         for (String key : vertexKeys)
@@ -482,6 +500,8 @@ public final class VertexVideoMenu
         VertexConfig.setAndSaveValue("trees", "default");
         VertexConfig.setAndSaveValue("droppedItems", "default");
         VertexConfig.setAndSaveValue("aoLevel", "100");
+        VertexConfig.setAndSaveValue("autosave", "45");
+        VertexConfig.setAndSaveValue("timeOverride", "default");
         VertexGraphics.applyTrees(settings);
         VertexRenderer.requestSettingsRemark();
 

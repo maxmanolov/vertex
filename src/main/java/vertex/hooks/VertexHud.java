@@ -31,6 +31,153 @@ public final class VertexHud
     private static Constructor<?> buttonCtor;
     private static boolean guiBroken = false;
 
+    // ---- overlay tail: Show FPS + Lagometer ---------------------------------------------
+
+    /** Frame-time ring for the lagometer: one entry per rendered frame, wrap-around. */
+    private static final int LAG_COLUMNS = 240;
+    private static final long[] frameNanos = new long[LAG_COLUMNS];
+    private static int frameCursor = 0;
+    private static long lastFrameStamp = 0L;
+    private static long fpsWindowStart = 0L;
+    private static int fpsWindowFrames = 0;
+    private static int fps = 0;
+
+    private static Field giMc;
+    private static Field mcFont;
+    private static java.lang.reflect.Method fontDrawShadow;
+    private static Field showChartField;
+    private static boolean overlayBroken = false;
+
+    /** Tail of GuiIngame.renderGameOverlay: the GUI ortho matrix is still active. */
+    public static void afterOverlay(Object gui)
+    {
+        long now = System.nanoTime();
+
+        if (lastFrameStamp != 0L)
+        {
+            frameNanos[frameCursor] = now - lastFrameStamp;
+            frameCursor = (frameCursor + 1) % LAG_COLUMNS;
+        }
+
+        lastFrameStamp = now;
+        ++fpsWindowFrames;
+
+        if (fpsWindowStart == 0L)
+        {
+            fpsWindowStart = now;
+        }
+        else if (now - fpsWindowStart >= 1_000_000_000L)
+        {
+            fps = (int)(fpsWindowFrames * 1_000_000_000L / (now - fpsWindowStart));
+            fpsWindowFrames = 0;
+            fpsWindowStart = now;
+        }
+
+        boolean showFps = VertexConfig.enabled("showFps");
+        boolean lagometer = VertexConfig.enabled("lagometer");
+
+        if (overlayBroken || (!showFps && !lagometer))
+        {
+            return;
+        }
+
+        try
+        {
+            if (lagometer)
+            {
+                drawLagometer();
+            }
+
+            if (showFps)
+            {
+                Object minecraft = resolveOverlayHandles(gui);
+                Object font = mcFont.get(minecraft);
+                fontDrawShadow.invoke(font, fps + " fps", Integer.valueOf(2),
+                    Integer.valueOf(2), Integer.valueOf(0xFFFFFF));
+            }
+        }
+        catch (Throwable t)
+        {
+            overlayBroken = true;
+            LogWrapper.severe("[Vertex] HUD overlay extras disabled after failure");
+            t.printStackTrace();
+        }
+    }
+
+    /**
+     * One column per frame, oldest to newest, under the FPS readout: green under
+     * 16.7ms, yellow under 33.3ms, red above, height 2px per ms (clamped to 40).
+     */
+    private static void drawLagometer()
+    {
+        int baseY = 14;
+
+        for (int i = 0; i < LAG_COLUMNS; ++i)
+        {
+            long nanos = frameNanos[(frameCursor + i) % LAG_COLUMNS];
+
+            if (nanos == 0L)
+            {
+                continue;
+            }
+
+            float ms = nanos / 1_000_000.0F;
+            int height = Math.min(40, Math.max(1, (int)(ms * 2.0F)));
+            int color = ms < 16.7F ? 0x9000FF00 : ms < 33.4F ? 0x90FFFF00 : 0x90FF0000;
+            fillRect(2 + i, baseY, 3 + i, baseY + height, color);
+        }
+    }
+
+    private static Object resolveOverlayHandles(Object gui) throws Exception
+    {
+        if (giMc == null)
+        {
+            giMc = gui.getClass().getDeclaredField(Mappings.GI_MC);
+            giMc.setAccessible(true);
+        }
+
+        Object minecraft = giMc.get(gui);
+
+        if (mcFont == null)
+        {
+            mcFont = minecraft.getClass().getDeclaredField(Mappings.MC_FONT_RENDERER);
+            mcFont.setAccessible(true);
+            Class<?> fontClass = mcFont.getType();
+            fontDrawShadow = fontClass.getMethod(Mappings.FONT_DRAW_SHADOW,
+                String.class, int.class, int.class, int.class);
+            fontDrawShadow.setAccessible(true);
+        }
+
+        return minecraft;
+    }
+
+    // ---- profiler chart gate --------------------------------------------------------------
+
+    /**
+     * Reroute of Minecraft's showDebugProfilerChart reads: with debugProfiler off the
+     * chart never shows and vanilla's own conjunction turns profiler collection off.
+     */
+    public static boolean debugChartEnabled(Object settings)
+    {
+        try
+        {
+            if (showChartField == null)
+            {
+                showChartField = settings.getClass().getDeclaredField(Mappings.GS_SHOW_DEBUG_CHART);
+                showChartField.setAccessible(true);
+            }
+
+            boolean vanilla = showChartField.getBoolean(settings);
+            return vanilla && VertexConfig.enabled("debugProfiler");
+        }
+        catch (Throwable t)
+        {
+            // Unresolvable field: degrade to key-only control rather than pinning the
+            // chart on or off regardless of the setting.
+            return VertexConfig.enabled("debugProfiler");
+        }
+    }
+
     // ---- rerouted drawRect gates -------------------------------------------------------
 
     public static void chatRect(int left, int top, int right, int bottom, int color)
