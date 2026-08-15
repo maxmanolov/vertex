@@ -181,6 +181,26 @@ public final class VertexVideoMenu
                         VideoMenuLayout.nextCloudHeight(cloudHeightPercent())));
                     buttonDisplayField.set(button, cloudHeightLabel());
                     return true;
+                case VideoMenuLayout.KIND_TRISTATE:
+                    VertexConfig.setAndSaveValue(slot.ref,
+                        VideoMenuLayout.nextTriState(VertexConfig.value(slot.ref, "default")));
+                    buttonDisplayField.set(button, triStateLabel(slot));
+
+                    if ("trees".equals(slot.ref))
+                    {
+                        // Leaves' graphics level is baked into both the block flag and
+                        // every built section: re-push it and rebuild the world.
+                        VertexGraphics.applyTrees(settings);
+                        VertexRenderer.requestSettingsRemark();
+                    }
+
+                    return true;
+                case VideoMenuLayout.KIND_AO_LEVEL:
+                    VertexConfig.setAndSaveValue("aoLevel", String.valueOf(
+                        VideoMenuLayout.nextAoLevel(aoLevelPercent())));
+                    buttonDisplayField.set(button, aoLevelLabel());
+                    VertexRenderer.requestSettingsRemark();
+                    return true;
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
@@ -297,6 +317,12 @@ public final class VertexVideoMenu
             case VideoMenuLayout.KIND_CLOUD_HEIGHT:
                 label = cloudHeightLabel();
                 break;
+            case VideoMenuLayout.KIND_TRISTATE:
+                label = triStateLabel(slot);
+                break;
+            case VideoMenuLayout.KIND_AO_LEVEL:
+                label = aoLevelLabel();
+                break;
             default:
                 label = slot.label;
         }
@@ -385,6 +411,21 @@ public final class VertexVideoMenu
         return VideoMenuLayout.cloudHeightLabel(cloudHeightPercent());
     }
 
+    private static String triStateLabel(VideoMenuLayout.Placed slot)
+    {
+        return VideoMenuLayout.triStateLabel(slot.label, VertexConfig.value(slot.ref, "default"));
+    }
+
+    private static int aoLevelPercent()
+    {
+        return VertexGraphics.aoLevelPercent(VertexConfig.value("aoLevel", "100"));
+    }
+
+    private static String aoLevelLabel()
+    {
+        return VideoMenuLayout.aoLevelLabel(aoLevelPercent());
+    }
+
     /** The reference colors binary states: green ON, red OFF; other values stay plain. */
     private static String colorize(String label)
     {
@@ -416,7 +457,7 @@ public final class VertexVideoMenu
         String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
             "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
-            "sunMoon", "stars", "depthFog"};
+            "sunMoon", "stars", "depthFog", "dynamicFov"};
         boolean remark = false;
 
         for (String key : vertexKeys)
@@ -438,6 +479,11 @@ public final class VertexVideoMenu
 
         VertexConfig.setAndSaveValue("fogStart", "default");
         VertexConfig.setAndSaveValue("cloudHeight", "0");
+        VertexConfig.setAndSaveValue("trees", "default");
+        VertexConfig.setAndSaveValue("droppedItems", "default");
+        VertexConfig.setAndSaveValue("aoLevel", "100");
+        VertexGraphics.applyTrees(settings);
+        VertexRenderer.requestSettingsRemark();
 
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_GAMMA), Float.valueOf(0.0F));
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_RENDER_DISTANCE), Float.valueOf(8.0F));

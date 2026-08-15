@@ -313,6 +313,24 @@ public final class Mappings
     // in the ctor). Every string-named ambient particle funnels through
     // bma.b(Ljava/lang/String;DDDDDD)Lbkm; whose callers all tolerate null (vanilla
     // returns null itself on distance culling).
+    // --- graphics decoupling surface (javap bma loadRenderers, bny, aji, blk, bao) ----
+    // loadRenderers (bma.a()V) pushes gameSettings.fancyGraphics (bbj.i:Z) into both
+    // leaf blocks: getstatic ajn.t/ajn.u (Lalt;) then alt.b(Z)V at offsets 21/37.
+    // RenderItem (bny extends bno) reads bbj.i directly for the flat-vs-3D dropped item
+    // choice. Block.getAmbientOcclusionLightValue is aji.I()F (0.2 for normal cubes).
+    // The hand-FOV smoother (blt.j()V) polls blk.t()F - EntityPlayerSP.getFOVMultiplier
+    // - into fovModifierHand each tick. bao.x()Z is the static fancy-graphics wrapper.
+    public static final String LEAVES_CLASS = "alt";
+    public static final String LEAVES_SET_GRAPHICS = "b";
+    public static final String LEAVES_SET_GRAPHICS_DESC = "(Z)V";
+    public static final String GS_FANCY_GRAPHICS = "i";
+    public static final String RENDER_ITEM = "bny";
+    public static final String BLOCK_AO_VALUE = "I";
+    public static final String BLOCK_AO_VALUE_DESC = "()F";
+    public static final String ENTITY_PLAYER_SP = "blk";
+    public static final String PLAYER_FOV_MULTIPLIER = "t";
+    public static final String PLAYER_FOV_MULTIPLIER_DESC = "()F";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";

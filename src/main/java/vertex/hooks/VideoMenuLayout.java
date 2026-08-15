@@ -53,6 +53,10 @@ final class VideoMenuLayout
 
     static final int KIND_CLOUD_HEIGHT = 14;
 
+    static final int KIND_TRISTATE = 15;
+
+    static final int KIND_AO_LEVEL = 16;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -232,7 +236,7 @@ final class VideoMenuLayout
         {
             case PAGE_DETAILS:
                 left.add(new Slot(KIND_CLOUDS, "Clouds", "clouds"));
-                left.add(fixed("Trees: Fast"));
+                left.add(new Slot(KIND_TRISTATE, "Trees", "trees"));
                 left.add(fixed("Water: Fast"));
                 left.add(vertex("Sky", "sky"));
                 left.add(vertex("Sun & Moon", "sunMoon"));
@@ -247,7 +251,7 @@ final class VideoMenuLayout
                 right.add(vanilla("z"));                                 // Show Capes
                 right.add(new Slot(KIND_FOG_START, "Fog Start", "fogStart"));
                 right.add(new Slot(KIND_HELD_TOOLTIPS, "Held Item Tooltips", null));
-                right.add(fixed("Dropped Items: Fast"));
+                right.add(new Slot(KIND_TRISTATE, "Dropped Items", "droppedItems"));
                 return;
             case PAGE_ANIMATIONS:
                 left.add(vertex("Water Animated", "animWater"));
@@ -311,7 +315,7 @@ final class VideoMenuLayout
             default:                                                     // PAGE_VIDEO
                 left.add(vanilla("m"));                                  // Graphics
                 left.add(vanilla("n"));                                  // Smooth Lighting
-                left.add(fixed("Smooth Lighting Level: §cOFF"));
+                left.add(new Slot(KIND_AO_LEVEL, "Smooth Lighting Level", "aoLevel"));
                 left.add(vanilla("o"));                                  // GUI Scale
                 left.add(slider("d"));                                   // Brightness
                 left.add(vertex("Dynamic Lights", "dynamicLights"));
@@ -323,7 +327,7 @@ final class VideoMenuLayout
                 right.add(vanilla("g"));                                 // View Bobbing
                 right.add(vanilla("i"));                                 // Advanced OpenGL
                 right.add(new Slot(KIND_CHUNK_LOADING, "Chunk Loading", null));
-                right.add(fixed("Dynamic FOV: §aON"));
+                right.add(vertex("Dynamic FOV", "dynamicFov"));
                 right.add(nav("Quality...", PAGE_QUALITY));
                 right.add(nav("Performance...", PAGE_PERFORMANCE));
                 right.add(nav("Other...", PAGE_OTHER));
@@ -401,6 +405,31 @@ final class VideoMenuLayout
     static String cloudHeightLabel(int percent)
     {
         return "Cloud Height: " + (percent <= 0 ? "§cOFF" : percent + "%");
+    }
+
+    /** Tri-state cycle: Default -> Fast -> Fancy -> Default. */
+    static String nextTriState(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        return trimmed.equals("default") ? "fast" : trimmed.equals("fast") ? "fancy" : "default";
+    }
+
+    static String triStateLabel(String base, String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        String value = trimmed.equals("fast") ? "Fast" : trimmed.equals("fancy") ? "Fancy" : "Default";
+        return base + ": " + value;
+    }
+
+    /** Smooth Lighting Level cycle: 100% -> OFF -> 50% -> 100%. */
+    static int nextAoLevel(int current)
+    {
+        return current == 100 ? 0 : current == 0 ? 50 : 100;
+    }
+
+    static String aoLevelLabel(int percent)
+    {
+        return "Smooth Lighting Level: " + (percent == 0 ? "§cOFF" : percent + "%");
     }
 
     private VideoMenuLayout()
