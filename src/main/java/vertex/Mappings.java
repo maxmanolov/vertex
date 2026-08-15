@@ -305,6 +305,21 @@ public final class Mappings
     public static final String WORLD_PROVIDER = "aqo";
     public static final String WP_VOID_FOG_FACTOR = "k";
     public static final String WP_VOID_FOG_FACTOR_DESC = "()D";
+
+    // --- animation surface (javap bpz TextureMap, bqd TextureAtlasSprite, bma) -------
+    // bpz.d()V walks listAnimatedSprites (field e) invoking bqd.j()V per sprite; the
+    // atlas discriminates via bpz.h (0=blocks, 1=items - the items branch special-cases
+    // "clock"/"compass" in bpz.a(String)). bqd.g() returns the icon name (field i, set
+    // in the ctor). Every string-named ambient particle funnels through
+    // bma.b(Ljava/lang/String;DDDDDD)Lbkm; whose callers all tolerate null (vanilla
+    // returns null itself on distance culling).
+    public static final String SPRITE_CLASS = "bqd";
+    public static final String SPRITE_UPDATE = "j";
+    public static final String SPRITE_UPDATE_DESC = "()V";
+    public static final String SPRITE_NAME = "g";
+    public static final String TM_TYPE = "h";
+    public static final String RG_DO_SPAWN_PARTICLE = "b";
+    public static final String RG_DO_SPAWN_PARTICLE_DESC = "(Ljava/lang/String;DDDDDD)Lbkm;";
     public static final String TEXTUREMAP_REGISTER_ICON = "a";
     public static final String TM_LOAD_ATLAS = "b";
     public static final String TM_LOAD_ATLAS_DESC = "(Lbqy;)V";

@@ -184,8 +184,12 @@ public final class VertexVideoMenu
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
-                    VertexConfig.setAndSave("textureAnimations", on);
-                    VertexConfig.setAndSave("voidParticles", on);
+
+                    for (String key : VideoMenuLayout.animationKeys())
+                    {
+                        VertexConfig.setAndSave(key, on);
+                    }
+
                     rebuild(screen, pageValue.intValue());
                     return true;
                 case VideoMenuLayout.KIND_RESET:
@@ -410,7 +414,7 @@ public final class VertexVideoMenu
     private static void resetDefaults(Object settings) throws Exception
     {
         String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
-            "textureAnimations", "voidParticles", "betterGrass", "randomEntities",
+            "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
             "sunMoon", "stars", "depthFog"};
         boolean remark = false;
@@ -420,6 +424,11 @@ public final class VertexVideoMenu
             boolean target = VertexConfig.declaredDefault(key);
             remark |= VideoMenuLayout.rebakesSections(key) && VertexConfig.enabled(key) != target;
             VertexConfig.setAndSave(key, target);
+        }
+
+        for (String key : VideoMenuLayout.animationKeys())
+        {
+            VertexConfig.setAndSave(key, VertexConfig.declaredDefault(key));
         }
 
         if (remark)

@@ -45,6 +45,10 @@ public class VertexTransformer implements IClassTransformer
                     "vertex/hooks/VertexMulticore", "onRenderersReloadedHook");
                 result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
                     "vertex/hooks/VertexFullbright", "interceptLightRemark", HeadGuardPatch.THIS_ONLY);
+                // Ambient-particle gates: a suppressed spawn returns null, exactly like
+                // vanilla's own distance culling in the same method.
+                result = HeadGuardPatch.apply(result, Mappings.RG_DO_SPAWN_PARTICLE, Mappings.RG_DO_SPAWN_PARTICLE_DESC,
+                    "vertex/hooks/VertexAnimations", "interceptParticle", HeadGuardPatch.THIS_AND_OBJECT);
 
                 if (vertex.hooks.VertexRenderer.MANAGED)
                 {
@@ -121,6 +125,9 @@ public class VertexTransformer implements IClassTransformer
                 result = SkipMethodPatch.apply(result, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.ER_RENDER_RAIN_SNOW, Mappings.ER_RENDER_RAIN_SNOW_DESC, "weather"),
                     new SkipMethodPatch.Target(Mappings.ER_ADD_RAIN_PARTICLES, Mappings.ER_ADD_RAIN_PARTICLES_DESC, "weather"),
+                    // Rain splash particles: gated by weather above AND their own key -
+                    // stacked guards OR together, so either off suppresses the splashes.
+                    new SkipMethodPatch.Target(Mappings.ER_ADD_RAIN_PARTICLES, Mappings.ER_ADD_RAIN_PARTICLES_DESC, "particleRainSplash"),
                 });
                 result = TailCallPatch.apply(result, Mappings.ER_SETUP_FOG, Mappings.ER_SETUP_FOG_DESC, "vertex/hooks/VertexHooks", "afterFogSetup");
                 // Freelook: divert the two mouse-look setAngles call sites so a held key
@@ -140,6 +147,14 @@ public class VertexTransformer implements IClassTransformer
             else if (Mappings.TEXTURE_MAP.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching TextureMap (" + name + ")");
+                // Per-sprite gates first, then the atlas recorder, then the global
+                // master skip - so a fully frozen game never enters the loop at all.
+                result = RerouteVirtualInMethodPatch.apply(result,
+                    Mappings.TM_UPDATE_ANIMATIONS, Mappings.TM_UPDATE_ANIMATIONS_DESC,
+                    Mappings.SPRITE_CLASS, Mappings.SPRITE_UPDATE, Mappings.SPRITE_UPDATE_DESC,
+                    "vertex/hooks/VertexAnimations", "updateSprite");
+                result = HeadInstanceCallPatch.apply(result, Mappings.TM_UPDATE_ANIMATIONS, Mappings.TM_UPDATE_ANIMATIONS_DESC,
+                    "vertex/hooks/VertexAnimations", "beginAtlasUpdate");
                 result = SkipMethodPatch.apply(result, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.TM_UPDATE_ANIMATIONS, Mappings.TM_UPDATE_ANIMATIONS_DESC, "textureAnimations"),
                 });

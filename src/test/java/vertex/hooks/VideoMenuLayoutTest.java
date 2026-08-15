@@ -83,12 +83,16 @@ public final class VideoMenuLayoutTest
         assertEquals(VideoMenuLayout.bottomRowY(H, 9), allOn.y);
         assertEquals(VideoMenuLayout.bottomRowY(H, 9), done.y);
 
-        // Real backing on this page: void particles + terrain animations (Vertex keys)
-        // and vanilla Particles; everything else is a disabled reference slot.
-        assertEquals(2, kindCount(page, VideoMenuLayout.KIND_VERTEX));
+        // Real backing on this page: sixteen Vertex keys (per-texture animations,
+        // particle families, atlas masters) plus vanilla Particles. The only inert
+        // slot left is Redstone Animated - 1.7.10 has no such animation.
+        assertEquals(16, kindCount(page, VideoMenuLayout.KIND_VERTEX));
         assertEquals(1, kindCount(page, VideoMenuLayout.KIND_VANILLA));
         assertEquals("q", byKind(page, VideoMenuLayout.KIND_VANILLA).ref);
-        assertEquals(15, kindCount(page, VideoMenuLayout.KIND_STATIC));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_STATIC));
+        assertEquals("textureAnimations", at(page, LEFT, VideoMenuLayout.rowY(H, 8)).ref);
+        assertEquals("terrainAnimated", at(page, LEFT, VideoMenuLayout.rowY(H, 7)).ref);
+        assertEquals("itemsAnimated", at(page, RIGHT, VideoMenuLayout.rowY(H, 7)).ref);
     }
 
     @Test
