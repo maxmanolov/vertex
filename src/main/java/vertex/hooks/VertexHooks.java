@@ -60,14 +60,43 @@ public final class VertexHooks
     /**
      * Runs after every EntityRenderer.setupFog exit. With fog=false, only linear
      * (distance) fog is disabled; density fog from lava, water, or blindness uses
-     * EXP/EXP2 modes and is deliberately preserved.
+     * EXP/EXP2 modes and is deliberately preserved. With fog on, a non-default
+     * fogStart fraction re-anchors where the linear band begins (vanilla uses
+     * 0.25 * end for terrain passes; the sky pass barely shows the difference).
      */
     public static void afterFogSetup()
     {
-        if (!VertexConfig.enabled("fog") && org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_FOG_MODE) == org.lwjgl.opengl.GL11.GL_LINEAR)
+        if (org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_FOG_MODE) != org.lwjgl.opengl.GL11.GL_LINEAR)
+        {
+            return;
+        }
+
+        if (!VertexConfig.enabled("fog"))
         {
             org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_FOG);
+            return;
         }
+
+        float fraction = fogStartFraction(VertexConfig.value("fogStart", "default"));
+
+        if (fraction >= 0.0F)
+        {
+            float end = org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_FOG_END);
+            org.lwjgl.opengl.GL11.glFogf(org.lwjgl.opengl.GL11.GL_FOG_START, end * fraction);
+        }
+    }
+
+    /** Parses the fogStart key: 0.2/0.4/0.6/0.8, anything else means vanilla (-1). */
+    static float fogStartFraction(String raw)
+    {
+        if (raw == null)
+        {
+            return -1.0F;
+        }
+
+        String trimmed = raw.trim();
+        return trimmed.equals("0.2") ? 0.2F : trimmed.equals("0.4") ? 0.4F
+            : trimmed.equals("0.6") ? 0.6F : trimmed.equals("0.8") ? 0.8F : -1.0F;
     }
 
     public static void blockChanged(Object renderGlobal, int x, int y, int z)

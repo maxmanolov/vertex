@@ -21,6 +21,11 @@ public final class VertexConfig
 {
     private static final String[][] KEYS = {
         {"sky", "true", "Render the sky pass (sky color, stars, sun and moon)"},
+        {"sunMoon", "true", "Draw the sun and moon (the rest of the sky pass is unaffected)"},
+        {"stars", "true", "Draw the night-sky stars"},
+        {"depthFog", "true", "Darken the fog color toward black near bedrock depths"},
+        {"fogStart", "default", "Linear fog start as a fraction of the fog end: default (vanilla), 0.2, 0.4, 0.6 or 0.8"},
+        {"cloudHeight", "0", "Lift clouds above their vanilla height by 0, 25, 50, 75 or 100 percent of the remaining sky"},
         {"clouds", "true", "Render clouds"},
         {"weather", "true", "Render rain and snow, and spawn rain splash particles"},
         {"voidParticles", "true", "Spawn void fog depth particles"},
@@ -131,6 +136,30 @@ public final class VertexConfig
      * format, carrying over current values and preserving keys Vertex doesn't declare.
      * lastModified is re-read after the write so our own save doesn't trigger a reload.
      */
+    /** String-key counterpart of {@link #setAndSave(String, boolean)} (renderer, fogStart, ...). */
+    public static synchronized void setAndSaveValue(String key, String value)
+    {
+        refresh();
+        values.setProperty(key, value);
+
+        if (file == null)
+        {
+            return;
+        }
+
+        try
+        {
+            writeCurrent();
+            lastModified = file.lastModified();
+            LogWrapper.info("[Vertex] Saved " + key + "=" + value + " to " + file.getName());
+        }
+        catch (Exception e)
+        {
+            // The in-memory value already applied; a failed save only loses persistence.
+            LogWrapper.warning("[Vertex] Could not save vertex.properties: " + e);
+        }
+    }
+
     public static synchronized void setAndSave(String key, boolean value)
     {
         refresh();

@@ -14,6 +14,12 @@ public final class VertexSkyBridge
         renderGlobal = instance;
     }
 
+    /** The live RenderGlobal, or null before the first frame publishes it. */
+    static Object current()
+    {
+        return renderGlobal;
+    }
+
     public static void afterSky()
     {
         Object instance = renderGlobal;

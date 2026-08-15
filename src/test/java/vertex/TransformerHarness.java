@@ -71,6 +71,27 @@ public final class TransformerHarness implements Opcodes
             virtualB = b;
         }
 
+        public static int objectCalls;
+        public static Object objectReceiver;
+        public static Object objectValue;
+
+        /** Erased-descriptor hook: reference parameters arrive widened to Object. */
+        public static void objectHook(Object receiver, Object value)
+        {
+            ++objectCalls;
+            objectReceiver = receiver;
+            objectValue = value;
+        }
+
+        public static int doubleCalls;
+
+        /** Return-adjust hook: doubles whatever the vanilla method produced. */
+        public static double adjustDouble(double value)
+        {
+            ++doubleCalls;
+            return value * 2.0D;
+        }
+
         public static void reset()
         {
             headCalls = 0;
@@ -83,6 +104,9 @@ public final class TransformerHarness implements Opcodes
             virtualReceiver = null;
             virtualA = 0.0F;
             virtualB = 0.0F;
+            objectCalls = 0;
+            objectReceiver = null;
+            objectValue = null;
         }
     }
 
@@ -225,6 +249,68 @@ public final class TransformerHarness implements Opcodes
             m.visitMethodInsn(INVOKEVIRTUAL, targetName, "c", "(FF)V", false);
         }
 
+        m.visitInsn(RETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A class with public static double <methodName>() returning the given constant. */
+    public static byte[] doubleMethodClass(String internalName, String methodName, double value)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, "()D", null, null);
+        m.visitCode();
+        m.visitLdcInsn(Double.valueOf(value));
+        m.visitInsn(DRETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** Target with public void c(Ljava/lang/String;)V recording its argument. */
+    public static byte[] virtualObjectTarget(String internalName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "calls", "I", null, null).visitEnd();
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "arg", "Ljava/lang/String;", null, null).visitEnd();
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor c = cw.visitMethod(ACC_PUBLIC, "c", "(Ljava/lang/String;)V", null, null);
+        c.visitCode();
+        c.visitFieldInsn(GETSTATIC, internalName, "calls", "I");
+        c.visitInsn(ICONST_1);
+        c.visitInsn(IADD);
+        c.visitFieldInsn(PUTSTATIC, internalName, "calls", "I");
+        c.visitVarInsn(ALOAD, 1);
+        c.visitFieldInsn(PUTSTATIC, internalName, "arg", "Ljava/lang/String;");
+        c.visitInsn(RETURN);
+        c.visitMaxs(0, 0);
+        c.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A caller with public static void m(T, String) holding one T.c(String) site. */
+    public static byte[] virtualObjectCaller(String internalName, String targetName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "m",
+            "(L" + targetName + ";Ljava/lang/String;)V", null, null);
+        m.visitCode();
+        m.visitVarInsn(ALOAD, 0);
+        m.visitVarInsn(ALOAD, 1);
+        m.visitMethodInsn(INVOKEVIRTUAL, targetName, "c", "(Ljava/lang/String;)V", false);
         m.visitInsn(RETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();

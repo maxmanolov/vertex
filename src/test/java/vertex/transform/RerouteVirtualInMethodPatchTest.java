@@ -63,6 +63,51 @@ public final class RerouteVirtualInMethodPatchTest
     }
 
     @Test
+    public void referenceParametersEraseToObjectInTheHookDescriptor() throws Exception
+    {
+        byte[] target = TransformerHarness.virtualObjectTarget("vfl/OTarget");
+        byte[] caller = TransformerHarness.virtualObjectCaller("vfl/OCaller", "vfl/OTarget");
+        byte[] patched = RerouteVirtualInMethodPatch.apply(caller, "m",
+            "(Lvfl/OTarget;Ljava/lang/String;)V",
+            "vfl/OTarget", "c", "(Ljava/lang/String;)V",
+            "vertex/TransformerHarness$Probe", "objectHook");
+
+        TransformerHarness.ByteLoader loader = new TransformerHarness.ByteLoader()
+            .add("vfl.OTarget", target)
+            .add("vfl.OCaller", patched);
+        Class<?> targetClass = loader.loadClass("vfl.OTarget");
+        Class<?> callerClass = loader.loadClass("vfl.OCaller");
+        Object instance = targetClass.newInstance();
+
+        TransformerHarness.Probe.reset();
+        callerClass.getMethod("m", targetClass, String.class).invoke(null, instance, "sun.png");
+
+        assertEquals(1, TransformerHarness.Probe.objectCalls);
+        assertSame(instance, TransformerHarness.Probe.objectReceiver);
+        assertEquals("the argument arrives widened, value intact",
+            "sun.png", TransformerHarness.Probe.objectValue);
+        assertEquals("the original method must never run",
+            0, targetClass.getField("calls").getInt(null));
+    }
+
+    @Test
+    public void referenceReturnsAreRejected() throws Exception
+    {
+        byte[] caller = TransformerHarness.virtualObjectCaller("vfl/OCaller2", "vfl/OTarget2");
+
+        try
+        {
+            RerouteVirtualInMethodPatch.apply(caller, "m", "(Lvfl/OTarget2;Ljava/lang/String;)V",
+                "vfl/OTarget2", "c", "(F)Ljava/lang/String;",
+                "vertex/TransformerHarness$Probe", "objectHook");
+            fail("expected the reference return to throw");
+        }
+        catch (IllegalStateException expected)
+        {
+        }
+    }
+
+    @Test
     public void zeroMatchesFailThePatch() throws Exception
     {
         byte[] caller = TransformerHarness.virtualCaller("vfl/Caller3", "vfl/Target3", 1);
