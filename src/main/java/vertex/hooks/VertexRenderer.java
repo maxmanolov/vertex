@@ -45,6 +45,7 @@ public final class VertexRenderer
 
     private static volatile boolean disabled = false;
     private static volatile boolean remarkRequested = false;
+    private static volatile boolean settingsRemarkRequested = false;
     private static boolean initialized = false;
     private static boolean submitReady = false;
     private static RenderBackend backend;
@@ -535,11 +536,46 @@ public final class VertexRenderer
     }
 
     /**
+     * A menu flip of a setting whose effect is baked into section meshes (connected
+     * textures, better grass, custom colors, ...) requests a whole-grid re-mark; the
+     * next client-thread frame executes it. Unlike the disable path this does not reset
+     * the backend - sections rebuild incrementally with their meshes staying live until
+     * each replacement lands.
+     */
+    public static void requestSettingsRemark()
+    {
+        settingsRemarkRequested = true;
+    }
+
+    /** Client-thread consumer for {@link #requestSettingsRemark()}; true at most once per request. */
+    static boolean consumeSettingsRemark()
+    {
+        if (!settingsRemarkRequested)
+        {
+            return false;
+        }
+
+        settingsRemarkRequested = false;
+        return true;
+    }
+
+    /** Settings-flip re-mark: every section rebuilds, backend and meshes stay live. */
+    static void remarkAllSections(Object renderGlobal)
+    {
+        markAllSectionsDirty(renderGlobal, "Settings change");
+    }
+
+    /**
      * Disable-path recovery: every section re-marks dirty and re-queues, so the vanilla
      * renderer rebuilds the display lists the managed backend owned. Near sections drain
      * first through vanilla's distance-sorted update pass; the world heals in seconds.
      */
     private static void markAllSectionsDirty(Object renderGlobal)
+    {
+        markAllSectionsDirty(renderGlobal, "Managed renderer fallback");
+    }
+
+    private static void markAllSectionsDirty(Object renderGlobal, String reason)
     {
         try
         {
@@ -552,11 +588,11 @@ public final class VertexRenderer
             }
 
             int marked = markSectionsDirty(renderGlobal, java.util.Arrays.asList(grid));
-            LogWrapper.info("[Vertex] Managed renderer fallback: re-marked " + marked + " sections for vanilla rebuild");
+            LogWrapper.info("[Vertex] " + reason + ": re-marked " + marked + " sections for rebuild");
         }
         catch (Exception e)
         {
-            LogWrapper.severe("[Vertex] Fallback re-mark failed; stale sections heal as they are touched");
+            LogWrapper.severe("[Vertex] " + reason + " re-mark failed; stale sections heal as they are touched");
             e.printStackTrace();
         }
     }
@@ -590,6 +626,14 @@ public final class VertexRenderer
 
             for (Object renderer : sections)
             {
+                // The dirty-flag handle normally resolves with managed init; a legacy
+                // (unmanaged) session flipping a mesh-baked setting reaches here first,
+                // so resolve it from the first real section instead of no-opping.
+                if (wrNeedsUpdate == null && renderer instanceof ImmediateMarker)
+                {
+                    wrNeedsUpdate = accessible(renderer.getClass(), Mappings.WR_NEEDS_UPDATE);
+                }
+
                 if (renderer instanceof ImmediateMarker && wrNeedsUpdate != null)
                 {
                     wrNeedsUpdate.setBoolean(renderer, true);

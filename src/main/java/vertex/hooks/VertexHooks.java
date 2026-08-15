@@ -147,6 +147,13 @@ public final class VertexHooks
         VertexSkyBridge.publish(renderGlobal);
         VertexMulticore.drainFinished();
 
+        // Menu flips of mesh-baked settings re-mark here, on the client thread, in
+        // every renderer mode (managed clientTick only runs when MANAGED).
+        if (VertexRenderer.consumeSettingsRemark())
+        {
+            VertexRenderer.remarkAllSections(renderGlobal);
+        }
+
         if (VertexRenderProfiler.ACTIVE)
         {
             VertexRenderProfiler.frame(renderGlobal);

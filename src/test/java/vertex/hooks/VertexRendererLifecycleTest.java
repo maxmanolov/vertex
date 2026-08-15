@@ -258,6 +258,40 @@ public class VertexRendererLifecycleTest
         }
     }
 
+    @Test
+    public void settingsRemarkConsumesAtMostOncePerRequest() throws Exception
+    {
+        // Drain any request left over from another test before asserting.
+        VertexRenderer.consumeSettingsRemark();
+        assertFalse("no request pending initially", VertexRenderer.consumeSettingsRemark());
+
+        VertexRenderer.requestSettingsRemark();
+        assertTrue("a request consumes once", VertexRenderer.consumeSettingsRemark());
+        assertFalse("and only once", VertexRenderer.consumeSettingsRemark());
+    }
+
+    @Test
+    public void settingsRemarkMarksEverySectionWithoutBackendInvolvement() throws Exception
+    {
+        FakeRenderGlobal renderGlobal = new FakeRenderGlobal();
+        FakeRenderer[] grid = new FakeRenderer[16];
+
+        for (int i = 0; i < grid.length; ++i)
+        {
+            grid[i] = new FakeRenderer();
+        }
+
+        renderGlobal.v = grid;
+        VertexRenderer.remarkAllSections(renderGlobal);
+
+        assertEquals("every section queued", grid.length, renderGlobal.t.size());
+
+        for (FakeRenderer renderer : grid)
+        {
+            assertTrue("every section re-marked dirty", renderer.q);
+        }
+    }
+
     private static VertexMulticore.ChunkBuild newBuild(Object renderer) throws Exception
     {
         java.lang.reflect.Constructor<VertexMulticore.ChunkBuild> ctor =
