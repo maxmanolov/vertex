@@ -27,9 +27,15 @@ final class HeadGuardPatch implements Opcodes
 
     static byte[] apply(byte[] basicClass, String method, String desc, String hookOwner, String hookName, int shape)
     {
-        if (!desc.endsWith(")V"))
+        String ret = desc.substring(desc.indexOf(')') + 1);
+        boolean objectReturn = ret.startsWith("L") || ret.startsWith("[");
+
+        if (!"V".equals(ret) && !objectReturn)
         {
-            throw new IllegalStateException("Head guard target must return void: " + method + desc);
+            // A skipped primitive return has no universal "nothing" value; object
+            // returns skip to null, which every vanilla caller of the current targets
+            // already handles (doSpawnParticle returns null on distance culling).
+            throw new IllegalStateException("Head guard target must return void or a reference: " + method + desc);
         }
 
         ClassNode cls = new ClassNode();
@@ -68,7 +74,17 @@ final class HeadGuardPatch implements Opcodes
 
                 head.add(new MethodInsnNode(INVOKESTATIC, hookOwner, hookName, hookDesc, false));
                 head.add(new JumpInsnNode(IFEQ, proceed));
-                head.add(new InsnNode(RETURN));
+
+                if (objectReturn)
+                {
+                    head.add(new InsnNode(ACONST_NULL));
+                    head.add(new InsnNode(ARETURN));
+                }
+                else
+                {
+                    head.add(new InsnNode(RETURN));
+                }
+
                 head.add(proceed);
                 candidate.instructions.insertBefore(candidate.instructions.getFirst(), head);
                 patched = true;

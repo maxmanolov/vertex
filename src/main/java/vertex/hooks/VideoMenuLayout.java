@@ -250,23 +250,23 @@ final class VideoMenuLayout
                 right.add(fixed("Dropped Items: Fast"));
                 return;
             case PAGE_ANIMATIONS:
-                left.add(fixed("Water Animated: §aON"));
-                left.add(fixed("Fire Animated: §aON"));
-                left.add(fixed("Redstone Animated: §aON"));
-                left.add(fixed("Flame Animated: §cOFF"));
+                left.add(vertex("Water Animated", "animWater"));
+                left.add(vertex("Fire Animated", "animFire"));
+                left.add(fixed("Redstone Animated: §aON"));              // no such 1.7.10 animation
+                left.add(vertex("Flame Animated", "particleFlame"));
                 left.add(vertex("Void Particles", "voidParticles"));
-                left.add(fixed("Rain Splash: §aON"));
-                left.add(fixed("Potion Particles: §aON"));
-                left.add(vertex("Terrain Animated", "textureAnimations"));
-                left.add(fixed("Textures Animated: §aON"));
-                right.add(fixed("Lava Animated: §aON"));
-                right.add(fixed("Portal Animated: §aON"));
-                right.add(fixed("Explosion Animated: §aON"));
-                right.add(fixed("Smoke Animated: §aON"));
-                right.add(fixed("Water Particles: §aON"));
-                right.add(fixed("Portal Particles: §aON"));
-                right.add(fixed("Dripping Water/Lava: §aON"));
-                right.add(fixed("Items Animated: §aON"));
+                left.add(vertex("Rain Splash", "particleRainSplash"));
+                left.add(vertex("Potion Particles", "particlePotion"));
+                left.add(vertex("Terrain Animated", "terrainAnimated"));
+                left.add(vertex("Textures Animated", "textureAnimations"));
+                right.add(vertex("Lava Animated", "animLava"));
+                right.add(vertex("Portal Animated", "animPortal"));
+                right.add(vertex("Explosion Animated", "particleExplosions"));
+                right.add(vertex("Smoke Animated", "particleSmoke"));
+                right.add(vertex("Water Particles", "particleWater"));
+                right.add(vertex("Portal Particles", "particlePortal"));
+                right.add(vertex("Dripping Water/Lava", "particleDripping"));
+                right.add(vertex("Items Animated", "itemsAnimated"));
                 right.add(vanilla("q"));                                 // Particles
                 return;
             case PAGE_QUALITY:
@@ -364,6 +364,15 @@ final class VideoMenuLayout
     {
         return "betterGrass".equals(key) || "naturalTextures".equals(key)
             || "connectedTextures".equals(key) || "customColors".equals(key);
+    }
+
+    /** Every Vertex key wired on the Animations page: the All ON / All OFF scope. */
+    static String[] animationKeys()
+    {
+        return new String[] {"animWater", "animFire", "particleFlame", "voidParticles",
+            "particleRainSplash", "particlePotion", "terrainAnimated", "textureAnimations",
+            "animLava", "animPortal", "particleExplosions", "particleSmoke",
+            "particleWater", "particlePortal", "particleDripping", "itemsAnimated"};
     }
 
     /** Fog Start cycle: Default -> 0.2 -> 0.4 -> 0.6 -> 0.8 -> Default. */
