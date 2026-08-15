@@ -108,6 +108,13 @@ public class VertexTransformer implements IClassTransformer
                     "vertex/hooks/VertexSkyDetails", "afterClouds");
                 result = HeadInstanceCallPatch.apply(result, Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC,
                     "vertex/hooks/VertexSkyDetails", "beforeClouds");
+                // Trees fast/fancy: loadRenderers pushes fancyGraphics into both leaf
+                // blocks; the reroute applies the tri-state override and captures the
+                // blocks so a menu flip can re-push immediately.
+                result = RerouteVirtualInMethodPatch.apply(result,
+                    Mappings.RG_LOAD_RENDERERS, Mappings.RG_LOAD_RENDERERS_DESC,
+                    Mappings.LEAVES_CLASS, Mappings.LEAVES_SET_GRAPHICS, Mappings.LEAVES_SET_GRAPHICS_DESC,
+                    "vertex/hooks/VertexGraphics", "setLeavesGraphics");
                 // Tail hooks BEFORE head skips: a skip guard adds a synthetic early RETURN,
                 // and a tail call attached to it would run the feature while its pass is
                 // disabled - custom sky layers were observed drawing 5,928/min with the
@@ -201,6 +208,24 @@ public class VertexTransformer implements IClassTransformer
                 LogWrapper.info("[Vertex] Patching Block (" + name + ")");
                 result = ReturnValuePatch.apply(result, Mappings.BLOCK_MIXED_BRIGHTNESS, Mappings.BLOCK_MIXED_BRIGHTNESS_DESC,
                     "vertex/hooks/VertexDynamicLights", "adjust");
+                // Smooth lighting level: scale the ambient-occlusion corner darkening.
+                result = ReturnAdjustPatch.apply(result, Mappings.BLOCK_AO_VALUE, Mappings.BLOCK_AO_VALUE_DESC,
+                    "vertex/hooks/VertexGraphics", "aoLightValue");
+            }
+            else if (Mappings.RENDER_ITEM.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching RenderItem (" + name + ")");
+                // Dropped items fast/fancy: the flat-vs-3D choice reads fancyGraphics.
+                result = FieldReadReroutePatch.apply(result,
+                    Mappings.GAME_SETTINGS, Mappings.GS_FANCY_GRAPHICS, "Z",
+                    "vertex/hooks/VertexGraphics", "fancyItems");
+            }
+            else if (Mappings.ENTITY_PLAYER_SP.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching EntityPlayerSP (" + name + ")");
+                // Dynamic FOV: pin the sprint/potion FOV multiplier to 1 when off.
+                result = ReturnAdjustPatch.apply(result, Mappings.PLAYER_FOV_MULTIPLIER, Mappings.PLAYER_FOV_MULTIPLIER_DESC,
+                    "vertex/hooks/VertexGraphics", "fovMultiplier");
             }
             else if (Mappings.GUI_NEW_CHAT.equals(name))
             {

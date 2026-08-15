@@ -27,12 +27,12 @@ public final class VideoMenuLayoutTest
         assertEquals("Video Settings", VideoMenuLayout.title(VideoMenuLayout.PAGE_VIDEO));
         assertEquals(9 + 9 + 1, page.size());
 
-        // Left column: Graphics, Smooth Lighting, SL Level (inert), GUI Scale,
+        // Left column: Graphics, Smooth Lighting, SL Level (live cycle), GUI Scale,
         // Brightness, Dynamic Lights, Fullbright (the Shaders... slot), Details,
         // Animations.
         assertColumn(page, LEFT, new int[] {
             VideoMenuLayout.KIND_VANILLA, VideoMenuLayout.KIND_VANILLA,
-            VideoMenuLayout.KIND_STATIC, VideoMenuLayout.KIND_VANILLA,
+            VideoMenuLayout.KIND_AO_LEVEL, VideoMenuLayout.KIND_VANILLA,
             VideoMenuLayout.KIND_SLIDER, VideoMenuLayout.KIND_VERTEX,
             VideoMenuLayout.KIND_FULLBRIGHT, VideoMenuLayout.KIND_NAV,
             VideoMenuLayout.KIND_NAV});
@@ -46,8 +46,10 @@ public final class VideoMenuLayoutTest
         assertColumn(page, RIGHT, new int[] {
             VideoMenuLayout.KIND_SLIDER, VideoMenuLayout.KIND_SLIDER,
             VideoMenuLayout.KIND_VANILLA, VideoMenuLayout.KIND_VANILLA,
-            VideoMenuLayout.KIND_CHUNK_LOADING, VideoMenuLayout.KIND_STATIC,
+            VideoMenuLayout.KIND_CHUNK_LOADING, VideoMenuLayout.KIND_VERTEX,
             VideoMenuLayout.KIND_NAV, VideoMenuLayout.KIND_NAV, VideoMenuLayout.KIND_NAV});
+        assertEquals("dynamicFov", at(page, RIGHT, VideoMenuLayout.rowY(H, 5)).ref);
+        assertEquals("aoLevel", at(page, LEFT, VideoMenuLayout.rowY(H, 2)).ref);
 
         assertEquals("f", at(page, RIGHT, VideoMenuLayout.rowY(H, 0)).ref); // render distance
         assertEquals("d", at(page, LEFT, VideoMenuLayout.rowY(H, 4)).ref);  // brightness
@@ -126,6 +128,10 @@ public final class VideoMenuLayoutTest
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_FOG_START));
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_CLOUD_HEIGHT));
         assertEquals("cloudHeight", at(details, RIGHT, VideoMenuLayout.rowY(H, 0)).ref);
+        // Trees and Dropped Items are tri-state (default follows Graphics).
+        assertEquals(2, kindCount(details, VideoMenuLayout.KIND_TRISTATE));
+        assertEquals("trees", at(details, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
+        assertEquals("droppedItems", at(details, RIGHT, VideoMenuLayout.rowY(H, 7)).ref);
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_VANILLA)); // capes
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_HELD_TOOLTIPS));
 
