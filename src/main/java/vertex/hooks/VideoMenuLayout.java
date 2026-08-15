@@ -49,6 +49,10 @@ final class VideoMenuLayout
     /** Effective cloud toggle: vanilla GameSettings and Vertex's pass gate move together. */
     static final int KIND_CLOUDS = 12;
 
+    static final int KIND_FOG_START = 13;
+
+    static final int KIND_CLOUD_HEIGHT = 14;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -231,17 +235,17 @@ final class VideoMenuLayout
                 left.add(fixed("Trees: Fast"));
                 left.add(fixed("Water: Fast"));
                 left.add(vertex("Sky", "sky"));
-                left.add(fixed("Sun & Moon: §cOFF"));
+                left.add(vertex("Sun & Moon", "sunMoon"));
                 left.add(vertex("Fog", "fog"));
-                left.add(fixed("Depth Fog: §cOFF"));
+                left.add(vertex("Depth Fog", "depthFog"));
                 left.add(fixed("Translucent Blocks: Fast"));
                 left.add(fixed("Vignette: Fast"));
-                right.add(fixed("Cloud Height: §cOFF"));
+                right.add(new Slot(KIND_CLOUD_HEIGHT, "Cloud Height", "cloudHeight"));
                 right.add(fixed("Grass: Fast"));
                 right.add(vertex("Rain & Snow", "weather"));
-                right.add(fixed("Stars: §cOFF"));
+                right.add(vertex("Stars", "stars"));
                 right.add(vanilla("z"));                                 // Show Capes
-                right.add(fixed("Fog Start: 0.2"));
+                right.add(new Slot(KIND_FOG_START, "Fog Start", "fogStart"));
                 right.add(new Slot(KIND_HELD_TOOLTIPS, "Held Item Tooltips", null));
                 right.add(fixed("Dropped Items: Fast"));
                 return;
@@ -360,6 +364,34 @@ final class VideoMenuLayout
     {
         return "betterGrass".equals(key) || "naturalTextures".equals(key)
             || "connectedTextures".equals(key) || "customColors".equals(key);
+    }
+
+    /** Fog Start cycle: Default -> 0.2 -> 0.4 -> 0.6 -> 0.8 -> Default. */
+    static String nextFogStart(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        return trimmed.equals("default") ? "0.2" : trimmed.equals("0.2") ? "0.4"
+            : trimmed.equals("0.4") ? "0.6" : trimmed.equals("0.6") ? "0.8" : "default";
+    }
+
+    static String fogStartLabel(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        boolean known = trimmed.equals("0.2") || trimmed.equals("0.4")
+            || trimmed.equals("0.6") || trimmed.equals("0.8");
+        return "Fog Start: " + (known ? trimmed : "Default");
+    }
+
+    /** Cloud Height cycle: OFF -> 25% -> 50% -> 75% -> 100% -> OFF. */
+    static int nextCloudHeight(int current)
+    {
+        return current == 0 ? 25 : current == 25 ? 50 : current == 50 ? 75
+            : current == 75 ? 100 : 0;
+    }
+
+    static String cloudHeightLabel(int percent)
+    {
+        return "Cloud Height: " + (percent <= 0 ? "§cOFF" : percent + "%");
     }
 
     private VideoMenuLayout()

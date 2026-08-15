@@ -28,7 +28,7 @@ final class RerouteVirtualInMethodPatch implements Opcodes
     {
         ClassNode cls = new ClassNode();
         new ClassReader(basicClass).accept(cls, 0);
-        String hookDesc = "(Ljava/lang/Object;" + targetDesc.substring(1);
+        String hookDesc = "(Ljava/lang/Object;" + eraseReferences(targetDesc.substring(1));
         int rerouted = 0;
 
         for (MethodNode candidate : cls.methods)
@@ -73,6 +73,58 @@ final class RerouteVirtualInMethodPatch implements Opcodes
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cls.accept(writer);
         return writer.toByteArray();
+    }
+
+    /**
+     * Hooks live outside the game class loader and cannot declare obfuscated parameter
+     * types, so every reference parameter erases to Object in the hook descriptor - the
+     * verifier accepts the widening at the rewritten call site. Reference returns would
+     * need the inverse (narrowing) cast and have no user yet, so they stay rejected.
+     */
+    private static String eraseReferences(String paramsAndReturn)
+    {
+        int split = paramsAndReturn.indexOf(')');
+        String params = paramsAndReturn.substring(0, split);
+        String ret = paramsAndReturn.substring(split + 1);
+
+        if (ret.startsWith("L") || ret.startsWith("["))
+        {
+            throw new IllegalStateException("Reference returns are not supported: " + paramsAndReturn);
+        }
+
+        StringBuilder erased = new StringBuilder();
+        int i = 0;
+
+        while (i < params.length())
+        {
+            char c = params.charAt(i);
+
+            if (c == 'L' || c == '[')
+            {
+                while (params.charAt(i) == '[')
+                {
+                    ++i;
+                }
+
+                if (params.charAt(i) == 'L')
+                {
+                    i = params.indexOf(';', i) + 1;
+                }
+                else
+                {
+                    ++i; // primitive array: [I, [F, ...
+                }
+
+                erased.append("Ljava/lang/Object;");
+            }
+            else
+            {
+                erased.append(c);
+                ++i;
+            }
+        }
+
+        return erased + ")" + ret;
     }
 
     private RerouteVirtualInMethodPatch()

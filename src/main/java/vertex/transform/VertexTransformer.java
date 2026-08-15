@@ -82,6 +82,28 @@ public class VertexTransformer implements IClassTransformer
                     result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCKS_FOR_UPDATE, Mappings.RG_MARK_BLOCKS_FOR_UPDATE_DESC,
                         "vertex/hooks/VertexMarkAudit", "onFunnel", HeadGuardPatch.THIS_ONLY);
                 }
+                // Sky details: every bindTexture in renderSky reports its texture (a
+                // sun/moon bind arms the next flush), every tessellator flush routes
+                // through the armed gate, and the star display list drops at its
+                // glCallList site. The cloud pass wraps in a matrix lift for the
+                // cloud-height setting.
+                result = RerouteVirtualInMethodPatch.apply(result,
+                    Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC,
+                    Mappings.TEXTURE_MANAGER, Mappings.TEXTURE_BIND,
+                    "(L" + Mappings.RESOURCE_LOCATION + ";)V",
+                    "vertex/hooks/VertexSkyDetails", "bindSkyTexture");
+                result = RerouteVirtualInMethodPatch.apply(result,
+                    Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC,
+                    Mappings.TESSELLATOR, Mappings.TESS_DRAW, Mappings.TESS_DRAW_DESC,
+                    "vertex/hooks/VertexSkyDetails", "skyDraw");
+                result = RerouteStaticInMethodPatch.apply(result,
+                    Mappings.RG_RENDER_SKY, Mappings.RG_RENDER_SKY_DESC,
+                    "org/lwjgl/opengl/GL11", "glCallList", "(I)V",
+                    "vertex/hooks/VertexSkyDetails", "skyCallList");
+                result = TailInstanceCallPatch.apply(result, Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC,
+                    "vertex/hooks/VertexSkyDetails", "afterClouds");
+                result = HeadInstanceCallPatch.apply(result, Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC,
+                    "vertex/hooks/VertexSkyDetails", "beforeClouds");
                 // Tail hooks BEFORE head skips: a skip guard adds a synthetic early RETURN,
                 // and a tail call attached to it would run the feature while its pass is
                 // disabled - custom sky layers were observed drawing 5,928/min with the
@@ -205,6 +227,14 @@ public class VertexTransformer implements IClassTransformer
                 result = SkipMethodPatch.apply(result, new SkipMethodPatch.Target[] {
                     new SkipMethodPatch.Target(Mappings.WC_DO_VOID_FOG_PARTICLES, Mappings.WC_DO_VOID_FOG_PARTICLES_DESC, "voidParticles"),
                 });
+            }
+            else if (Mappings.WORLD_PROVIDER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching WorldProvider (" + name + ")");
+                // Depth fog: the fog-color pass darkens by ((eyeY)*factor)^2 below 1;
+                // the adjuster returns a factor large enough that this never engages.
+                result = ReturnAdjustPatch.apply(result, Mappings.WP_VOID_FOG_FACTOR, Mappings.WP_VOID_FOG_FACTOR_DESC,
+                    "vertex/hooks/VertexSkyDetails", "voidFogFactor");
             }
 
             // Applies to every class, including the ones patched above: rewrite reads of

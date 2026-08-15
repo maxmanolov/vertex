@@ -286,6 +286,25 @@ public final class Mappings
     public static final String ER_RENDER_RAIN_SNOW_DESC = "(F)V";
     public static final String ER_ADD_RAIN_PARTICLES = "l";
     public static final String ER_ADD_RAIN_PARTICLES_DESC = "()V";
+
+    // --- sky detail surface (javap bma renderSky a(F)V, blt fog passes, aqo) ---------
+    // renderSky binds bqf.a(Lbqx;)V three times: the End sky, the sun (getstatic o,
+    // offset 869) and the moon (getstatic n, 962); the sun/moon quads flush through
+    // bmh.a()I at offsets 950/1120 while the sunset glow and horizon caps draw with
+    // texturing disabled. Stars are a display list: glColor4f(starBrightness x3)
+    // directly precedes getfield F + GL11.glCallList at 1162-1165; G is the sky dome
+    // list (417) and H the below-horizon cap (1250). Clouds render in bma.b(F)V.
+    // blt.a(IF)V sets the linear fog band as start=0.25*far, end=far (sky pass -1:
+    // start=0, end=0.8*far). The depth darkening multiplies the fog color by
+    // ((eyeY)*aqo.k())^2 whenever that product is below 1; aqo.k()D is
+    // WorldProvider.getVoidFogYFactor returning 0.03125, invoked from blt's fog-color
+    // pass at offset 685.
+    public static final String TEXTURE_MANAGER = "bqf";
+    public static final String RG_STAR_LIST = "F";
+    public static final String TESS_DRAW_DESC = "()I";
+    public static final String WORLD_PROVIDER = "aqo";
+    public static final String WP_VOID_FOG_FACTOR = "k";
+    public static final String WP_VOID_FOG_FACTOR_DESC = "()D";
     public static final String TEXTUREMAP_REGISTER_ICON = "a";
     public static final String TM_LOAD_ATLAS = "b";
     public static final String TM_LOAD_ATLAS_DESC = "(Lbqy;)V";

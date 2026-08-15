@@ -171,6 +171,16 @@ public final class VertexVideoMenu
                     saveOptions.invoke(settings);
                     buttonDisplayField.set(button, heldTooltipsLabel(settings));
                     return true;
+                case VideoMenuLayout.KIND_FOG_START:
+                    VertexConfig.setAndSaveValue("fogStart",
+                        VideoMenuLayout.nextFogStart(VertexConfig.value("fogStart", "default")));
+                    buttonDisplayField.set(button, fogStartLabel());
+                    return true;
+                case VideoMenuLayout.KIND_CLOUD_HEIGHT:
+                    VertexConfig.setAndSaveValue("cloudHeight", String.valueOf(
+                        VideoMenuLayout.nextCloudHeight(cloudHeightPercent())));
+                    buttonDisplayField.set(button, cloudHeightLabel());
+                    return true;
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
@@ -277,6 +287,12 @@ public final class VertexVideoMenu
             case VideoMenuLayout.KIND_HELD_TOOLTIPS:
                 label = heldTooltipsLabel(settings);
                 break;
+            case VideoMenuLayout.KIND_FOG_START:
+                label = fogStartLabel();
+                break;
+            case VideoMenuLayout.KIND_CLOUD_HEIGHT:
+                label = cloudHeightLabel();
+                break;
             default:
                 label = slot.label;
         }
@@ -350,6 +366,21 @@ public final class VertexVideoMenu
             + (heldTooltipsField.getBoolean(settings) ? "§aON" : "§cOFF");
     }
 
+    private static String fogStartLabel()
+    {
+        return VideoMenuLayout.fogStartLabel(VertexConfig.value("fogStart", "default"));
+    }
+
+    private static int cloudHeightPercent()
+    {
+        return VertexSkyDetails.cloudLiftPercent(VertexConfig.value("cloudHeight", "0"));
+    }
+
+    private static String cloudHeightLabel()
+    {
+        return VideoMenuLayout.cloudHeightLabel(cloudHeightPercent());
+    }
+
     /** The reference colors binary states: green ON, red OFF; other values stay plain. */
     private static String colorize(String label)
     {
@@ -380,7 +411,8 @@ public final class VertexVideoMenu
     {
         String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
             "textureAnimations", "voidParticles", "betterGrass", "randomEntities",
-            "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore"};
+            "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
+            "sunMoon", "stars", "depthFog"};
         boolean remark = false;
 
         for (String key : vertexKeys)
@@ -394,6 +426,9 @@ public final class VertexVideoMenu
         {
             VertexRenderer.requestSettingsRemark();
         }
+
+        VertexConfig.setAndSaveValue("fogStart", "default");
+        VertexConfig.setAndSaveValue("cloudHeight", "0");
 
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_GAMMA), Float.valueOf(0.0F));
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_RENDER_DISTANCE), Float.valueOf(8.0F));
