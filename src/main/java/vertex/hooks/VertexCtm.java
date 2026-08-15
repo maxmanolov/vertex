@@ -66,7 +66,11 @@ public final class VertexCtm
     /** Head hook on TextureMap.loadTextureAtlas, before stitching. */
     public static void beforeStitch(Object textureMap)
     {
-        if (disabled || !VertexConfig.enabled("connectedTextures"))
+        // Rules load and tiles stitch even when the key is off: the per-face lookup in
+        // VertexIcons carries the enabled() gate, so the video-menu toggle works live in
+        // both directions without a resource reload. The cost of stitching unused tiles
+        // is a few atlas cells, and only for packs that ship CTM rules at all.
+        if (disabled)
         {
             return;
         }

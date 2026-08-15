@@ -124,7 +124,25 @@ public final class VideoMenuLayoutTest
         assertEquals(2, kindCount(quality, VideoMenuLayout.KIND_SLIDER));  // mipmap, aniso
         assertEquals("F", at(quality, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
         assertEquals("G", at(quality, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
-        assertEquals(5, kindCount(quality, VideoMenuLayout.KIND_VERTEX));
+        // better grass, custom sky, random mobs, custom colors, natural textures,
+        // connected textures - all live keys.
+        assertEquals(6, kindCount(quality, VideoMenuLayout.KIND_VERTEX));
+        assertEquals("connectedTextures",
+            at(quality, LEFT, VideoMenuLayout.rowY(H, 6)).ref);
+    }
+
+    @Test
+    public void meshBakedKeysRequestASectionRemarkAndOverlayKeysDoNot()
+    {
+        assertTrue(VideoMenuLayout.rebakesSections("connectedTextures"));
+        assertTrue(VideoMenuLayout.rebakesSections("betterGrass"));
+        assertTrue(VideoMenuLayout.rebakesSections("naturalTextures"));
+        assertTrue(VideoMenuLayout.rebakesSections("customColors"));
+        // Overlay/entity/pass toggles apply per frame without touching section meshes.
+        assertTrue(!VideoMenuLayout.rebakesSections("customSky"));
+        assertTrue(!VideoMenuLayout.rebakesSections("randomEntities"));
+        assertTrue(!VideoMenuLayout.rebakesSections("weather"));
+        assertTrue(!VideoMenuLayout.rebakesSections("sky"));
     }
 
     @Test
@@ -144,8 +162,11 @@ public final class VideoMenuLayoutTest
         assertEquals(VideoMenuLayout.rowY(H, 7), reset.y);
         assertEquals(reset.y + 32, done.y);
 
-        // Real backing: fullscreen + 3D anaglyph (vanilla), reset, done.
+        // Real backing: fullscreen + 3D anaglyph (vanilla), weather (Vertex key,
+        // the same key as the Details page's Rain & Snow), reset, done.
         assertEquals(2, kindCount(page, VideoMenuLayout.KIND_VANILLA));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_VERTEX));
+        assertEquals("weather", byKind(page, VideoMenuLayout.KIND_VERTEX).ref);
     }
 
     @Test

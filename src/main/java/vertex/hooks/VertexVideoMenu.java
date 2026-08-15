@@ -144,6 +144,12 @@ public final class VertexVideoMenu
                 case VideoMenuLayout.KIND_VERTEX:
                     VertexConfig.setAndSave(slot.ref, !VertexConfig.enabled(slot.ref));
                     buttonDisplayField.set(button, vertexLabel(slot.label, slot.ref));
+
+                    if (VideoMenuLayout.rebakesSections(slot.ref))
+                    {
+                        VertexRenderer.requestSettingsRemark();
+                    }
+
                     return true;
                 case VideoMenuLayout.KIND_FULLBRIGHT:
                     VertexConfig.setAndSave("fullbright", !VertexConfig.enabled("fullbright"));
@@ -374,11 +380,19 @@ public final class VertexVideoMenu
     {
         String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
             "textureAnimations", "voidParticles", "betterGrass", "randomEntities",
-            "customColors", "naturalTextures", "customSky", "multicore"};
+            "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore"};
+        boolean remark = false;
 
         for (String key : vertexKeys)
         {
-            VertexConfig.setAndSave(key, VertexConfig.declaredDefault(key));
+            boolean target = VertexConfig.declaredDefault(key);
+            remark |= VideoMenuLayout.rebakesSections(key) && VertexConfig.enabled(key) != target;
+            VertexConfig.setAndSave(key, target);
+        }
+
+        if (remark)
+        {
+            VertexRenderer.requestSettingsRemark();
         }
 
         setOptionFloatValue.invoke(settings, option(Mappings.OPT_GAMMA), Float.valueOf(0.0F));

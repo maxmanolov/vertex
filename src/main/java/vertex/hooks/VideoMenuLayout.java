@@ -272,7 +272,7 @@ final class VideoMenuLayout
                 left.add(vertex("Better Grass", "betterGrass"));
                 left.add(fixed("Custom Fonts: §cOFF"));
                 left.add(fixed("Swamp Colors: §aON"));
-                left.add(fixed("Connected Textures: §cOFF"));
+                left.add(vertex("Connected Textures", "connectedTextures"));
                 left.add(vertex("Custom Sky", "customSky"));
                 right.add(fixed("Mipmap Type: Nearest"));
                 right.add(fixed("Antialiasing: §cOFF"));
@@ -296,7 +296,7 @@ final class VideoMenuLayout
             case PAGE_OTHER:
                 left.add(fixed("Lagometer: §cOFF"));
                 left.add(fixed("Show FPS: §cOFF"));
-                left.add(fixed("Weather: §cOFF"));
+                left.add(vertex("Weather", "weather"));
                 left.add(vanilla("x"));                                  // Fullscreen
                 left.add(vanilla("h"));                                  // 3D Anaglyph
                 right.add(fixed("Debug Profiler: §cOFF"));
@@ -349,6 +349,17 @@ final class VideoMenuLayout
     private static Slot fixed(String label)
     {
         return new Slot(KIND_STATIC, label, null);
+    }
+
+    /**
+     * Keys whose effect is baked into section meshes at tessellation time. Flipping one
+     * from the menu must re-mark every section or the world keeps the old look until
+     * chunks happen to rebuild.
+     */
+    static boolean rebakesSections(String key)
+    {
+        return "betterGrass".equals(key) || "naturalTextures".equals(key)
+            || "connectedTextures".equals(key) || "customColors".equals(key);
     }
 
     private VideoMenuLayout()
