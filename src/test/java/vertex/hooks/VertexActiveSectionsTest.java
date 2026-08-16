@@ -40,7 +40,9 @@ public final class VertexActiveSectionsTest
         assertArrayEquals(built, VertexActiveSections.snapshot(owner));
 
         // A vanilla movement sort becomes the registry order used by the next snapshot.
-        VertexActiveSections.sort(VertexActiveSections.snapshot(owner), new Comparator<Object>()
+        // Routed through VertexRenderOrder, the single owner of the patched Arrays.sort
+        // anchor, so this also covers the two features composing.
+        VertexRenderOrder.sort(VertexActiveSections.snapshot(owner), new Comparator<Object>()
         {
             @Override
             public int compare(Object left, Object right)

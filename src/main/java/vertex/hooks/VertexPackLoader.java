@@ -135,6 +135,7 @@ public final class VertexPackLoader
     static void reload(Object manager)
     {
         lastManager = manager;
+        VertexCloudCache.reset();
         VertexRandomEntities.onResourceReload();
         VertexNaturalIcons.onResourceReload();
 

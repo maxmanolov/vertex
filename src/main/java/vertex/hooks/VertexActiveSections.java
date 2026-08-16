@@ -152,12 +152,13 @@ public final class VertexActiveSections
         }
     }
 
-    /** Arrays.sort replacement that keeps the mutable registry in the same camera order. */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void sort(Object[] values, Comparator comparator)
+    /**
+     * Post-sort notification from {@link VertexRenderOrder#sort}, which owns the single
+     * Arrays.sort anchor in the renderer. Only a sort of the published snapshot changes
+     * the registry order; the grid-load sort of vanilla's own array is a no-op here.
+     */
+    public static void onSorted(Object[] values)
     {
-        Arrays.sort(values, comparator);
-
         if (!disabled && values == snapshot && renderGlobal != null)
         {
             active.clear();

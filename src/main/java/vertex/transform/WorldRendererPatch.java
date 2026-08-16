@@ -19,6 +19,8 @@ import vertex.Mappings;
  *  - adds a public boolean vertex$immediate field
  *  - implements {@link vertex.api.ImmediateMarker} with bridge methods over the flag,
  *    needsUpdate, and updateRenderer(EntityLivingBase)
+ *  - implements {@link vertex.api.DistanceKeyHost} with a primitive sort key and center
+ *    coordinate bridges
  *  - clears the flag at the head of setPosition so recycled renderers never inherit it
  *
  * MC 1.7.10 classes are version 50, so COMPUTE_MAXS suffices and no stack-map frames are
@@ -28,6 +30,7 @@ final class WorldRendererPatch implements Opcodes
 {
     private static final String MARKER_IFACE = "vertex/api/ImmediateMarker";
     private static final String MESH_HOST_IFACE = "vertex/api/MeshHost";
+    private static final String DISTANCE_HOST_IFACE = "vertex/api/DistanceKeyHost";
 
     static byte[] apply(byte[] basicClass)
     {
@@ -41,6 +44,28 @@ final class WorldRendererPatch implements Opcodes
         // state, reachable without reflection from both sides of the loader split.
         cls.interfaces.add(MESH_HOST_IFACE);
         cls.fields.add(new FieldNode(ACC_PUBLIC, Mappings.ADDED_MESH_FIELD, "Ljava/lang/Object;", null, null));
+
+        // DistanceKeyHost: a primitive key plus center-coordinate bridges for the two
+        // full renderer-array sorts. All of this state is client-thread confined.
+        cls.interfaces.add(DISTANCE_HOST_IFACE);
+        cls.fields.add(new FieldNode(ACC_PUBLIC, Mappings.ADDED_SORT_KEY_FIELD, "D", null, null));
+
+        MethodNode keyGet = new MethodNode(ACC_PUBLIC, "vertex$sortKey", "()D", null, null);
+        keyGet.instructions.add(new VarInsnNode(ALOAD, 0));
+        keyGet.instructions.add(new FieldInsnNode(GETFIELD, cls.name, Mappings.ADDED_SORT_KEY_FIELD, "D"));
+        keyGet.instructions.add(new InsnNode(DRETURN));
+        cls.methods.add(keyGet);
+
+        MethodNode keySet = new MethodNode(ACC_PUBLIC, "vertex$setSortKey", "(D)V", null, null);
+        keySet.instructions.add(new VarInsnNode(ALOAD, 0));
+        keySet.instructions.add(new VarInsnNode(DLOAD, 1));
+        keySet.instructions.add(new FieldInsnNode(PUTFIELD, cls.name, Mappings.ADDED_SORT_KEY_FIELD, "D"));
+        keySet.instructions.add(new InsnNode(RETURN));
+        cls.methods.add(keySet);
+
+        addIntFieldBridge(cls, "vertex$centerX", Mappings.WR_CENTER_X);
+        addIntFieldBridge(cls, "vertex$centerY", Mappings.WR_CENTER_Y);
+        addIntFieldBridge(cls, "vertex$centerZ", Mappings.WR_CENTER_Z);
 
         MethodNode meshGet = new MethodNode(ACC_PUBLIC, "vertex$mesh", "()Ljava/lang/Object;", null, null);
         meshGet.instructions.add(new VarInsnNode(ALOAD, 0));
@@ -127,6 +152,29 @@ final class WorldRendererPatch implements Opcodes
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cls.accept(writer);
         return writer.toByteArray();
+    }
+
+    /**
+     * Idempotent: ActiveSectionPatch injects byte-identical center bridges for its own
+     * interface, and a class file may not declare the same name+descriptor twice (the
+     * JVM rejects it with ClassFormatError). Whichever patch runs first supplies the
+     * accessor for both interfaces, so neither depends on the other's weave order.
+     */
+    private static void addIntFieldBridge(ClassNode cls, String methodName, String fieldName)
+    {
+        for (MethodNode existing : cls.methods)
+        {
+            if (existing.name.equals(methodName) && existing.desc.equals("()I"))
+            {
+                return;
+            }
+        }
+
+        MethodNode method = new MethodNode(ACC_PUBLIC, methodName, "()I", null, null);
+        method.instructions.add(new VarInsnNode(ALOAD, 0));
+        method.instructions.add(new FieldInsnNode(GETFIELD, cls.name, fieldName, "I"));
+        method.instructions.add(new InsnNode(IRETURN));
+        cls.methods.add(method);
     }
 
     private WorldRendererPatch()

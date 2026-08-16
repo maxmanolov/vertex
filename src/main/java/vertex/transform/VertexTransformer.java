@@ -57,18 +57,37 @@ public class VertexTransformer implements IClassTransformer
                     "vertex/hooks/VertexMulticore", "onRenderersReloadedHook");
                 result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
                     "vertex/hooks/VertexFullbright", "interceptLightRemark", HeadGuardPatch.THIS_ONLY);
+                // The full renderer grid is sorted on load and after camera movement.
+                // Derive one primitive distance per section instead of repeating the
+                // same arithmetic for every comparator invocation. The movement method
+                // also sorts RenderLists; the hook delegates that unrelated array.
+                result = RerouteStaticInMethodPatch.apply(result,
+                    Mappings.RG_LOAD_RENDERERS, Mappings.RG_LOAD_RENDERERS_DESC,
+                    "java/util/Arrays", "sort", "([Ljava/lang/Object;Ljava/util/Comparator;)V",
+                    "vertex/hooks/VertexRenderOrder", "sort");
+                result = RerouteStaticInMethodPatch.apply(result,
+                    Mappings.RG_SORT_AND_RENDER, Mappings.RG_SORT_AND_RENDER_DESC,
+                    "java/util/Arrays", "sort", "([Ljava/lang/Object;Ljava/util/Comparator;)V",
+                    "vertex/hooks/VertexRenderOrder", "sort");
                 // Ambient-particle gates: a suppressed spawn returns null, exactly like
                 // vanilla's own distance culling in the same method.
                 result = HeadGuardPatch.apply(result, Mappings.RG_DO_SPAWN_PARTICLE, Mappings.RG_DO_SPAWN_PARTICLE_DESC,
                     "vertex/hooks/VertexAnimations", "interceptParticle", HeadGuardPatch.THIS_AND_OBJECT);
 
+                // Cloud geometry changes slowly but vanilla rebuilds it every frame.
+                // Install the cache before profiling and detail wrappers so cache hits
+                // remain timed and cloud-height/disable guards still enclose the pass.
+                result = CloudCachePatch.apply(result);
+                result = TailInstanceCallPatch.apply(result, Mappings.RG_LOAD_RENDERERS, Mappings.RG_LOAD_RENDERERS_DESC,
+                    "vertex/hooks/VertexCloudCache", "reset");
+
                 if (vertex.hooks.VertexRenderer.MANAGED)
                 {
                     result = ActiveRenderArrayPatch.apply(result);
-                    result = RerouteStaticInMethodPatch.apply(result,
-                        Mappings.RG_SORT_AND_RENDER, Mappings.RG_SORT_AND_RENDER_DESC,
-                        "java/util/Arrays", "sort", "([Ljava/lang/Object;Ljava/util/Comparator;)V",
-                        "vertex/hooks/VertexActiveSections", "sort");
+                    // No second reroute of the same Arrays.sort call: VertexRenderOrder
+                    // owns that single anchor above and notifies the active-section
+                    // registry from its tail, so neither feature depends on the order
+                    // these patches are woven in.
                     // Managed section-mesh pipeline: a backend that owns submission draws
                     // the pass here instead of vanilla's glCallLists batches. Woven before
                     // the profiler brackets so the brackets time whichever path runs.
@@ -89,6 +108,8 @@ public class VertexTransformer implements IClassTransformer
                         "vertex/hooks/VertexRenderProfiler", vertex.hooks.VertexRenderProfiler.PHASE_SUBMIT);
                     result = BracketPatch.apply(result, Mappings.RG_UPDATE_RENDERERS, Mappings.RG_UPDATE_RENDERERS_DESC,
                         "vertex/hooks/VertexRenderProfiler", vertex.hooks.VertexRenderProfiler.PHASE_UPDATE);
+                    result = BracketPatch.apply(result, Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC,
+                        "vertex/hooks/VertexRenderProfiler", vertex.hooks.VertexRenderProfiler.PHASE_CLOUD);
                 }
 
                 if (vertex.hooks.VertexMarkAudit.ACTIVE)
@@ -350,6 +371,16 @@ public class VertexTransformer implements IClassTransformer
                 // Autosave interval: the tick's single %900 site becomes configurable.
                 result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
                     900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
+            }
+            else if (Mappings.WORLD_SERVER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching WorldServer (" + name + ")");
+                result = WorldServerTickPatch.apply(result);
+            }
+            else if (Mappings.SCHEDULED_TICK.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching NextTickListEntry (" + name + ")");
+                result = ScheduledTickEntryPatch.apply(result);
             }
             else if (isSmoothBlender(name))
             {

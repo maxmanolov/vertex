@@ -44,6 +44,8 @@ public final class Mappings
     public static final String MINECRAFT = "bao";
     public static final String RENDER_GLOBAL = "bma";
     public static final String WORLD_RENDERER = "blo";
+    /** EntitySorter: captures negated camera X/Y/Z in a/b/c for renderer-array ordering. */
+    public static final String ENTITY_SORTER = "blq";
     public static final String RENDER_MANAGER = "bnn";
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
@@ -165,6 +167,12 @@ public final class Mappings
     public static final String RG_MC = "A";
     /** RenderGlobal.sortedWorldRenderers: the distance-ordered copy of the full grid. */
     public static final String RG_SORTED_RENDERERS = "u";
+    /* RenderGlobal.cloudTickCounter=field_72773_u=E drives the built-in cloud drift.
+     * Both cloud paths interpolate the camera fold X from lastTickPosX p (b(F)V offs
+     * 255-275, c(F)V offs 72-92) and Z from lastTickPosZ r (offs 299-319 / 120-140),
+     * but Y from prevPosY T (offs 49-69 / 13-33), NOT lastTickPosY q. The drift factor
+     * at both sites is the widened float 0.03F (ldc2_w 0.029999999329447746). */
+    public static final String RG_CLOUD_TICK_COUNTER = "E";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
     public static final String RG_RENDER_CHUNKS_WIDE = "w";
@@ -175,6 +183,7 @@ public final class Mappings
     public static final String WR_POS_X = "c";
     public static final String WR_POS_Y = "d";
     public static final String WR_POS_Z = "e";
+    /* WorldRenderer center X/Y/Z used by EntitySorter = n/o/p. */
     public static final String WR_CENTER_X = "n";
     public static final String WR_CENTER_Y = "o";
     public static final String WR_CENTER_Z = "p";
@@ -191,6 +200,8 @@ public final class Mappings
     public static final String ENTITY_POS_X = "s";
     public static final String ENTITY_POS_Y = "t";
     public static final String ENTITY_POS_Z = "u";
+    public static final String ENTITY_LAST_TICK_POS_X = "p";
+    public static final String ENTITY_LAST_TICK_POS_Z = "r";
     /* Entity.prevPosX/Y/Z = field_70142_S / field_70137_T / field_70136_U - the
      * interpolation anchors renderSortedRenderers uses for the camera position. */
     public static final String ENTITY_PREV_POS_X = "S";
@@ -202,6 +213,9 @@ public final class Mappings
 
     /** Backend slot field added to WorldRenderer by the transformer (see MeshHost). */
     public static final String ADDED_MESH_FIELD = "vertex$mesh";
+
+    /** Primitive distance key added to WorldRenderer for allocation-free full-grid sorts. */
+    public static final String ADDED_SORT_KEY_FIELD = "vertex$sortKey";
 
     /*
      * Render-control targets (all void, patched with config-gated head skips):
@@ -329,6 +343,7 @@ public final class Mappings
     public static final String LEAVES_SET_GRAPHICS = "b";
     public static final String LEAVES_SET_GRAPHICS_DESC = "(Z)V";
     public static final String GS_FANCY_GRAPHICS = "i";
+    public static final String GS_ANAGLYPH = "e";
     public static final String RENDER_ITEM = "bny";
     public static final String BLOCK_AO_VALUE = "I";
     public static final String BLOCK_AO_VALUE_DESC = "()F";
@@ -357,6 +372,26 @@ public final class Mappings
     public static final String MC_SERVER = "net.minecraft.server.MinecraftServer";
     public static final String MC_SERVER_TICK = "u";
     public static final String MC_SERVER_TICK_DESC = "()V";
+    /* Integrated-server scheduled-block-tick surface (javap of the official 1.7.10
+     * client jar, cross-checked against joined.srg): WorldServer=mt stores the
+     * membership Set at M and the time-ordered TreeSet at N. Its chunk query
+     * getPendingBlockUpdates=a(Lapx;Z)Ljava/util/List; obtains the first iterator from
+     * N. NextTickListEntry=ahs exposes block x/z in public fields a/c; Chunk=apx exposes
+     * chunk x/z in public final fields g/h. WorldServer.initialize=a(Lahj;)V can recreate
+     * the membership set after construction, so both lifecycle points install it. */
+    public static final String WORLD_SERVER = "mt";
+    public static final String WS_PENDING_TICK_SET = "M";
+    public static final String WS_PENDING_TICK_TREE = "N";
+    public static final String WS_PENDING_TICK_LIST = "V";
+    public static final String WS_INITIALIZE = "a";
+    public static final String WS_INITIALIZE_DESC = "(Lahj;)V";
+    public static final String WS_GET_PENDING_TICKS = "a";
+    public static final String WS_GET_PENDING_TICKS_DESC = "(Lapx;Z)Ljava/util/List;";
+    public static final String SCHEDULED_TICK = "ahs";
+    public static final String SCHEDULED_TICK_X = "a";
+    public static final String SCHEDULED_TICK_Z = "c";
+    public static final String CHUNK_X = "g";
+    public static final String CHUNK_Z = "h";
     public static final String WORLD_CLASS = "ahb";
     public static final String WORLD_CELESTIAL_ANGLE_DESC = "(F)F";
 

@@ -29,9 +29,12 @@ final class ActiveSectionPatch implements Opcodes
         verifyField(cls, Mappings.WR_CENTER_Z, "I");
         cls.interfaces.add(API);
         cls.methods.add(hasMesh(cls.name));
-        cls.methods.add(intGetter(cls.name, "vertex$centerX", Mappings.WR_CENTER_X));
-        cls.methods.add(intGetter(cls.name, "vertex$centerY", Mappings.WR_CENTER_Y));
-        cls.methods.add(intGetter(cls.name, "vertex$centerZ", Mappings.WR_CENTER_Z));
+        // Center accessors are shared with DistanceKeyHost (WorldRendererPatch) and are
+        // byte-identical; adding a second copy would be a ClassFormatError, so whichever
+        // patch runs first supplies them for both interfaces.
+        addIntGetterIfAbsent(cls, "vertex$centerX", Mappings.WR_CENTER_X);
+        addIntGetterIfAbsent(cls, "vertex$centerY", Mappings.WR_CENTER_Y);
+        addIntGetterIfAbsent(cls, "vertex$centerZ", Mappings.WR_CENTER_Z);
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cls.accept(writer);
         return writer.toByteArray();
@@ -57,6 +60,19 @@ final class ActiveSectionPatch implements Opcodes
         method.instructions.add(new InsnNode(ICONST_1));
         method.instructions.add(new InsnNode(IRETURN));
         return method;
+    }
+
+    private static void addIntGetterIfAbsent(ClassNode cls, String methodName, String fieldName)
+    {
+        for (MethodNode existing : cls.methods)
+        {
+            if (existing.name.equals(methodName) && existing.desc.equals("()I"))
+            {
+                return;
+            }
+        }
+
+        cls.methods.add(intGetter(cls.name, methodName, fieldName));
     }
 
     private static MethodNode intGetter(String owner, String methodName, String fieldName)
