@@ -26,19 +26,29 @@ justification. Architecture and the clean-room policy live in
 ### Configuration (active)
 
 `vertex.properties` is created in the game directory on first run. Every key defaults to
-vanilla behavior; set a key to `false` to skip that work for performance. Edits hot-reload
-within a second — no restart, except the two pipeline keys (`multicore`, `renderer`),
-which apply at the next launch. The generated file documents every key with a comment; the
-authoritative list lives there and in [FEATURES.md](FEATURES.md) (20 keys as of 0.4.0,
-covering render passes, pack visual features, dynamic lights, the chunk-build and
-renderer pipelines, fullbright, HUD backgrounds and diagnostics).
+vanilla behavior; set a key to `false` (or its non-default value) to change exactly that
+behavior. Edits hot-reload within a second — no restart, except the pipeline keys
+(`multicore`, `renderer`, `fastMath`), which apply at the next launch. The generated file
+documents every key with a comment; the authoritative list lives there and in
+[FEATURES.md](FEATURES.md) (45 keys as of 0.5.x, covering render passes and their
+details, per-animation and particle gates, fancy/fast decoupling, pack visual features,
+dynamic lights, the chunk-build and renderer pipelines, fullbright, the HUD, and
+diagnostics). Almost every key also has a button on the six-page Video Settings menu —
+the file and the menu write the same configuration.
 
-### Render-pass controls (active)
+### Render-pass and detail controls (active)
 
-Config-gated head-skips of whole vanilla render passes: the sky pass (sky color, stars,
-sun and moon), clouds, rain/snow rendering plus rain splash particles, void fog particles,
-and per-frame animated-texture uploads. Each costs a single static call per frame when
-enabled and removes the pass entirely when disabled.
+Config-gated head-skips of whole vanilla render passes — the sky pass, clouds, rain/snow
+rendering, void fog particles, and animated-texture uploads — each costing a single
+static call per frame when enabled. On top of the pass switches, the detail settings
+control individual elements: sun & moon, stars, depth-fog darkening, the fog start
+fraction, cloud height, per-texture animation families (water/lava/fire/portal, items),
+ambient particle families (smoke, explosions, portal, flame, water, dripping, potions,
+rain splashes), leaves and dropped-item fancy/fast independent of Graphics, the smooth
+lighting level, dynamic FOV, mipmap type, swamp colors, an FPS readout and frame-time
+lagometer, the debug profiler gate, autosave interval, a client-visual time override,
+and per-frame chunk-update budgets with an idle boost. Every one of them lives on the
+six-page Video Settings menu and in vertex.properties.
 
 ### Interactive render priority (ported, active)
 

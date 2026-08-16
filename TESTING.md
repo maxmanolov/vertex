@@ -72,7 +72,27 @@ self-disables down the ladder to the vanilla path and logs once.
   option, a Vertex option (Fullbright, Dynamic Lights), drag a slider, navigate into a
   sub-page and back via Done and via Esc, change GUI Scale on the main page (screen
   re-centers), and confirm values survive a restart. Greyed rows are reference slots
-  with no Vertex backing and must do nothing. Automated placement evidence:
+  with no honest 1.7.10 backing and must do nothing. Automated placement evidence:
   `-Dvertex.test.guiProbe=videoPages` screenshots all six pages.
+- Detail settings: toggle Sun & Moon off at day and Stars off at night (each element
+  vanishes alone, the rest of the sky stays); cycle Cloud Height and watch the cloud
+  plane lift; cycle Fog Start with fog visible; Depth Fog off brightens the fog color
+  at bedrock depths. Toggling Connected Textures, Better Grass, Custom Colors, Natural
+  Textures or Swamp Colors rebuilds the world within seconds (the settings re-mark).
+- Animations page: freeze water/lava/fire/portal individually (only that family stops);
+  Items Animated off freezes the compass/clock; smoke/flame/portal/potion particle
+  toggles stop their families while crits and block-break particles always spawn. All
+  OFF then All ON round-trips every wired key.
+- Trees/Dropped Items: force Fast and Fancy against the opposite Graphics setting and
+  confirm leaves/item entities follow the override, Default follows Graphics again.
+- Smooth Lighting Level: cycle 100% -> OFF -> 50% in a dark interior; corner shading
+  visibly weakens then partially returns; the world re-marks on each step.
+- Other page: Show FPS draws the counter top-left (hides nothing else), Lagometer draws
+  the frame-time graph under it, Time: Night darkens the sky at noon without touching
+  daylight sensors or mob spawning (gameplay stays day), Autosave: 3min spaces the
+  "Saving chunks" pauses out, Debug Profiler OFF makes F3+Shift show no pie chart.
+- Performance page: Chunk Updates 1 vs 5 visibly changes world-load fill rate;
+  Dynamic Updates on + standing still finishes loading faster; Fast Math and Fast
+  Render read back correctly after the restart they announce.
 - Installer: `java -jar vertex-<v>.jar install` into a fresh .minecraft with vanilla
   1.7.10 present; profile appears and launches.
