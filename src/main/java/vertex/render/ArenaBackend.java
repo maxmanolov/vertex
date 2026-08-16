@@ -371,6 +371,8 @@ public final class ArenaBackend implements RenderBackend
     {
         int blocks = 0;
         long live = 0L;
+        int freeBlocks = 0;
+        int largestFree = 0;
 
         for (int pass = 0; pass < 2; ++pass)
         {
@@ -380,17 +382,29 @@ public final class ArenaBackend implements RenderBackend
 
                 for (int i = 0; i < arena.blocks.size(); ++i)
                 {
-                    live += arena.blocks.get(i).allocator.liveBytes();
+                    ArenaAllocator allocator = arena.blocks.get(i).allocator;
+                    live += allocator.liveBytes();
+                    freeBlocks += allocator.freeBlockCount();
+
+                    if (allocator.largestFreeBlock() > largestFree)
+                    {
+                        largestFree = allocator.largestFreeBlock();
+                    }
                 }
             }
         }
 
-        long fragPct = this.capacityBytes > 0L
+        // freePct is headroom (unreserved capacity), not fragmentation - the previous
+        // fragPct label conflated the two. Fragmentation shows as freeBlocks growing
+        // while largestFreeKB shrinks: many small holes instead of a few big ones.
+        long freePct = this.capacityBytes > 0L
             ? (this.capacityBytes - live) * 100L / this.capacityBytes : 0L;
         String report = " arena[blocks=" + blocks
             + " capMB=" + this.capacityBytes / (1024L * 1024L)
             + " liveMB=" + live / (1024L * 1024L)
-            + " fragPct=" + fragPct
+            + " freePct=" + freePct
+            + " freeBlocks=" + freeBlocks
+            + " largestFreeKB=" + largestFree / 1024
             + " batches=" + this.batchesIssued
             + " drained=" + this.blocksDrained
             + " multiDraw=" + this.multiDraw + "]";
