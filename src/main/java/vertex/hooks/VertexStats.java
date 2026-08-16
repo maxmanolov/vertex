@@ -70,7 +70,6 @@ public final class VertexStats
         long reportRebuilds = rebuilds;
         LogWrapper.info("[Vertex] Last 60s: immediate promotions=" + reportPromotions + " rebuilds=" + reportRebuilds
             + " glStateCalls=" + gl[0] + " glRedundant=" + gl[1] + " redundantPct=" + redundantPct
-            + (gl[2] > 0L ? " glSkipped=" + gl[2] : "")
             + " ctmApplied=" + VertexCtm.applied + " skyDraws=" + VertexSky.draws + " entityVariants=" + VertexRandomEntities.applied + " emptyReplays=" + emptyReplays + " naturalVariants=" + VertexIcons.naturalVariants + " iconHits=" + VertexIcons.hits + " iconSideHits=" + VertexIcons.sideHits
             + " buildQ=" + VertexMulticore.pendingDepth()
             + " fbSkippedRemarks=" + VertexFullbright.skippedRemarks

@@ -3,30 +3,28 @@ package vertex.hooks;
 import org.lwjgl.opengl.GL11;
 
 /**
- * Every game call to the three highest-frequency GL state functions routes through these
- * wrappers (woven by GLCallCountPatch across all game classes). Two roles:
+ * Fast Render investigation instrumentation (docs/ROADMAP.md #5): every game call to the
+ * three highest-frequency GL state functions routes through these wrappers (woven
+ * class-wide by GLCallCountPatch), counting total and redundant transitions before
+ * forwarding. Redundant means a call that sets state to its current value - the ratio
+ * measured in real play is the upper bound on state-batching wins.
  *
- * Counting (always on): total and redundant transitions per minute ride the diagnostics
- * line - the redundancy ratio measured in real play is the upper bound on state-batching
- * wins (docs/ROADMAP.md #5).
+ * The model behind the counts lives in {@link GLStateTracker}: per-unit sampler and
+ * texgen capabilities, per-(unit, target) bindings, and invalidation at the two points
+ * GL state changes behind the wrappers' back (glPopAttrib, glDeleteTextures - both also
+ * woven), so the redundancy figure stays honest across those events.
  *
- * Skipping (glStateCache=true, restart required): a call the tracker knows to be a
- * no-op returns without touching the driver. The tracker is conservative - unknown
- * state always forwards - and it invalidates wherever GL can change behind it:
- * glPopAttrib clears everything, glDeleteTextures forgets the ids (glGenTextures can
- * reissue them). Correctness gate before any default flip: bit-identical frame captures
- * against a cache-off run of the same fixture.
+ * Actually skipping the redundant calls was built and measured on 2026-08-15: with
+ * 4.5M skips per minute engaged, frame times did not move on macOS (ftP50/ftP99
+ * identical), so the skip does not exist - the counters stay because they price the
+ * opportunity for platforms where drivers are not this cheap.
  */
 public final class VertexGLStats
 {
-    /** Resolved once at class load, like the renderer selector: zero per-call cost. */
-    private static final boolean SKIP = VertexConfig.enabled("glStateCache");
-
     private static final GLStateTracker TRACKER = new GLStateTracker();
 
     private static long stateCalls;
     private static long redundantCalls;
-    private static long skippedCalls;
 
     public static void activeTexture(int unit)
     {
@@ -47,12 +45,6 @@ public final class VertexGLStats
         if (TRACKER.redundantEnable(cap))
         {
             ++redundantCalls;
-
-            if (SKIP)
-            {
-                ++skippedCalls;
-                return;
-            }
         }
 
         GL11.glEnable(cap);
@@ -65,12 +57,6 @@ public final class VertexGLStats
         if (TRACKER.redundantDisable(cap))
         {
             ++redundantCalls;
-
-            if (SKIP)
-            {
-                ++skippedCalls;
-                return;
-            }
         }
 
         GL11.glDisable(cap);
@@ -83,12 +69,6 @@ public final class VertexGLStats
         if (TRACKER.redundantBind(target, texture))
         {
             ++redundantCalls;
-
-            if (SKIP)
-            {
-                ++skippedCalls;
-                return;
-            }
         }
 
         GL11.glBindTexture(target, texture);
@@ -116,13 +96,12 @@ public final class VertexGLStats
         GL11.glDeleteTextures(textures);
     }
 
-    /** Drained by the per-minute diagnostics report; returns {total, redundant, skipped}. */
+    /** Drained by the per-minute diagnostics report; returns {total, redundant}. */
     public static long[] drain()
     {
-        long[] out = {stateCalls, redundantCalls, skippedCalls};
+        long[] out = {stateCalls, redundantCalls};
         stateCalls = 0L;
         redundantCalls = 0L;
-        skippedCalls = 0L;
         return out;
     }
 
