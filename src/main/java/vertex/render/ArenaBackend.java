@@ -235,6 +235,11 @@ public final class ArenaBackend implements RenderBackend
             }
         }
 
+        if (!ordered)
+        {
+            this.plan.sortOpaqueBatches();
+        }
+
         int currentFormat = 0;
         int boundBuffer = 0;
 

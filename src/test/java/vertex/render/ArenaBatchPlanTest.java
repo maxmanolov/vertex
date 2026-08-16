@@ -48,6 +48,55 @@ public class ArenaBatchPlanTest
     }
 
     @Test
+    public void opaqueSortOrdersBatchesByStableIdentityRegardlessOfArrival()
+    {
+        // The same three batches arriving in two different (worker-completion) orders
+        // must submit identically after the sort: region first, buffer id last.
+        ArenaBatchPlan early = new ArenaBatchPlan();
+        early.add(false, item(9, 0, 6, 1024, 0));
+        early.add(false, item(2, 0, 6, 0, 0));
+        early.add(false, item(5, 0, 6, 0, 1024));
+        early.sortOpaqueBatches();
+
+        ArenaBatchPlan late = new ArenaBatchPlan();
+        late.add(false, item(5, 0, 6, 0, 1024));
+        late.add(false, item(9, 0, 6, 1024, 0));
+        late.add(false, item(2, 0, 6, 0, 0));
+        late.sortOpaqueBatches();
+
+        assertEquals(3, early.batchCount());
+
+        for (int i = 0; i < 3; ++i)
+        {
+            assertEquals("buffer order run-independent",
+                early.batch(i).buffer, late.batch(i).buffer);
+            assertEquals(early.batch(i).minusX, late.batch(i).minusX);
+            assertEquals(early.batch(i).minusZ, late.batch(i).minusZ);
+        }
+
+        assertEquals("region (0,0) sorts first", 2, early.batch(0).buffer);
+        assertEquals("region (0,1024) second", 5, early.batch(1).buffer);
+        assertEquals("region (1024,0) third", 9, early.batch(2).buffer);
+    }
+
+    @Test
+    public void opaqueSortKeepsRangeContentAndWalkOrderInsideEachBatch()
+    {
+        ArenaBatchPlan plan = new ArenaBatchPlan();
+        plan.add(false, item(3, 0, 24, 1024, 0));
+        plan.add(false, item(1, 0, 12, 0, 0));
+        plan.add(false, item(1, 64, 18, 0, 0));
+        plan.sortOpaqueBatches();
+
+        assertEquals(1, plan.batch(0).buffer);
+        assertEquals(2, plan.batch(0).size);
+        assertEquals("walk order inside the batch survives the sort",
+            0, plan.batch(0).firsts[0]);
+        assertEquals(64, plan.batch(0).firsts[1]);
+        assertEquals(3, plan.batch(1).buffer);
+    }
+
+    @Test
     public void orderedSplitsOnEveryRegionFlipAndPreservesWalkOrder()
     {
         ArenaBatchPlan plan = new ArenaBatchPlan();
