@@ -163,6 +163,8 @@ public final class Mappings
     public static final String RG_DBG_SKIPPED_PASS = "ac";
     public static final String RG_GL_RENDER_LISTS = "af";
     public static final String RG_MC = "A";
+    /** RenderGlobal.sortedWorldRenderers: the distance-ordered copy of the full grid. */
+    public static final String RG_SORTED_RENDERERS = "u";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
     public static final String RG_RENDER_CHUNKS_WIDE = "w";
@@ -173,6 +175,9 @@ public final class Mappings
     public static final String WR_POS_X = "c";
     public static final String WR_POS_Y = "d";
     public static final String WR_POS_Z = "e";
+    public static final String WR_CENTER_X = "n";
+    public static final String WR_CENTER_Y = "o";
+    public static final String WR_CENTER_Z = "p";
     public static final String WR_SET_POSITION = "a";
     public static final String WR_SET_POSITION_DESC = "(III)V";
     public static final String WR_UPDATE_RENDERER = "a";
