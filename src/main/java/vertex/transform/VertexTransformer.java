@@ -45,6 +45,18 @@ public class VertexTransformer implements IClassTransformer
                     "vertex/hooks/VertexMulticore", "onRenderersReloadedHook");
                 result = HeadGuardPatch.apply(result, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE, Mappings.RG_MARK_BLOCK_FOR_RENDER_UPDATE_DESC,
                     "vertex/hooks/VertexFullbright", "interceptLightRemark", HeadGuardPatch.THIS_ONLY);
+                // The full renderer grid is sorted on load and after camera movement.
+                // Derive one primitive distance per section instead of repeating the
+                // same arithmetic for every comparator invocation. The movement method
+                // also sorts RenderLists; the hook delegates that unrelated array.
+                result = RerouteStaticInMethodPatch.apply(result,
+                    Mappings.RG_LOAD_RENDERERS, Mappings.RG_LOAD_RENDERERS_DESC,
+                    "java/util/Arrays", "sort", "([Ljava/lang/Object;Ljava/util/Comparator;)V",
+                    "vertex/hooks/VertexRenderOrder", "sort");
+                result = RerouteStaticInMethodPatch.apply(result,
+                    Mappings.RG_SORT_AND_RENDER, Mappings.RG_SORT_AND_RENDER_DESC,
+                    "java/util/Arrays", "sort", "([Ljava/lang/Object;Ljava/util/Comparator;)V",
+                    "vertex/hooks/VertexRenderOrder", "sort");
                 // Ambient-particle gates: a suppressed spawn returns null, exactly like
                 // vanilla's own distance culling in the same method.
                 result = HeadGuardPatch.apply(result, Mappings.RG_DO_SPAWN_PARTICLE, Mappings.RG_DO_SPAWN_PARTICLE_DESC,
