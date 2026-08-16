@@ -80,13 +80,22 @@ public final class VertexConfig
 
     private static final Properties values = new Properties();
     private static File file;
-    private static long lastCheck = 0L;
+    private static volatile long lastCheck = 0L;
     private static long lastModified = -1L;
 
-    public static synchronized boolean enabled(String key)
+    /**
+     * Published read-only copy of {@link #values}: the hot readers (render thread per
+     * frame, worker threads per icon lookup during tessellation) take no lock and touch
+     * no Hashtable synchronization - each read is one volatile load of the latest
+     * fully-built map. Every mutation path republishes it before returning.
+     */
+    private static volatile java.util.HashMap<String, String> snapshot =
+        new java.util.HashMap<String, String>();
+
+    public static boolean enabled(String key)
     {
-        refresh();
-        String value = values.getProperty(key);
+        maybeRefresh();
+        String value = snapshot.get(key);
 
         if (value == null)
         {
@@ -139,10 +148,10 @@ public final class VertexConfig
      * value resolves to the key's declared default, falling back to the caller's default
      * for undeclared keys - the same never-enable-by-accident posture as enabled().
      */
-    public static synchronized String value(String key, String fallback)
+    public static String value(String key, String fallback)
     {
-        refresh();
-        String value = values.getProperty(key);
+        maybeRefresh();
+        String value = snapshot.get(key);
 
         if (value == null || value.trim().isEmpty())
         {
@@ -195,6 +204,7 @@ public final class VertexConfig
     {
         refresh();
         values.setProperty(key, value);
+        publish();
 
         if (bulkDepth > 0)
         {
@@ -204,6 +214,19 @@ public final class VertexConfig
         }
 
         persist(key + "=" + value);
+    }
+
+    /** Rebuilds and republishes the lock-free read copy; call with the lock held. */
+    private static void publish()
+    {
+        java.util.HashMap<String, String> copy = new java.util.HashMap<String, String>();
+
+        for (String name : values.stringPropertyNames())
+        {
+            copy.put(name, values.getProperty(name));
+        }
+
+        snapshot = copy;
     }
 
     public static synchronized void setAndSave(String key, boolean value)
@@ -232,6 +255,20 @@ public final class VertexConfig
         {
             // The in-memory change already applied; a failed save only loses persistence.
             LogWrapper.warning("[Vertex] Could not save vertex.properties: " + e);
+        }
+    }
+
+    /** Lock-free fast path: one volatile read per call between the 1s re-checks. */
+    private static void maybeRefresh()
+    {
+        if (System.currentTimeMillis() - lastCheck < 1000L)
+        {
+            return;
+        }
+
+        synchronized (VertexConfig.class)
+        {
+            refresh();
         }
     }
 
@@ -283,6 +320,7 @@ public final class VertexConfig
 
                 values.clear();
                 values.putAll(loaded);
+                publish();
                 LogWrapper.info("[Vertex] Loaded configuration from " + file.getName());
             }
         }
@@ -292,6 +330,7 @@ public final class VertexConfig
             // values active after a malformed hot reload (#101). lastModified already
             // records this file version, so unchanged bad content logs only once.
             values.clear();
+            publish();
             LogWrapper.warning("[Vertex] Could not read vertex.properties, using defaults: " + e);
         }
     }
