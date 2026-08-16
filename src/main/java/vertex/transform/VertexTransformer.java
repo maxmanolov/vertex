@@ -170,6 +170,8 @@ public class VertexTransformer implements IClassTransformer
                 // Mipmap type: cache the terrain atlas id and apply the filter choice.
                 result = TailInstanceCallPatch.apply(result, Mappings.TM_LOAD_ATLAS, Mappings.TM_LOAD_ATLAS_DESC,
                     "vertex/hooks/VertexQuality", "afterAtlasLoad");
+                result = TailInstanceCallPatch.apply(result, Mappings.TM_LOAD_ATLAS, Mappings.TM_LOAD_ATLAS_DESC,
+                    "vertex/hooks/VertexClearWater", "afterAtlasLoad");
             }
             else if (Mappings.MINECRAFT.equals(name))
             {

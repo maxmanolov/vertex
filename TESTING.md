@@ -92,6 +92,10 @@ self-disables down the ladder to the vanilla path and logs once.
 - Better snow: in a snowy biome set `betterSnow=true`, place a fence and a torch on
   ground beside snow layers; a thin snow layer renders beneath both, and breaking the
   neighboring snow clears it after the rebuild. Off restores bare ground.
+- Clear Water: stand over deep water and flip Clear Water ON - the bottom becomes
+  visible within a tick (log: "Clear water armed (2 sprites)"); OFF restores vanilla
+  opacity bit-exact. Flip once with Water Animated OFF to confirm the immediate
+  re-upload covers frozen animations too.
 - Trees/Dropped Items: force Fast and Fancy against the opposite Graphics setting and
   confirm leaves/item entities follow the override, Default follows Graphics again.
 - Smooth Lighting Level: cycle 100% -> OFF -> 50% in a dark interior; corner shading

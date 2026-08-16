@@ -150,6 +150,12 @@ public final class VertexVideoMenu
                         VertexRenderer.requestSettingsRemark();
                     }
 
+                    if ("clearWater".equals(slot.ref))
+                    {
+                        // Texture-side setting: rewrite the frame data and re-upload now.
+                        VertexClearWater.applyFromMenu();
+                    }
+
                     return true;
                 case VideoMenuLayout.KIND_FULLBRIGHT:
                     VertexConfig.setAndSave("fullbright", !VertexConfig.enabled("fullbright"));
@@ -533,7 +539,7 @@ public final class VertexVideoMenu
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
             "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler",
             "smoothFps", "dynamicUpdates", "fastMath", "swampColors", "betterSnow",
-            "smoothBiomes"};
+            "smoothBiomes", "clearWater"};
         boolean remark = false;
         VertexConfig.beginBulkSave();
 
@@ -574,6 +580,7 @@ public final class VertexVideoMenu
         }
 
         VertexQuality.applyMipmapType();
+        VertexClearWater.applyFromMenu();
         // The renderer selector (Fast Render's backing key) stays outside Reset's
         // scope: a backend swap needs a restart and should remain an explicit choice.
         VertexGraphics.applyTrees(settings);
