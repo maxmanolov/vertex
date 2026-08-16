@@ -364,6 +364,17 @@ public final class Mappings
     public static final String MATH_COS = "b";
     public static final String MATH_TRIG_DESC = "(F)F";
 
+    // --- quality surface (javap aiv BiomeGenSwamp, bpz/bpp textures) ------------------
+    // The swamp biome aiv (extends ahu) special-cases its colors: grass b(III)I picks
+    // 5011004/6975545 by perlin, foliage c(III)I returns 6975545 flat; the base class
+    // versions sample the standard temperature/rainfall colormaps. TextureMap extends
+    // bpp whose b()I is getGlTextureId.
+    public static final String SWAMP_BIOME = "aiv";
+    public static final String BIOME_GRASS_COLOR = "b";
+    public static final String BIOME_FOLIAGE_COLOR = "c";
+    public static final String BIOME_COLOR_DESC = "(III)I";
+    public static final String TEXTURE_GL_ID = "b";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";

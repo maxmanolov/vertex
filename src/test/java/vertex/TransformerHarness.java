@@ -109,6 +109,14 @@ public final class TransformerHarness implements Opcodes
             return intConstValue;
         }
 
+        public static boolean guardValue = true;
+
+        /** Super-fallback guard: true keeps the subclass body. */
+        public static boolean guard()
+        {
+            return guardValue;
+        }
+
         public static void reset()
         {
             headCalls = 0;
@@ -299,6 +307,50 @@ public final class TransformerHarness implements Opcodes
         m.visitInsn(FCONST_2);
         m.visitInsn(FMUL);
         m.visitInsn(FRETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A superclass with public int <methodName>(int,int,int) returning 1. */
+    public static byte[] intTriSuperClass(String internalName, String methodName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC, methodName, "(III)I", null, null);
+        m.visitCode();
+        m.visitInsn(ICONST_1);
+        m.visitInsn(IRETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A subclass overriding <methodName>(III)I with a constant 2. */
+    public static byte[] intTriSubClass(String internalName, String superName, String methodName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, superName, null);
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, superName, "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC, methodName, "(III)I", null, null);
+        m.visitCode();
+        m.visitInsn(ICONST_2);
+        m.visitInsn(IRETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();
         cw.visitEnd();

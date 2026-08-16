@@ -65,6 +65,8 @@ final class VideoMenuLayout
 
     static final int KIND_FAST_RENDER = 20;
 
+    static final int KIND_MIPMAP_TYPE = 21;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -284,18 +286,18 @@ final class VideoMenuLayout
             case PAGE_QUALITY:
                 left.add(slider("F"));                                   // Mipmap Levels
                 left.add(slider("G"));                                   // Anisotropic Filtering
-                left.add(fixed("Clear Water: §cOFF"));
+                left.add(fixed("Clear Water: §cOFF"));                   // tracked enhancement
                 left.add(vertex("Better Grass", "betterGrass"));
-                left.add(fixed("Custom Fonts: §cOFF"));
-                left.add(fixed("Swamp Colors: §aON"));
+                left.add(fixed("Custom Fonts: §cOFF"));                  // tracked enhancement
+                left.add(vertex("Swamp Colors", "swampColors"));
                 left.add(vertex("Connected Textures", "connectedTextures"));
                 left.add(vertex("Custom Sky", "customSky"));
-                right.add(fixed("Mipmap Type: Nearest"));
-                right.add(fixed("Antialiasing: §cOFF"));
+                right.add(new Slot(KIND_MIPMAP_TYPE, "Mipmap Type", "mipmapType"));
+                right.add(fixed("Antialiasing: §cOFF"));                 // tracked enhancement
                 right.add(vertex("Random Mobs", "randomEntities"));
-                right.add(fixed("Better Snow: §cOFF"));
+                right.add(fixed("Better Snow: §cOFF"));                  // tracked enhancement
                 right.add(vertex("Custom Colors", "customColors"));
-                right.add(fixed("Smooth Biomes: §cOFF"));
+                right.add(fixed("Smooth Biomes: §cOFF"));                // 3x3 blend is vanilla-on
                 right.add(vertex("Natural Textures", "naturalTextures"));
                 return;
             case PAGE_PERFORMANCE:
@@ -375,7 +377,8 @@ final class VideoMenuLayout
     static boolean rebakesSections(String key)
     {
         return "betterGrass".equals(key) || "naturalTextures".equals(key)
-            || "connectedTextures".equals(key) || "customColors".equals(key);
+            || "connectedTextures".equals(key) || "customColors".equals(key)
+            || "swampColors".equals(key);
     }
 
     /** Every Vertex key wired on the Animations page: the All ON / All OFF scope. */
@@ -418,6 +421,18 @@ final class VideoMenuLayout
     static String fastRenderLabel(boolean on)
     {
         return "Fast Render: " + (on ? "§aON" : "§cOFF");
+    }
+
+    /** Mipmap Type cycle: Nearest <-> Linear. */
+    static String nextMipmapType(String current)
+    {
+        return "linear".equals(current == null ? "" : current.trim()) ? "nearest" : "linear";
+    }
+
+    static String mipmapTypeLabel(String current)
+    {
+        return "Mipmap Type: "
+            + ("linear".equals(current == null ? "" : current.trim()) ? "Linear" : "Nearest");
     }
 
     /** Tri-state cycle: Default -> Fast -> Fancy -> Default. */
