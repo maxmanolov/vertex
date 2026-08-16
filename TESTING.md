@@ -96,6 +96,10 @@ self-disables down the ladder to the vanilla path and logs once.
   visible within a tick (log: "Clear water armed (2 sprites)"); OFF restores vanilla
   opacity bit-exact. Flip once with Water Animated OFF to confirm the immediate
   re-upload covers frozen animations too.
+- Fullscreen Mode: cycle to a smaller mode (e.g. 1280x720), press F11 - the log shows
+  "Fullscreen mode 1280x720 applied" and the fullscreen resolution matches; Default
+  restores the vanilla desktop-mode path (no log line). A value from a disconnected
+  monitor falls back to desktop with a one-time log note.
 - Trees/Dropped Items: force Fast and Fancy against the opposite Graphics setting and
   confirm leaves/item entities follow the override, Default follows Graphics again.
 - Smooth Lighting Level: cycle 100% -> OFF -> 50% in a dark interior; corner shading

@@ -69,6 +69,8 @@ final class VideoMenuLayout
 
     static final int KIND_ANTIALIAS = 22;
 
+    static final int KIND_FULLSCREEN_MODE = 23;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -322,7 +324,7 @@ final class VideoMenuLayout
                 right.add(vertex("Debug Profiler", "debugProfiler"));
                 right.add(new Slot(KIND_AUTOSAVE, "Autosave", "autosave"));
                 right.add(new Slot(KIND_TIME, "Time", "timeOverride"));
-                right.add(fixed("Fullscreen Mode: Default"));
+                right.add(new Slot(KIND_FULLSCREEN_MODE, "Fullscreen Mode", "fullscreenMode"));
                 return;
             default:                                                     // PAGE_VIDEO
                 left.add(vanilla("m"));                                  // Graphics
@@ -490,6 +492,14 @@ final class VideoMenuLayout
         String trimmed = current == null ? "" : current.trim();
         String value = trimmed.equals("180") ? "3min" : trimmed.equals("1800") ? "30min" : "45s";
         return "Autosave: " + value;
+    }
+
+    /** "Default" for the desktop mode, otherwise the stored WxH verbatim. */
+    static String fullscreenModeLabel(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        String value = trimmed.isEmpty() || trimmed.equals("default") ? "Default" : trimmed;
+        return "Fullscreen Mode: " + value;
     }
 
     /** Chunk Updates cycle: 1..5 then wrap; anything unparsable restarts at the default 4. */

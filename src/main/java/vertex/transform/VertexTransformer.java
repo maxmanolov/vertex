@@ -201,6 +201,14 @@ public class VertexTransformer implements IClassTransformer
                 result = FieldReadReroutePatch.apply(result,
                     Mappings.GAME_SETTINGS, Mappings.GS_SHOW_DEBUG_CHART, "Z",
                     "vertex/hooks/VertexHud", "debugChartEnabled");
+                // Fullscreen Mode: guard the fullscreen display-mode chooser; when a
+                // WxH override applies, the hook has set the mode and vanilla's
+                // desktop-mode body is skipped (toggleFullscreen re-reads the live
+                // mode for its resize either way).
+                result = HeadGuardPatch.apply(result,
+                    Mappings.MC_FULLSCREEN_MODE, Mappings.MC_FULLSCREEN_MODE_DESC,
+                    "vertex/hooks/VertexFullscreen", "overrideFullscreenMode",
+                    HeadGuardPatch.THIS_ONLY);
             }
             else if (Mappings.RENDER_BLOCKS.equals(name))
             {

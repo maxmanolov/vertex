@@ -213,6 +213,12 @@ public final class VertexVideoMenu
                     buttonDisplayField.set(button, aoLevelLabel());
                     VertexRenderer.requestSettingsRemark();
                     return true;
+                case VideoMenuLayout.KIND_FULLSCREEN_MODE:
+                    VertexConfig.setAndSaveValue("fullscreenMode",
+                        VertexFullscreen.nextMode(VertexConfig.value("fullscreenMode", "default")));
+                    buttonDisplayField.set(button, VideoMenuLayout.fullscreenModeLabel(
+                        VertexConfig.value("fullscreenMode", "default")));
+                    return true;
                 case VideoMenuLayout.KIND_AUTOSAVE:
                     VertexConfig.setAndSaveValue("autosave",
                         VideoMenuLayout.nextAutosave(VertexConfig.value("autosave", "45")));
@@ -383,6 +389,9 @@ public final class VertexVideoMenu
                 break;
             case VideoMenuLayout.KIND_AO_LEVEL:
                 label = aoLevelLabel();
+                break;
+            case VideoMenuLayout.KIND_FULLSCREEN_MODE:
+                label = VideoMenuLayout.fullscreenModeLabel(VertexConfig.value("fullscreenMode", "default"));
                 break;
             case VideoMenuLayout.KIND_AUTOSAVE:
                 label = VideoMenuLayout.autosaveLabel(VertexConfig.value("autosave", "45"));
@@ -568,6 +577,7 @@ public final class VertexVideoMenu
             VertexConfig.setAndSaveValue("chunkUpdates", "4");
             VertexConfig.setAndSaveValue("mipmapType", "nearest");
             VertexConfig.setAndSaveValue("antialiasing", "0");
+            VertexConfig.setAndSaveValue("fullscreenMode", "default");
         }
         finally
         {
