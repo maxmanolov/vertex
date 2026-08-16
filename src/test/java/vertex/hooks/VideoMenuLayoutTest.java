@@ -149,8 +149,10 @@ public final class VideoMenuLayoutTest
         assertEquals("F", at(quality, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
         assertEquals("G", at(quality, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
         // better grass, custom sky, random mobs, custom colors, natural textures,
-        // connected textures, swamp colors, better snow, smooth biomes - all live keys.
-        assertEquals(9, kindCount(quality, VideoMenuLayout.KIND_VERTEX));
+        // connected textures, swamp colors, better snow, smooth biomes, clear water -
+        // all live keys.
+        assertEquals(10, kindCount(quality, VideoMenuLayout.KIND_VERTEX));
+        assertEquals("clearWater", at(quality, LEFT, VideoMenuLayout.rowY(H, 2)).ref);
         assertEquals("betterSnow", at(quality, RIGHT, VideoMenuLayout.rowY(H, 3)).ref);
         assertEquals("smoothBiomes", at(quality, RIGHT, VideoMenuLayout.rowY(H, 5)).ref);
         assertEquals("connectedTextures",

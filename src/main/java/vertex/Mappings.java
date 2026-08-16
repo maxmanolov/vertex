@@ -444,6 +444,22 @@ public final class Mappings
     public static final String TM_LOAD_ATLAS_DESC = "(Lbqy;)V";
     public static final String TM_UPDATE_ANIMATIONS = "d";
     public static final String TM_UPDATE_ANIMATIONS_DESC = "()V";
+    // Clear Water frame surgery: bqd.j()V reads the frame list `getfield a:Ljava/util/List;`
+    // (offs 51/110/122), sprite geometry `e/f/c/d` (width/height/originX/originY, offs
+    // 134-147) and the frame index `g:I` (offs 19/33/72), then uploads the current frame
+    // through `invokestatic bqi.a:([[IIIIIZZ)V` (off 152, both booleans iconst_0).
+    // bpz.d()V binds the atlas and walks `getfield e:Ljava/util/List;` calling bqd.j()
+    // per element (offs 7-37) - the animated-sprite list. Sprite names: aji <clinit>
+    // registers block 8/9 with icon names "water_flow"/"water_still" (ldc offs 365/410).
+    public static final String SPRITE_FRAMES = "a";
+    public static final String SPRITE_WIDTH = "e";
+    public static final String SPRITE_HEIGHT = "f";
+    public static final String SPRITE_ORIGIN_X = "c";
+    public static final String SPRITE_ORIGIN_Y = "d";
+    public static final String SPRITE_FRAME_INDEX = "g";
+    public static final String TM_ANIMATED_SPRITES = "e";
+    public static final String TEXTURE_UTIL = "bqi";
+    public static final String TEX_UPLOAD = "a";
     public static final String WC_DO_VOID_FOG_PARTICLES = "C";
     public static final String WC_DO_VOID_FOG_PARTICLES_DESC = "(III)V";
 

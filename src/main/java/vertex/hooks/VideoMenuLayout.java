@@ -288,7 +288,7 @@ final class VideoMenuLayout
             case PAGE_QUALITY:
                 left.add(slider("F"));                                   // Mipmap Levels
                 left.add(slider("G"));                                   // Anisotropic Filtering
-                left.add(fixed("Clear Water: §cOFF"));                   // tracked enhancement
+                left.add(vertex("Clear Water", "clearWater"));
                 left.add(vertex("Better Grass", "betterGrass"));
                 left.add(fixed("Custom Fonts: §cOFF"));                  // tracked enhancement
                 left.add(vertex("Swamp Colors", "swampColors"));
