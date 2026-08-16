@@ -165,6 +165,8 @@ public final class Mappings
     public static final String RG_DBG_SKIPPED_PASS = "ac";
     public static final String RG_GL_RENDER_LISTS = "af";
     public static final String RG_MC = "A";
+    /** RenderGlobal.sortedWorldRenderers: the distance-ordered copy of the full grid. */
+    public static final String RG_SORTED_RENDERERS = "u";
     /* RenderGlobal.cloudTickCounter=field_72773_u=E drives the built-in cloud drift.
      * Both cloud paths interpolate the camera fold X from lastTickPosX p (b(F)V offs
      * 255-275, c(F)V offs 72-92) and Z from lastTickPosZ r (offs 299-319 / 120-140),

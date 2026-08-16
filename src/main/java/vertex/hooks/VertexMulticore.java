@@ -125,6 +125,12 @@ public final class VertexMulticore
         }
     }
 
+    /** True only while a worker is executing the wrapped vanilla build body. */
+    public static boolean isWorkerBuild()
+    {
+        return currentBuild.get() != null;
+    }
+
     /** Head guard on WorldRenderer.updateRenderer: true = skip the vanilla body. */
     public static boolean interceptUpdate(Object renderer, Object entity)
     {
@@ -699,6 +705,14 @@ public final class VertexMulticore
         else
         {
             legacyReplay(build);
+        }
+
+        // Publish after either replay path. Fully empty builds capture no pass and
+        // therefore never enter installWorkerBuild, but they still have to retire a
+        // section that carried geometry before this rebuild.
+        if (VertexRenderer.MANAGED)
+        {
+            VertexActiveSections.built(renderer);
         }
 
         // Tile-entity reconciliation deferred from the worker: removals are the renderers

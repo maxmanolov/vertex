@@ -28,6 +28,18 @@ public class VertexTransformer implements IClassTransformer
             {
                 LogWrapper.info("[Vertex] Patching WorldRenderer (" + name + ")");
                 result = WorldRendererPatch.apply(result);
+
+                if (vertex.hooks.VertexRenderer.MANAGED)
+                {
+                    result = ActiveSectionPatch.apply(result);
+                    // Attach to the original returns before interceptUpdate adds its
+                    // synthetic worker-submission return at the method head.
+                    result = TailInstanceCallPatch.apply(result, Mappings.WR_UPDATE_RENDERER,
+                        Mappings.WR_UPDATE_RENDERER_DESC, "vertex/hooks/VertexActiveSections", "built");
+                    result = HeadInstanceInt3CallPatch.apply(result, Mappings.WR_SET_POSITION,
+                        Mappings.WR_SET_POSITION_DESC, "vertex/hooks/VertexActiveSections", "beforeReposition");
+                }
+
                 result = HeadGuardPatch.apply(result, Mappings.WR_UPDATE_RENDERER, Mappings.WR_UPDATE_RENDERER_DESC,
                     "vertex/hooks/VertexMulticore", "interceptUpdate", HeadGuardPatch.THIS_AND_OBJECT);
                 result = HeadGuardPatch.apply(result, Mappings.WR_UPDATE_RENDERER_SORT, Mappings.WR_UPDATE_RENDERER_SORT_DESC,
@@ -71,6 +83,11 @@ public class VertexTransformer implements IClassTransformer
 
                 if (vertex.hooks.VertexRenderer.MANAGED)
                 {
+                    result = ActiveRenderArrayPatch.apply(result);
+                    // No second reroute of the same Arrays.sort call: VertexRenderOrder
+                    // owns that single anchor above and notifies the active-section
+                    // registry from its tail, so neither feature depends on the order
+                    // these patches are woven in.
                     // Managed section-mesh pipeline: a backend that owns submission draws
                     // the pass here instead of vanilla's glCallLists batches. Woven before
                     // the profiler brackets so the brackets time whichever path runs.

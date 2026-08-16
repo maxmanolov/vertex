@@ -154,8 +154,22 @@ final class WorldRendererPatch implements Opcodes
         return writer.toByteArray();
     }
 
+    /**
+     * Idempotent: ActiveSectionPatch injects byte-identical center bridges for its own
+     * interface, and a class file may not declare the same name+descriptor twice (the
+     * JVM rejects it with ClassFormatError). Whichever patch runs first supplies the
+     * accessor for both interfaces, so neither depends on the other's weave order.
+     */
     private static void addIntFieldBridge(ClassNode cls, String methodName, String fieldName)
     {
+        for (MethodNode existing : cls.methods)
+        {
+            if (existing.name.equals(methodName) && existing.desc.equals("()I"))
+            {
+                return;
+            }
+        }
+
         MethodNode method = new MethodNode(ACC_PUBLIC, methodName, "()I", null, null);
         method.instructions.add(new VarInsnNode(ALOAD, 0));
         method.instructions.add(new FieldInsnNode(GETFIELD, cls.name, fieldName, "I"));

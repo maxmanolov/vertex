@@ -28,8 +28,23 @@ public final class VertexRenderOrder
     private static Field offsetZ;
     private static boolean disabled;
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    /**
+     * The single hook owning vanilla's renderer-array Arrays.sort call sites. It orders
+     * the array, then hands it to the active-section registry: keeping one anchor for
+     * this instruction is what lets the cached-key ordering and the mesh-bearing
+     * traversal registry coexist without depending on transformer weave order.
+     */
+    @SuppressWarnings("rawtypes")
     public static void sort(Object[] values, Comparator comparator)
+    {
+        order(values, comparator);
+        // Every exit above is a completed sort, including the vanilla fallbacks, so the
+        // registry always sees the final order.
+        VertexActiveSections.onSorted(values);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void order(Object[] values, Comparator comparator)
     {
         if (disabled || values.length == 0 || !(values[0] instanceof DistanceKeyHost))
         {
