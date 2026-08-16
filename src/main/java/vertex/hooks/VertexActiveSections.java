@@ -16,7 +16,14 @@ import vertex.api.ActiveSection;
 /** Client-thread registry of built sections that carry at least one render pass. */
 public final class VertexActiveSections
 {
-    /** Vanilla's occlusion path unconditionally touches the nearest 27 entries. */
+    /**
+     * Floor for swapping in the compact array. Vanilla's occlusion path opens with an
+     * unclamped prefix over the nearest sixteen entries - sortAndRender calls the query
+     * helper a(0,16), marks u[0..15], then renders that range, all without consulting
+     * u.length; only from the second stride onward does it clamp the bound to
+     * arraylength (bma.a(Lsv;ID)I offsets 525-537 and 617-632). Sixteen is therefore the
+     * true contract; this keeps a deliberate margin above it.
+     */
     private static final int MIN_RENDERERS = 27;
     private static final List<Object> active = new ArrayList<Object>();
     private static final IdentityHashMap<Object, Boolean> members = new IdentityHashMap<Object, Boolean>();
