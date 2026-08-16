@@ -61,6 +61,10 @@ final class VideoMenuLayout
 
     static final int KIND_TIME = 18;
 
+    static final int KIND_CHUNK_UPDATES = 19;
+
+    static final int KIND_FAST_RENDER = 20;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -295,15 +299,15 @@ final class VideoMenuLayout
                 right.add(vertex("Natural Textures", "naturalTextures"));
                 return;
             case PAGE_PERFORMANCE:
-                left.add(fixed("Smooth FPS: §cOFF"));
-                left.add(fixed("Load Far: §cOFF"));
-                left.add(fixed("Chunk Updates: 1"));
-                left.add(fixed("Fast Math: §aON"));
-                left.add(fixed("Fast Render: §aON"));
-                right.add(fixed("Smooth World: §cOFF"));
-                right.add(fixed("Preloaded Chunks: §cOFF"));
-                right.add(fixed("Dynamic Updates: §cOFF"));
-                right.add(fixed("Lazy Chunk Loading: §cOFF"));
+                left.add(vertex("Smooth FPS", "smoothFps"));
+                left.add(fixed("Load Far: §cOFF"));                      // no 1.7.10 behavior
+                left.add(new Slot(KIND_CHUNK_UPDATES, "Chunk Updates", "chunkUpdates"));
+                left.add(vertex("Fast Math", "fastMath"));
+                left.add(new Slot(KIND_FAST_RENDER, "Fast Render", null));
+                right.add(fixed("Smooth World: §cOFF"));                 // integrated-server pacing, tracked
+                right.add(fixed("Preloaded Chunks: §cOFF"));             // no 1.7.10 behavior
+                right.add(vertex("Dynamic Updates", "dynamicUpdates"));
+                right.add(fixed("Lazy Chunk Loading: §cOFF"));           // integrated-server pacing, tracked
                 return;
             case PAGE_OTHER:
                 left.add(vertex("Lagometer", "lagometer"));
@@ -411,6 +415,11 @@ final class VideoMenuLayout
         return "Cloud Height: " + (percent <= 0 ? "§cOFF" : percent + "%");
     }
 
+    static String fastRenderLabel(boolean on)
+    {
+        return "Fast Render: " + (on ? "§aON" : "§cOFF");
+    }
+
     /** Tri-state cycle: Default -> Fast -> Fancy -> Default. */
     static String nextTriState(String current)
     {
@@ -448,6 +457,26 @@ final class VideoMenuLayout
         String trimmed = current == null ? "" : current.trim();
         String value = trimmed.equals("180") ? "3min" : trimmed.equals("1800") ? "30min" : "45s";
         return "Autosave: " + value;
+    }
+
+    /** Chunk Updates cycle: 1..5 then wrap; anything unparsable restarts at the default 4. */
+    static String nextChunkUpdates(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+
+        if (trimmed.length() == 1 && trimmed.charAt(0) >= '1' && trimmed.charAt(0) <= '4')
+        {
+            return String.valueOf((char)(trimmed.charAt(0) + 1));
+        }
+
+        return trimmed.equals("5") ? "1" : "5";
+    }
+
+    static String chunkUpdatesLabel(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        boolean valid = trimmed.length() == 1 && trimmed.charAt(0) >= '1' && trimmed.charAt(0) <= '5';
+        return "Chunk Updates: " + (valid ? trimmed : "4");
     }
 
     /** Time cycle: Default -> Day -> Night -> Default. */

@@ -165,6 +165,18 @@ public final class VertexHooks
         }
     }
 
+    /** Stationary detection for the Dynamic Updates boost. */
+    private static double lastViewerX;
+    private static double lastViewerY;
+    private static double lastViewerZ;
+    private static int stationaryFrames = 0;
+
+    /** True once the view entity has held one block position for about a second. */
+    public static boolean playerStationary()
+    {
+        return stationaryFrames > 60;
+    }
+
     public static void consumeImmediates(Object renderGlobal, Object viewEntity)
     {
         if (!ready(renderGlobal))
@@ -172,6 +184,7 @@ public final class VertexHooks
             return;
         }
 
+        trackStationary(viewEntity);
         VertexStats.tick();
         VertexSkyBridge.publish(renderGlobal);
         VertexMulticore.drainFinished();
@@ -233,6 +246,34 @@ public final class VertexHooks
         catch (Exception e)
         {
             disable("consumeImmediates", e);
+        }
+    }
+
+    private static void trackStationary(Object viewEntity)
+    {
+        try
+        {
+            if (viewEntity == null || entityPosX == null)
+            {
+                stationaryFrames = 0;
+                return;
+            }
+
+            double x = entityPosX.getDouble(viewEntity);
+            double y = entityPosY.getDouble(viewEntity);
+            double z = entityPosZ.getDouble(viewEntity);
+            // Tight positional tolerance: looking around while standing still counts,
+            // walking resets within a frame or two.
+            boolean still = Math.abs(x - lastViewerX) < 0.05D
+                && Math.abs(y - lastViewerY) < 0.05D && Math.abs(z - lastViewerZ) < 0.05D;
+            stationaryFrames = still ? stationaryFrames + 1 : 0;
+            lastViewerX = x;
+            lastViewerY = y;
+            lastViewerZ = z;
+        }
+        catch (Exception e)
+        {
+            stationaryFrames = 0;
         }
     }
 

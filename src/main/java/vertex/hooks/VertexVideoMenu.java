@@ -213,6 +213,20 @@ public final class VertexVideoMenu
                     buttonDisplayField.set(button,
                         VideoMenuLayout.timeOverrideLabel(VertexConfig.value("timeOverride", "default")));
                     return true;
+                case VideoMenuLayout.KIND_CHUNK_UPDATES:
+                    VertexConfig.setAndSaveValue("chunkUpdates",
+                        VideoMenuLayout.nextChunkUpdates(VertexConfig.value("chunkUpdates", "4")));
+                    buttonDisplayField.set(button,
+                        VideoMenuLayout.chunkUpdatesLabel(VertexConfig.value("chunkUpdates", "4")));
+                    return true;
+                case VideoMenuLayout.KIND_FAST_RENDER:
+                    // Aliases the renderer backend selector; a restart applies it,
+                    // exactly like the Chunk Loading button's multicore flip.
+                    VertexConfig.setAndSaveValue("renderer",
+                        VertexPerformance.nextFastRender(VertexConfig.value("renderer", "arena")));
+                    buttonDisplayField.set(button, VideoMenuLayout.fastRenderLabel(
+                        VertexPerformance.fastRenderOn(VertexConfig.value("renderer", "arena"))));
+                    return true;
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
@@ -340,6 +354,13 @@ public final class VertexVideoMenu
                 break;
             case VideoMenuLayout.KIND_TIME:
                 label = VideoMenuLayout.timeOverrideLabel(VertexConfig.value("timeOverride", "default"));
+                break;
+            case VideoMenuLayout.KIND_CHUNK_UPDATES:
+                label = VideoMenuLayout.chunkUpdatesLabel(VertexConfig.value("chunkUpdates", "4"));
+                break;
+            case VideoMenuLayout.KIND_FAST_RENDER:
+                label = VideoMenuLayout.fastRenderLabel(
+                    VertexPerformance.fastRenderOn(VertexConfig.value("renderer", "arena")));
                 break;
             default:
                 label = slot.label;
@@ -475,7 +496,8 @@ public final class VertexVideoMenu
         String[] vertexKeys = {"dynamicLights", "fullbright", "sky", "clouds", "fog", "weather",
             "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
-            "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler"};
+            "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler",
+            "smoothFps", "dynamicUpdates", "fastMath"};
         boolean remark = false;
 
         for (String key : vertexKeys)
@@ -502,6 +524,9 @@ public final class VertexVideoMenu
         VertexConfig.setAndSaveValue("aoLevel", "100");
         VertexConfig.setAndSaveValue("autosave", "45");
         VertexConfig.setAndSaveValue("timeOverride", "default");
+        VertexConfig.setAndSaveValue("chunkUpdates", "4");
+        // The renderer selector (Fast Render's backing key) stays outside Reset's
+        // scope: a backend swap needs a restart and should remain an explicit choice.
         VertexGraphics.applyTrees(settings);
         VertexRenderer.requestSettingsRemark();
 

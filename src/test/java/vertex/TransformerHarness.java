@@ -288,6 +288,23 @@ public final class TransformerHarness implements Opcodes
         return cw.toByteArray();
     }
 
+    /** A class with public static float <methodName>(float) returning its argument doubled. */
+    public static byte[] floatStaticMethodClass(String internalName, String methodName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, "(F)F", null, null);
+        m.visitCode();
+        m.visitVarInsn(FLOAD, 0);
+        m.visitInsn(FCONST_2);
+        m.visitInsn(FMUL);
+        m.visitInsn(FRETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
     /** A superclass with public float c(float) returning its argument doubled. */
     public static byte[] floatSuperClass(String internalName)
     {

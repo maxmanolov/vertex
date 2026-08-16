@@ -355,6 +355,15 @@ public final class Mappings
     public static final String WORLD_CLASS = "ahb";
     public static final String WORLD_CELESTIAL_ANGLE_DESC = "(F)F";
 
+    // --- fast math surface (javap qh) -------------------------------------------------
+    // qh is MathHelper: a private static float[] a of 65,536 entries backs the final
+    // static a(F)F (sin, indexer 10430.378 = 65536/2pi) and b(F)F (cos, quarter-turn
+    // offset 16384). Both bodies replace with table-backed delegates.
+    public static final String MATH_HELPER = "qh";
+    public static final String MATH_SIN = "a";
+    public static final String MATH_COS = "b";
+    public static final String MATH_TRIG_DESC = "(F)F";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";
