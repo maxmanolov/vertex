@@ -117,6 +117,23 @@ public final class TransformerHarness implements Opcodes
             return guardValue;
         }
 
+        public static boolean centerGuardValue = false;
+        public static int centerKind = -1;
+        public static Object centerWorld;
+
+        /** Center-sample guard and replacement for the blend override tests. */
+        public static boolean centerGuard()
+        {
+            return centerGuardValue;
+        }
+
+        public static int centerSample(Object world, int x, int y, int z, int kind)
+        {
+            centerWorld = world;
+            centerKind = kind;
+            return 42;
+        }
+
         public static boolean triGuardValue = false;
         public static int triGuardCalls;
         public static Object triGuardBlock;
@@ -320,6 +337,33 @@ public final class TransformerHarness implements Opcodes
         m.visitInsn(IADD);
         m.visitFieldInsn(PUTSTATIC, internalName, "calls", "I");
         m.visitInsn(ICONST_1);
+        m.visitInsn(IRETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A class with public int d(Object,int,int,int) returning 7 and counting calls. */
+    public static byte[] blendMethodClass(String internalName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "calls", "I", null, null).visitEnd();
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC, "d", "(Ljava/lang/Object;III)I", null, null);
+        m.visitCode();
+        m.visitFieldInsn(GETSTATIC, internalName, "calls", "I");
+        m.visitInsn(ICONST_1);
+        m.visitInsn(IADD);
+        m.visitFieldInsn(PUTSTATIC, internalName, "calls", "I");
+        m.visitIntInsn(BIPUSH, 7);
         m.visitInsn(IRETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();

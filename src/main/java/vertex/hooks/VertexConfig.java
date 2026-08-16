@@ -41,6 +41,7 @@ public final class VertexConfig
         {"fastMath", "false", "Use a small cache-resident trig table (restart required)"},
         {"mipmapType", "nearest", "Terrain atlas minification: nearest (vanilla) or linear (smoother distant texel blend)"},
         {"swampColors", "true", "Use the swamp biome's special grass and foliage tint instead of the standard colormap"},
+        {"smoothBiomes", "true", "Blend grass and foliage colors across biome borders (off = one lookup per block)"},
         {"clouds", "true", "Render clouds"},
         {"weather", "true", "Render rain and snow, and spawn rain splash particles"},
         {"voidParticles", "true", "Spawn void fog depth particles"},

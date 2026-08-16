@@ -298,6 +298,15 @@ public class VertexTransformer implements IClassTransformer
                 result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
                     900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
             }
+            else if (isSmoothBlender(name))
+            {
+                LogWrapper.info("[Vertex] Patching biome color blender (" + name + ")");
+                // Smooth biomes off: the 3x3 blend collapses to the center sample.
+                result = CenterSampleOverridePatch.apply(result,
+                    Mappings.COLOR_BLEND, Mappings.COLOR_BLEND_DESC,
+                    isFoliageBlender(name) ? 1 : 0,
+                    "vertex/hooks/VertexSmoothBiomes", "fastPath", "centerSample");
+            }
             else if (Mappings.SWAMP_BIOME.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching BiomeGenSwamp (" + name + ")");
@@ -342,5 +351,36 @@ public class VertexTransformer implements IClassTransformer
         }
 
         return result;
+    }
+
+    private static boolean isSmoothBlender(String name)
+    {
+        return isFoliageBlender(name) || isGrassBlender(name);
+    }
+
+    private static boolean isGrassBlender(String name)
+    {
+        for (String owner : Mappings.SMOOTH_GRASS_BLENDERS)
+        {
+            if (owner.equals(name))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isFoliageBlender(String name)
+    {
+        for (String owner : Mappings.SMOOTH_FOLIAGE_BLENDERS)
+        {
+            if (owner.equals(name))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

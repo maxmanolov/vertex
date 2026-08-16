@@ -297,7 +297,7 @@ final class VideoMenuLayout
                 right.add(vertex("Random Mobs", "randomEntities"));
                 right.add(vertex("Better Snow", "betterSnow"));
                 right.add(vertex("Custom Colors", "customColors"));
-                right.add(fixed("Smooth Biomes: §cOFF"));                // 3x3 blend is vanilla-on
+                right.add(vertex("Smooth Biomes", "smoothBiomes"));
                 right.add(vertex("Natural Textures", "naturalTextures"));
                 return;
             case PAGE_PERFORMANCE:
@@ -378,7 +378,8 @@ final class VideoMenuLayout
     {
         return "betterGrass".equals(key) || "naturalTextures".equals(key)
             || "connectedTextures".equals(key) || "customColors".equals(key)
-            || "swampColors".equals(key) || "betterSnow".equals(key);
+            || "swampColors".equals(key) || "betterSnow".equals(key)
+            || "smoothBiomes".equals(key);
     }
 
     /** Every Vertex key wired on the Animations page: the All ON / All OFF scope. */
