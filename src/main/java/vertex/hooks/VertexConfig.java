@@ -160,40 +160,63 @@ public final class VertexConfig
         return value.trim();
     }
 
+    /** Nesting depth of open bulk-save scopes; while positive, saves coalesce. */
+    private static int bulkDepth = 0;
+    private static boolean bulkDirty = false;
+    private static int bulkKeys = 0;
+
+    /**
+     * Coalesces the writes of a multi-key update (the menu's Reset and All ON/OFF flip
+     * dozens of keys per click): saves inside a bulk scope apply in memory immediately
+     * but the file writes once, at the close of the outermost scope, with one log line.
+     */
+    public static synchronized void beginBulkSave()
+    {
+        ++bulkDepth;
+    }
+
+    public static synchronized void endBulkSave()
+    {
+        if (bulkDepth > 0 && --bulkDepth == 0 && bulkDirty)
+        {
+            bulkDirty = false;
+            int flushed = bulkKeys;
+            bulkKeys = 0;
+            persist(flushed + " keys");
+        }
+    }
+
     /**
      * In-game toggle support: set one key and rewrite the file in the same commented
      * format, carrying over current values and preserving keys Vertex doesn't declare.
-     * lastModified is re-read after the write so our own save doesn't trigger a reload.
+     * String-keyed variant for the non-boolean options (renderer, fogStart, ...).
      */
-    /** String-key counterpart of {@link #setAndSave(String, boolean)} (renderer, fogStart, ...). */
     public static synchronized void setAndSaveValue(String key, String value)
     {
         refresh();
         values.setProperty(key, value);
 
-        if (file == null)
+        if (bulkDepth > 0)
         {
+            bulkDirty = true;
+            ++bulkKeys;
             return;
         }
 
-        try
-        {
-            writeCurrent();
-            lastModified = file.lastModified();
-            LogWrapper.info("[Vertex] Saved " + key + "=" + value + " to " + file.getName());
-        }
-        catch (Exception e)
-        {
-            // The in-memory value already applied; a failed save only loses persistence.
-            LogWrapper.warning("[Vertex] Could not save vertex.properties: " + e);
-        }
+        persist(key + "=" + value);
     }
 
     public static synchronized void setAndSave(String key, boolean value)
     {
-        refresh();
-        values.setProperty(key, String.valueOf(value));
+        setAndSaveValue(key, String.valueOf(value));
+    }
 
+    /**
+     * Rewrites the file with the current values. lastModified is re-read after the
+     * write so our own save doesn't trigger a reload.
+     */
+    private static void persist(String what)
+    {
         if (file == null)
         {
             return;
@@ -203,11 +226,11 @@ public final class VertexConfig
         {
             writeCurrent();
             lastModified = file.lastModified();
-            LogWrapper.info("[Vertex] Saved " + key + "=" + value + " to " + file.getName());
+            LogWrapper.info("[Vertex] Saved " + what + " to " + file.getName());
         }
         catch (Exception e)
         {
-            // The in-memory toggle already applied; a failed save only loses persistence.
+            // The in-memory change already applied; a failed save only loses persistence.
             LogWrapper.warning("[Vertex] Could not save vertex.properties: " + e);
         }
     }
@@ -279,8 +302,12 @@ public final class VertexConfig
         writeCurrent();
     }
 
+    /** Test seam: file rewrites performed since class load. */
+    static int fileWritesForTest = 0;
+
     private static void writeCurrent() throws Exception
     {
+        ++fileWritesForTest;
         Writer out = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
 
         try

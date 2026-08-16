@@ -238,10 +238,18 @@ public final class VertexVideoMenu
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
+                    VertexConfig.beginBulkSave();
 
-                    for (String key : VideoMenuLayout.animationKeys())
+                    try
                     {
-                        VertexConfig.setAndSave(key, on);
+                        for (String key : VideoMenuLayout.animationKeys())
+                        {
+                            VertexConfig.setAndSave(key, on);
+                        }
+                    }
+                    finally
+                    {
+                        VertexConfig.endBulkSave();
                     }
 
                     rebuild(screen, pageValue.intValue());
@@ -510,17 +518,35 @@ public final class VertexVideoMenu
             "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler",
             "smoothFps", "dynamicUpdates", "fastMath", "swampColors"};
         boolean remark = false;
+        VertexConfig.beginBulkSave();
 
-        for (String key : vertexKeys)
+        try
         {
-            boolean target = VertexConfig.declaredDefault(key);
-            remark |= VideoMenuLayout.rebakesSections(key) && VertexConfig.enabled(key) != target;
-            VertexConfig.setAndSave(key, target);
+            for (String key : vertexKeys)
+            {
+                boolean target = VertexConfig.declaredDefault(key);
+                remark |= VideoMenuLayout.rebakesSections(key) && VertexConfig.enabled(key) != target;
+                VertexConfig.setAndSave(key, target);
+            }
+
+            for (String key : VideoMenuLayout.animationKeys())
+            {
+                VertexConfig.setAndSave(key, VertexConfig.declaredDefault(key));
+            }
+
+            VertexConfig.setAndSaveValue("fogStart", "default");
+            VertexConfig.setAndSaveValue("cloudHeight", "0");
+            VertexConfig.setAndSaveValue("trees", "default");
+            VertexConfig.setAndSaveValue("droppedItems", "default");
+            VertexConfig.setAndSaveValue("aoLevel", "100");
+            VertexConfig.setAndSaveValue("autosave", "45");
+            VertexConfig.setAndSaveValue("timeOverride", "default");
+            VertexConfig.setAndSaveValue("chunkUpdates", "4");
+            VertexConfig.setAndSaveValue("mipmapType", "nearest");
         }
-
-        for (String key : VideoMenuLayout.animationKeys())
+        finally
         {
-            VertexConfig.setAndSave(key, VertexConfig.declaredDefault(key));
+            VertexConfig.endBulkSave();
         }
 
         if (remark)
@@ -528,15 +554,6 @@ public final class VertexVideoMenu
             VertexRenderer.requestSettingsRemark();
         }
 
-        VertexConfig.setAndSaveValue("fogStart", "default");
-        VertexConfig.setAndSaveValue("cloudHeight", "0");
-        VertexConfig.setAndSaveValue("trees", "default");
-        VertexConfig.setAndSaveValue("droppedItems", "default");
-        VertexConfig.setAndSaveValue("aoLevel", "100");
-        VertexConfig.setAndSaveValue("autosave", "45");
-        VertexConfig.setAndSaveValue("timeOverride", "default");
-        VertexConfig.setAndSaveValue("chunkUpdates", "4");
-        VertexConfig.setAndSaveValue("mipmapType", "nearest");
         VertexQuality.applyMipmapType();
         // The renderer selector (Fast Render's backing key) stays outside Reset's
         // scope: a backend swap needs a restart and should remain an explicit choice.
