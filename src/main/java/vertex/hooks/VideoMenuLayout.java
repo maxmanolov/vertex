@@ -257,7 +257,7 @@ final class VideoMenuLayout
                 left.add(fixed("Translucent Blocks: Fast"));
                 left.add(fixed("Vignette: Fast"));
                 right.add(new Slot(KIND_CLOUD_HEIGHT, "Cloud Height", "cloudHeight"));
-                right.add(fixed("Grass: Fast"));
+                right.add(new Slot(KIND_TRISTATE, "Grass", "grass"));
                 right.add(vertex("Rain & Snow", "weather"));
                 right.add(vertex("Stars", "stars"));
                 right.add(vanilla("z"));                                 // Show Capes
@@ -381,7 +381,7 @@ final class VideoMenuLayout
         return "betterGrass".equals(key) || "naturalTextures".equals(key)
             || "connectedTextures".equals(key) || "customColors".equals(key)
             || "swampColors".equals(key) || "betterSnow".equals(key)
-            || "smoothBiomes".equals(key);
+            || "smoothBiomes".equals(key) || "grass".equals(key);
     }
 
     /** Every Vertex key wired on the Animations page: the All ON / All OFF scope. */

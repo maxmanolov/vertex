@@ -417,6 +417,18 @@ public final class Mappings
     public static final String MC_INIT_DISPLAY = "ag";
     public static final String MC_INIT_DISPLAY_DESC = "()V";
 
+    // --- fancy grass surface (javap blm, bao) -----------------------------------------
+    // Vanilla's grass side overlay exists and is gated by the static blm.b: the AO and
+    // non-AO standard renderers draw the biome-tinted alh.e() overlay icon over any
+    // "grass_side" face when blm.b holds (offsets 3421-3593 show the AO-path gate:
+    // blm.b, icon name equals grass_side, no texture override). Minecraft's per-frame
+    // "Pre render" section (bao.ak()V, offset 160-166) re-derives blm.b from
+    // gameSettings.fancyGraphics every frame - rerouting that single write decouples
+    // grass quality with no captured state at all.
+    public static final String MC_PRE_RENDER = "ak";
+    public static final String MC_PRE_RENDER_DESC = "()V";
+    public static final String RB_FANCY_GRASS = "b";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";

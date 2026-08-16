@@ -182,6 +182,12 @@ public class VertexTransformer implements IClassTransformer
                 // Smooth FPS: drain the driver queue at the frame tail when enabled.
                 result = TailInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC,
                     "vertex/hooks/VertexPerformance", "afterFrame");
+                // Grass fast/fancy: the per-frame fancy-grass derivation reroutes so
+                // the tri-state override lands in RenderBlocks' static gate instead.
+                result = StaticFieldWriteReroutePatch.apply(result,
+                    Mappings.MC_PRE_RENDER, Mappings.MC_PRE_RENDER_DESC,
+                    Mappings.RENDER_BLOCKS, Mappings.RB_FANCY_GRASS, "Z",
+                    "vertex/hooks/VertexGraphics", "applyFancyGrass");
                 // Antialiasing: the display-create reroute asks for a sampled context
                 // first and falls back through vanilla's own ladder.
                 result = RerouteStaticInMethodPatch.apply(result,

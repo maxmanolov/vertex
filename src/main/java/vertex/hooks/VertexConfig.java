@@ -28,6 +28,7 @@ public final class VertexConfig
         {"cloudHeight", "0", "Lift clouds above their vanilla height by 0, 25, 50, 75 or 100 percent of the remaining sky"},
         {"trees", "default", "Leaf rendering: default (follow Graphics), fast (opaque) or fancy (transparent)"},
         {"droppedItems", "default", "Dropped item rendering: default (follow Graphics), fast (flat) or fancy (3D)"},
+        {"grass", "default", "Grass side overlay: default (follow Graphics), fast (plain sides) or fancy (biome-tinted overlay)"},
         {"aoLevel", "100", "Smooth lighting corner darkening: 0 (none), 50 or 100 percent"},
         {"dynamicFov", "true", "Widen the field of view while sprinting, flying or under speed effects"},
         {"showFps", "false", "Draw a small FPS readout in the top-left corner"},
