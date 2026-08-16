@@ -86,6 +86,22 @@ public final class GLCallCountPatch implements Opcodes
                             reroute(call, "bindTexture");
                             ++rewritten;
                         }
+                        else if (call.name.equals("glPopAttrib") && call.desc.equals("()V"))
+                        {
+                            // Restores arbitrary server state: the tracker must forget.
+                            reroute(call, "popAttrib");
+                            ++rewritten;
+                        }
+                        else if (call.name.equals("glDeleteTextures") && call.desc.equals("(I)V"))
+                        {
+                            reroute(call, "deleteTexture");
+                            ++rewritten;
+                        }
+                        else if (call.name.equals("glDeleteTextures") && call.desc.equals("(Ljava/nio/IntBuffer;)V"))
+                        {
+                            reroute(call, "deleteTextures");
+                            ++rewritten;
+                        }
                     }
                 }
             }

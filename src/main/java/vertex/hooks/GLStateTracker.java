@@ -1,0 +1,109 @@
+package vertex.hooks;
+
+import java.util.HashMap;
+
+/**
+ * Pure client-thread model of the GL state the counting wrappers observe: enable/disable
+ * capabilities (GL_TEXTURE_2D tracked per texture unit, everything else global) and
+ * texture bindings per (unit, target). A transition is redundant only when the tracked
+ * state says the call would be a no-op; unknown state is never redundant, so a skip
+ * decision built on this model is conservative by construction.
+ *
+ * The model must be invalidated whenever GL state can change behind its back:
+ * glPopAttrib restores arbitrary server state ({@link #invalidateAll}), and a deleted
+ * texture id can be reissued by glGenTextures ({@link #forgetTexture}).
+ */
+final class GLStateTracker
+{
+    private static final int CAP_TRACK = 65536;
+    private static final byte UNKNOWN = 0;
+    private static final byte ENABLED = 1;
+    private static final byte DISABLED = 2;
+
+    private final byte[] capState = new byte[CAP_TRACK];
+    private final HashMap<Long, Integer> lastBound = new HashMap<Long, Integer>();
+    private final HashMap<Long, Byte> capByUnit = new HashMap<Long, Byte>();
+    private int activeUnit = 0;
+
+    void setActiveUnit(int unit)
+    {
+        this.activeUnit = unit;
+    }
+
+    /**
+     * Capabilities that are per texture unit in fixed-function GL: the sampler enables
+     * (1D/2D/3D/cube) and the texgen coordinates (vanilla's end-portal effect enables
+     * GEN_S..Q). Tracking these globally would let one unit's enable mask another's.
+     */
+    private static boolean perUnitCap(int cap)
+    {
+        return cap == 3552 || cap == 3553 || cap == 32879 || cap == 34067
+            || (cap >= 3168 && cap <= 3171);
+    }
+
+    /** Records an enable; true when the capability was already known enabled. */
+    boolean redundantEnable(int cap)
+    {
+        if (perUnitCap(cap))
+        {
+            Byte previous = this.capByUnit.put(unitKey(cap), Byte.valueOf(ENABLED));
+            return previous != null && previous.byteValue() == ENABLED;
+        }
+
+        if (cap >= 0 && cap < CAP_TRACK)
+        {
+            boolean redundant = this.capState[cap] == ENABLED;
+            this.capState[cap] = ENABLED;
+            return redundant;
+        }
+
+        return false;
+    }
+
+    /** Records a disable; true when the capability was already known disabled. */
+    boolean redundantDisable(int cap)
+    {
+        if (perUnitCap(cap))
+        {
+            Byte previous = this.capByUnit.put(unitKey(cap), Byte.valueOf(DISABLED));
+            return previous != null && previous.byteValue() == DISABLED;
+        }
+
+        if (cap >= 0 && cap < CAP_TRACK)
+        {
+            boolean redundant = this.capState[cap] == DISABLED;
+            this.capState[cap] = DISABLED;
+            return redundant;
+        }
+
+        return false;
+    }
+
+    private Long unitKey(int cap)
+    {
+        return Long.valueOf((long)this.activeUnit << 32 | (cap & 0xFFFFFFFFL));
+    }
+
+    /** Records a bind; true when this (unit, target) already held the same texture. */
+    boolean redundantBind(int target, int texture)
+    {
+        Long key = Long.valueOf((long)this.activeUnit << 32 | (target & 0xFFFFFFFFL));
+        Integer previous = this.lastBound.put(key, Integer.valueOf(texture));
+        return previous != null && previous.intValue() == texture;
+    }
+
+    /** glPopAttrib restored unknown state: forget everything and re-learn. */
+    void invalidateAll()
+    {
+        java.util.Arrays.fill(this.capState, UNKNOWN);
+        this.lastBound.clear();
+        this.capByUnit.clear();
+    }
+
+    /** A deleted texture id may be reissued: the next bind of it must forward. */
+    void forgetTexture(int texture)
+    {
+        this.lastBound.values().removeAll(
+            java.util.Collections.singleton(Integer.valueOf(texture)));
+    }
+}
