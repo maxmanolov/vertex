@@ -408,6 +408,15 @@ public final class Mappings
     public static final String[] SMOOTH_GRASS_BLENDERS = {"alh", "ako", "ane"};
     public static final String[] SMOOTH_FOLIAGE_BLENDERS = {"alt"};
 
+    // --- antialiasing surface (javap bao) ---------------------------------------------
+    // Display initialization lives in bao.ag()V: new PixelFormat().withDepthBits(24)
+    // feeds Display.create(PixelFormat) at offset 276, and vanilla's own catch already
+    // falls back to the plain create() at 315 after logging "Couldn't set pixel
+    // format". The reroute extends that ladder upward: sampled format first, the
+    // vanilla format on failure, vanilla's own fallback last.
+    public static final String MC_INIT_DISPLAY = "ag";
+    public static final String MC_INIT_DISPLAY_DESC = "()V";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";

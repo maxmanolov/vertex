@@ -157,6 +157,8 @@ public final class VideoMenuLayoutTest
         assertEquals("swampColors", at(quality, LEFT, VideoMenuLayout.rowY(H, 5)).ref);
         assertEquals(1, kindCount(quality, VideoMenuLayout.KIND_MIPMAP_TYPE));
         assertEquals("mipmapType", at(quality, RIGHT, VideoMenuLayout.rowY(H, 0)).ref);
+        assertEquals(1, kindCount(quality, VideoMenuLayout.KIND_ANTIALIAS));
+        assertEquals("antialiasing", at(quality, RIGHT, VideoMenuLayout.rowY(H, 1)).ref);
     }
 
     @Test
