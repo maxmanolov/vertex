@@ -516,7 +516,7 @@ public final class VertexVideoMenu
             "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
             "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler",
-            "smoothFps", "dynamicUpdates", "fastMath", "swampColors"};
+            "smoothFps", "dynamicUpdates", "fastMath", "swampColors", "betterSnow"};
         boolean remark = false;
         VertexConfig.beginBulkSave();
 

@@ -24,18 +24,21 @@ final class HeadGuardPatch implements Opcodes
     static final int THIS_AND_INT = 1;
     static final int THIS_AND_OBJECT = 2;
     static final int THIS_INT_DOUBLE = 3;
+    static final int THIS_OBJECT_III = 4;
 
     static byte[] apply(byte[] basicClass, String method, String desc, String hookOwner, String hookName, int shape)
     {
         String ret = desc.substring(desc.indexOf(')') + 1);
         boolean objectReturn = ret.startsWith("L") || ret.startsWith("[");
+        boolean booleanReturn = "Z".equals(ret);
 
-        if (!"V".equals(ret) && !objectReturn)
+        if (!"V".equals(ret) && !objectReturn && !booleanReturn)
         {
-            // A skipped primitive return has no universal "nothing" value; object
-            // returns skip to null, which every vanilla caller of the current targets
-            // already handles (doSpawnParticle returns null on distance culling).
-            throw new IllegalStateException("Head guard target must return void or a reference: " + method + desc);
+            // A skipped primitive return needs a universal "nothing" value: void has
+            // none to produce, objects skip to null (doSpawnParticle's own culling
+            // convention), booleans skip to false (the dispatch convention for "drew
+            // nothing"). Other primitives have no such convention and stay rejected.
+            throw new IllegalStateException("Head guard target must return void, boolean or a reference: " + method + desc);
         }
 
         ClassNode cls = new ClassNode();
@@ -67,6 +70,14 @@ final class HeadGuardPatch implements Opcodes
                     head.add(new VarInsnNode(DLOAD, 2));
                     hookDesc = "(Ljava/lang/Object;ID)Z";
                 }
+                else if (shape == THIS_OBJECT_III)
+                {
+                    head.add(new VarInsnNode(ALOAD, 1));
+                    head.add(new VarInsnNode(ILOAD, 2));
+                    head.add(new VarInsnNode(ILOAD, 3));
+                    head.add(new VarInsnNode(ILOAD, 4));
+                    hookDesc = "(Ljava/lang/Object;Ljava/lang/Object;III)Z";
+                }
                 else
                 {
                     hookDesc = "(Ljava/lang/Object;)Z";
@@ -79,6 +90,11 @@ final class HeadGuardPatch implements Opcodes
                 {
                     head.add(new InsnNode(ACONST_NULL));
                     head.add(new InsnNode(ARETURN));
+                }
+                else if (booleanReturn)
+                {
+                    head.add(new InsnNode(ICONST_0));
+                    head.add(new InsnNode(IRETURN));
                 }
                 else
                 {

@@ -375,6 +375,26 @@ public final class Mappings
     public static final String BIOME_COLOR_DESC = "(III)I";
     public static final String TEXTURE_GL_ID = "b";
 
+    // --- better snow surface (javap blm RenderBlocks, blo WorldRenderer, ajn) ---------
+    // WorldRenderer's tessellation loops dispatch every block through blm.b(Laji;III)Z
+    // (render type from aji.b()I; type 0 falls through to renderStandardBlock, blm.q
+    // with the same descriptor). blm.a(DDDDDD)V sets render bounds unless the lock
+    // (field o) is held; blm.b(DDDDDD)V overrides the bounds and takes the lock
+    // (putfield o at offset 36). The tessellation world is blm.a:Lahl; and
+    // ahl.a(III)Laji; is getBlock. Blocks.snow_layer is ajn.aC (clinit: ldc
+    // "snow_layer" then putstatic aC, offsets 1123-1131) - already mapped as
+    // BLOCKS_SNOW_LAYER for the better-grass surface; snow_layer's meta-driven
+    // bounds-based-on-state is why the prepend locks explicit one-layer bounds
+    // instead of letting the host block's metadata leak in as a snow height.
+    public static final String RB_DISPATCH = "b";
+    public static final String RB_DISPATCH_DESC = "(Laji;III)Z";
+    public static final String RB_RENDER_STANDARD = "q";
+    public static final String RB_OVERRIDE_BOUNDS = "b";
+    public static final String RB_BOUNDS_LOCK = "o";
+    public static final String RB_BLOCK_ACCESS = "a";
+    public static final String ACCESS_GET_BLOCK = "a";
+    public static final String BLOCK_RENDER_TYPE = "b";
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";

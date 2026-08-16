@@ -295,7 +295,7 @@ final class VideoMenuLayout
                 right.add(new Slot(KIND_MIPMAP_TYPE, "Mipmap Type", "mipmapType"));
                 right.add(fixed("Antialiasing: §cOFF"));                 // tracked enhancement
                 right.add(vertex("Random Mobs", "randomEntities"));
-                right.add(fixed("Better Snow: §cOFF"));                  // tracked enhancement
+                right.add(vertex("Better Snow", "betterSnow"));
                 right.add(vertex("Custom Colors", "customColors"));
                 right.add(fixed("Smooth Biomes: §cOFF"));                // 3x3 blend is vanilla-on
                 right.add(vertex("Natural Textures", "naturalTextures"));
@@ -378,7 +378,7 @@ final class VideoMenuLayout
     {
         return "betterGrass".equals(key) || "naturalTextures".equals(key)
             || "connectedTextures".equals(key) || "customColors".equals(key)
-            || "swampColors".equals(key);
+            || "swampColors".equals(key) || "betterSnow".equals(key);
     }
 
     /** Every Vertex key wired on the Animations page: the All ON / All OFF scope. */

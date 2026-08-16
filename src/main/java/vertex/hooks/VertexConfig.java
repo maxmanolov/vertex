@@ -64,6 +64,7 @@ public final class VertexConfig
         {"dynamicLights", "true", "Dynamic light sources illuminate surroundings"},
         {"customColors", "true", "Resource-pack custom colors (grass and foliage colormaps)"},
         {"betterGrass", "false", "Render grass block sides as grass when the terrain continues below"},
+        {"betterSnow", "false", "Draw a snow layer under fences, walls and plants next to snow"},
         {"naturalTextures", "true", "Mirror tile variants from a pack's natural.properties"},
         {"randomEntities", "true", "Per-mob texture variants when a pack supplies numbered siblings"},
         {"customSky", "true", "Draw pack-defined custom sky layers"},

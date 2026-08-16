@@ -192,6 +192,10 @@ public class VertexTransformer implements IClassTransformer
             {
                 LogWrapper.info("[Vertex] Patching RenderBlocks (" + name + ")");
                 result = IconHookPatch.apply(result);
+                // Better snow: the per-block dispatch gets a prepend hook that draws a
+                // one-layer snow box under qualifying blocks; it never skips the body.
+                result = HeadGuardPatch.apply(result, Mappings.RB_DISPATCH, Mappings.RB_DISPATCH_DESC,
+                    "vertex/hooks/VertexBetterSnow", "prepend", HeadGuardPatch.THIS_OBJECT_III);
             }
             else if (Mappings.RENDER_CLASS.equals(name))
             {
