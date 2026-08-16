@@ -155,6 +155,11 @@ public final class VertexVideoMenu
                         // Texture-side setting: rewrite the frame data and re-upload now.
                         VertexClearWater.applyFromMenu();
                     }
+                    else if ("customFonts".equals(slot.ref))
+                    {
+                        // Re-run the font reload so glyphs and widths swap immediately.
+                        VertexFonts.applyFromMenu();
+                    }
 
                     return true;
                 case VideoMenuLayout.KIND_FULLBRIGHT:
@@ -548,7 +553,7 @@ public final class VertexVideoMenu
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
             "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler",
             "smoothFps", "dynamicUpdates", "fastMath", "swampColors", "betterSnow",
-            "smoothBiomes", "clearWater"};
+            "smoothBiomes", "clearWater", "customFonts"};
         boolean remark = false;
         VertexConfig.beginBulkSave();
 
@@ -591,6 +596,7 @@ public final class VertexVideoMenu
 
         VertexQuality.applyMipmapType();
         VertexClearWater.applyFromMenu();
+        VertexFonts.applyFromMenu();
         // The renderer selector (Fast Render's backing key) stays outside Reset's
         // scope: a backend swap needs a restart and should remain an explicit choice.
         VertexGraphics.applyTrees(settings);

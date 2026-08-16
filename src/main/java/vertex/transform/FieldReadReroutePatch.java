@@ -12,23 +12,26 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * Rewrites every GETFIELD owner.name:desc in the patched class into a static hook call
  * that receives the field's holder and decides the value: the stack shape is identical
- * (one reference consumed, one primitive produced), so the rewrite composes with any
- * surrounding control flow. This is the decoupling primitive for vanilla behavior that
- * keys off a shared settings field (fancyGraphics) which Vertex overrides per consumer.
+ * (one reference consumed, one value produced), so the rewrite composes with any
+ * surrounding control flow. Primitive fields call a (Ljava/lang/Object;)prim hook;
+ * reference fields call a (Ljava/lang/Object;)Ljava/lang/Object; hook followed by a
+ * checkcast back to the declared field type. This is the decoupling primitive for
+ * vanilla behavior that keys off a shared field (fancyGraphics, the font texture
+ * location) which Vertex overrides per consumer.
  */
 final class FieldReadReroutePatch implements Opcodes
 {
     static byte[] apply(byte[] basicClass, String fieldOwner, String fieldName, String fieldDesc,
         String hookOwner, String hookName)
     {
-        if (fieldDesc.startsWith("L") || fieldDesc.startsWith("["))
-        {
-            throw new IllegalStateException("Field-read reroute supports primitive fields only: " + fieldDesc);
-        }
+        boolean reference = fieldDesc.startsWith("L") || fieldDesc.startsWith("[");
+        String castType = !reference ? null
+            : fieldDesc.startsWith("L") ? fieldDesc.substring(1, fieldDesc.length() - 1) : fieldDesc;
 
         ClassNode cls = new ClassNode();
         new ClassReader(basicClass).accept(cls, 0);
-        String hookDesc = "(Ljava/lang/Object;)" + fieldDesc;
+        String hookDesc = reference ? "(Ljava/lang/Object;)Ljava/lang/Object;"
+            : "(Ljava/lang/Object;)" + fieldDesc;
         int rerouted = 0;
 
         for (MethodNode method : cls.methods)
@@ -44,8 +47,20 @@ final class FieldReadReroutePatch implements Opcodes
                     if (read.owner.equals(fieldOwner) && read.name.equals(fieldName)
                         && read.desc.equals(fieldDesc))
                     {
-                        method.instructions.set(insn,
-                            new MethodInsnNode(INVOKESTATIC, hookOwner, hookName, hookDesc, false));
+                        MethodInsnNode call =
+                            new MethodInsnNode(INVOKESTATIC, hookOwner, hookName, hookDesc, false);
+
+                        if (reference)
+                        {
+                            method.instructions.insertBefore(insn, call);
+                            method.instructions.set(insn,
+                                new org.objectweb.asm.tree.TypeInsnNode(CHECKCAST, castType));
+                        }
+                        else
+                        {
+                            method.instructions.set(insn, call);
+                        }
+
                         ++rerouted;
                     }
                 }

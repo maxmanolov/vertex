@@ -292,7 +292,7 @@ final class VideoMenuLayout
                 left.add(slider("G"));                                   // Anisotropic Filtering
                 left.add(vertex("Clear Water", "clearWater"));
                 left.add(vertex("Better Grass", "betterGrass"));
-                left.add(fixed("Custom Fonts: §cOFF"));                  // tracked enhancement
+                left.add(vertex("Custom Fonts", "customFonts"));
                 left.add(vertex("Swamp Colors", "swampColors"));
                 left.add(vertex("Connected Textures", "connectedTextures"));
                 left.add(vertex("Custom Sky", "customSky"));

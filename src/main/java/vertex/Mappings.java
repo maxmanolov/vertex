@@ -470,6 +470,20 @@ public final class Mappings
     // that sets its own mode needs no field writes at all.
     public static final String MC_FULLSCREEN_MODE = "ai";
     public static final String MC_FULLSCREEN_MODE_DESC = "()V";
+    // Custom Fonts: bbu (FontRenderer, implements bqz) holds its font texture location
+    // in `private final bqx g` and re-reads the texture in private c(): bao.B()
+    // (getMinecraft) -> bao.Q()Lbqy; (getResourceManager) -> getfield g:Lbqx; (off 7)
+    // -> bqy.a(Lbqx;)Lbqw; (getResource, off 10) -> bqw.b() input stream -> ImageIO
+    // (offs 15-20). c() then derives the glyph grid from the real image size (height/16
+    // off 67-71, width/16 off 73-77, scale 8.0f/cell off 82-88), so HD sizes work with
+    // no extra width math. a(Lbqy;)V is the reload listener that re-runs c()/d().
+    public static final String FONT_RENDERER = "bbu";
+    public static final String FR_FONT_LOCATION = "g";
+    public static final String FR_FONT_LOCATION_DESC = "Lbqx;";
+    public static final String FR_RELOAD = "a";
+    public static final String FR_RELOAD_DESC = "(Lbqy;)V";
+    public static final String MC_GET_RESOURCE_MANAGER = "Q";
+    public static final String RM_GET_RESOURCE = "a";
     public static final String WC_DO_VOID_FOG_PARTICLES = "C";
     public static final String WC_DO_VOID_FOG_PARTICLES_DESC = "(III)V";
 

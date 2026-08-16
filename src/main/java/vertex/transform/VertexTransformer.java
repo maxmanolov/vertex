@@ -173,6 +173,20 @@ public class VertexTransformer implements IClassTransformer
                 result = TailInstanceCallPatch.apply(result, Mappings.TM_LOAD_ATLAS, Mappings.TM_LOAD_ATLAS_DESC,
                     "vertex/hooks/VertexClearWater", "afterAtlasLoad");
             }
+            else if (Mappings.FONT_RENDERER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching FontRenderer (" + name + ")");
+                // Custom Fonts: every read of the font-texture location (the c() image
+                // load and each per-draw bind) resolves through the hook, which swaps
+                // in the pack's mcpatcher/font counterpart when one exists.
+                result = FieldReadReroutePatch.apply(result,
+                    Mappings.FONT_RENDERER, Mappings.FR_FONT_LOCATION, Mappings.FR_FONT_LOCATION_DESC,
+                    "vertex/hooks/VertexFonts", "fontLocation");
+                // Pack changes re-decide: drop the cached choice before c()/d() re-run.
+                result = HeadInstanceCallPatch.apply(result,
+                    Mappings.FR_RELOAD, Mappings.FR_RELOAD_DESC,
+                    "vertex/hooks/VertexFonts", "onFontReload");
+            }
             else if (Mappings.MINECRAFT.equals(name))
             {
                 LogWrapper.info("[Vertex] Patching Minecraft (" + name + ")");
