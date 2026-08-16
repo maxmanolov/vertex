@@ -395,6 +395,19 @@ public final class Mappings
     public static final String ACCESS_GET_BLOCK = "a";
     public static final String BLOCK_RENDER_TYPE = "b";
 
+    // --- smooth biomes surface (javap alh/alt/ako/ane color blenders) -----------------
+    // Four block families blend biome colors over a 3x3 neighborhood in d(Lahl;III)I
+    // (three idivs = the R/G/B averages): alh BlockGrass, ako and ane (tall-grass and
+    // vine families) sample ahu.b(III)I (grass color), alt BlockLeavesBase samples
+    // ahu.c(III)I (foliage color). Each loop obtains biomes via the ahl interface's
+    // a(II)Lahu;. The liquid blender (alw) and aoj use different shapes and stay on
+    // the vanilla path (issue #167 tracks them).
+    public static final String COLOR_BLEND = "d";
+    public static final String COLOR_BLEND_DESC = "(Lahl;III)I";
+    public static final String BIOME_BY_COORDS = "a";
+    public static final String[] SMOOTH_GRASS_BLENDERS = {"alh", "ako", "ane"};
+    public static final String[] SMOOTH_FOLIAGE_BLENDERS = {"alt"};
+
     public static final String SPRITE_CLASS = "bqd";
     public static final String SPRITE_UPDATE = "j";
     public static final String SPRITE_UPDATE_DESC = "()V";
