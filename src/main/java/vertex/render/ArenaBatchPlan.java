@@ -128,6 +128,58 @@ final class ArenaBatchPlan
         batch.add(item);
     }
 
+    /**
+     * Orders the opaque pass's batches by their stable identity (region, format, draw
+     * mode; buffer id as the last resort for multi-block splits). Batch formation order
+     * follows worker completion order, so without this the draw order - and with it the
+     * winner of the hair-thin section-border overlaps the anti-crack scale creates -
+     * changed from run to run, polluting capture-based A/B comparisons. Depth testing
+     * makes any opaque order equally correct; this one is just reproducible, and it
+     * groups same-buffer batches so the submission loop's bind skip actually skips.
+     * Never called for the ordered (translucent) pass.
+     */
+    void sortOpaqueBatches()
+    {
+        for (int i = 1; i < this.batchCount; ++i)
+        {
+            Batch key = this.batches[i];
+            int j = i - 1;
+
+            while (j >= 0 && stableOrder(this.batches[j], key) > 0)
+            {
+                this.batches[j + 1] = this.batches[j];
+                --j;
+            }
+
+            this.batches[j + 1] = key;
+        }
+    }
+
+    private static int stableOrder(Batch a, Batch b)
+    {
+        if (a.minusX != b.minusX)
+        {
+            return a.minusX < b.minusX ? -1 : 1;
+        }
+
+        if (a.minusZ != b.minusZ)
+        {
+            return a.minusZ < b.minusZ ? -1 : 1;
+        }
+
+        if (a.formatBits != b.formatBits)
+        {
+            return a.formatBits < b.formatBits ? -1 : 1;
+        }
+
+        if (a.drawMode != b.drawMode)
+        {
+            return a.drawMode < b.drawMode ? -1 : 1;
+        }
+
+        return a.buffer < b.buffer ? -1 : a.buffer == b.buffer ? 0 : 1;
+    }
+
     int batchCount()
     {
         return this.batchCount;
