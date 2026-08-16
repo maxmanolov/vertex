@@ -50,6 +50,13 @@ public class VertexTransformer implements IClassTransformer
                 result = HeadGuardPatch.apply(result, Mappings.RG_DO_SPAWN_PARTICLE, Mappings.RG_DO_SPAWN_PARTICLE_DESC,
                     "vertex/hooks/VertexAnimations", "interceptParticle", HeadGuardPatch.THIS_AND_OBJECT);
 
+                // Cloud geometry changes slowly but vanilla rebuilds it every frame.
+                // Install the cache before profiling and detail wrappers so cache hits
+                // remain timed and cloud-height/disable guards still enclose the pass.
+                result = CloudCachePatch.apply(result);
+                result = TailInstanceCallPatch.apply(result, Mappings.RG_LOAD_RENDERERS, Mappings.RG_LOAD_RENDERERS_DESC,
+                    "vertex/hooks/VertexCloudCache", "reset");
+
                 if (vertex.hooks.VertexRenderer.MANAGED)
                 {
                     // Managed section-mesh pipeline: a backend that owns submission draws
@@ -72,6 +79,8 @@ public class VertexTransformer implements IClassTransformer
                         "vertex/hooks/VertexRenderProfiler", vertex.hooks.VertexRenderProfiler.PHASE_SUBMIT);
                     result = BracketPatch.apply(result, Mappings.RG_UPDATE_RENDERERS, Mappings.RG_UPDATE_RENDERERS_DESC,
                         "vertex/hooks/VertexRenderProfiler", vertex.hooks.VertexRenderProfiler.PHASE_UPDATE);
+                    result = BracketPatch.apply(result, Mappings.RG_RENDER_CLOUDS, Mappings.RG_RENDER_CLOUDS_DESC,
+                        "vertex/hooks/VertexRenderProfiler", vertex.hooks.VertexRenderProfiler.PHASE_CLOUD);
                 }
 
                 if (vertex.hooks.VertexMarkAudit.ACTIVE)

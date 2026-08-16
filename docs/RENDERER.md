@@ -161,7 +161,7 @@ their rebuild migrates them, so compaction has no visual gap.
 
 ## 6. Instrumentation and gates
 
-- `-Dvertex.profileRender=true` - phase split (clip / traversal / submit / update) and
+- `-Dvertex.profileRender=true` - phase split (clip / traversal / submit / update / cloud) and
   section counters, the baseline instrument; works identically under every backend
   because the brackets time the vanilla entry points around whichever path runs.
 - Diagnostics line (managed modes): `renderer=<name> meshUploads meshUploadKB

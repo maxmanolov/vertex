@@ -6,7 +6,7 @@ import net.minecraft.launchwrapper.LogWrapper;
 import vertex.Mappings;
 
 /**
- * Opt-in render-phase profiler (-Dvertex.profileRender=true): times the four client-thread
+ * Opt-in render-phase profiler (-Dvertex.profileRender=true): times the five client-thread
  * phases of the vanilla terrain renderer via {@link vertex.transform.BracketPatch} brackets
  * and logs a 10-second summary. The phases nest as clip / sortAndRender(submit) /
  * updateRenderers, so "traversal" is derived as sortAndRender minus submit. With the flag
@@ -25,8 +25,9 @@ public final class VertexRenderProfiler
     public static final int PHASE_SORT = 1;
     public static final int PHASE_SUBMIT = 2;
     public static final int PHASE_UPDATE = 3;
+    public static final int PHASE_CLOUD = 4;
 
-    private static final String[] NAMES = {"clip", "sort", "submit", "update"};
+    private static final String[] NAMES = {"clip", "sort", "submit", "update", "cloud"};
     private static final long REPORT_NANOS = 10_000_000_000L;
 
     private static final long[] openSince = new long[NAMES.length];
@@ -96,7 +97,8 @@ public final class VertexRenderProfiler
         double traversalMs = (windowNanos[PHASE_SORT] - windowNanos[PHASE_SUBMIT]) / 1_000_000.0D;
         line.append(String.format(" traversal=%.1fms", traversalMs));
         line.append(String.format(" busyPct=%.1f",
-            (windowNanos[PHASE_CLIP] + windowNanos[PHASE_SORT] + windowNanos[PHASE_UPDATE]) * 100.0D / windowSpan));
+            (windowNanos[PHASE_CLIP] + windowNanos[PHASE_SORT] + windowNanos[PHASE_UPDATE]
+                + windowNanos[PHASE_CLOUD]) * 100.0D / windowSpan));
         appendSectionCounters(line);
         LogWrapper.info(line.toString());
 

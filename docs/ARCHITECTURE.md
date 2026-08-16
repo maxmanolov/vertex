@@ -92,7 +92,7 @@ first soak, and only an instrumented run showed the icon dispatch was live all a
   keeps the GUI drawn during frame captures, `-Dvertex.test.markAudit=true` attributes
   every section re-mark and every direct worldRenderersToUpdate addition to its caller
   (10-second counters per mark entry point plus sampled stacks; the instrument that
-  root-caused #118), `-Dvertex.profileRender=true` brackets the four client-thread
+  root-caused #118), `-Dvertex.profileRender=true` brackets the five client-thread
   renderer phases (frustum clip, sortAndRender walk, glCallLists submission, rebuild
   pass) and logs a 10-second `[VertexProf]` split plus vanilla's per-frame section
   counters (the baseline instrument for the render-backend work), and
