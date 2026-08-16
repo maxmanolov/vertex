@@ -8,6 +8,7 @@ import net.minecraft.launchwrapper.Launch;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -157,6 +158,59 @@ public class VertexConfigDefaultsTest
         write("");
         org.junit.Assert.assertEquals("undeclared keys use the caller fallback",
             "fallback", VertexConfig.value("noSuchKey", "fallback"));
+    }
+
+    @Test
+    public void bulkSaveWritesTheFileOnceAndKeepsEveryValue() throws Exception
+    {
+        write("sky=true\n");
+        assertTrue(VertexConfig.enabled("sky"));
+        int before = VertexConfig.fileWritesForTest;
+
+        VertexConfig.beginBulkSave();
+        VertexConfig.setAndSave("clouds", false);
+        VertexConfig.setAndSave("stars", false);
+        VertexConfig.setAndSaveValue("fogStart", "0.4");
+        VertexConfig.beginBulkSave();
+        VertexConfig.setAndSave("fog", false);
+        VertexConfig.endBulkSave();
+        assertEquals("no write until the outermost scope closes",
+            before, VertexConfig.fileWritesForTest);
+        VertexConfig.endBulkSave();
+
+        assertEquals("exactly one write for the whole batch",
+            before + 1, VertexConfig.fileWritesForTest);
+        assertFalse(VertexConfig.enabled("clouds"));
+        assertFalse(VertexConfig.enabled("stars"));
+        assertFalse(VertexConfig.enabled("fog"));
+        assertEquals("0.4", VertexConfig.value("fogStart", "default"));
+    }
+
+    @Test
+    public void savesOutsideABulkScopeStillWriteImmediately() throws Exception
+    {
+        write("sky=true\n");
+        assertTrue(VertexConfig.enabled("sky"));
+        int before = VertexConfig.fileWritesForTest;
+
+        VertexConfig.setAndSave("clouds", false);
+        VertexConfig.setAndSave("clouds", true);
+
+        assertEquals(before + 2, VertexConfig.fileWritesForTest);
+        assertTrue(VertexConfig.enabled("clouds"));
+    }
+
+    @Test
+    public void anEmptyBulkScopeWritesNothing() throws Exception
+    {
+        write("sky=true\n");
+        assertTrue(VertexConfig.enabled("sky"));
+        int before = VertexConfig.fileWritesForTest;
+
+        VertexConfig.beginBulkSave();
+        VertexConfig.endBulkSave();
+
+        assertEquals(before, VertexConfig.fileWritesForTest);
     }
 
     private static void write(String content) throws Exception
