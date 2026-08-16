@@ -227,6 +227,14 @@ public final class VertexVideoMenu
                     buttonDisplayField.set(button, VideoMenuLayout.fastRenderLabel(
                         VertexPerformance.fastRenderOn(VertexConfig.value("renderer", "arena"))));
                     return true;
+                case VideoMenuLayout.KIND_MIPMAP_TYPE:
+                    VertexConfig.setAndSaveValue("mipmapType",
+                        VideoMenuLayout.nextMipmapType(VertexConfig.value("mipmapType", "nearest")));
+                    buttonDisplayField.set(button,
+                        VideoMenuLayout.mipmapTypeLabel(VertexConfig.value("mipmapType", "nearest")));
+                    // Sampler state, not mesh data: applies live to the cached atlas.
+                    VertexQuality.applyMipmapType();
+                    return true;
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
@@ -361,6 +369,9 @@ public final class VertexVideoMenu
             case VideoMenuLayout.KIND_FAST_RENDER:
                 label = VideoMenuLayout.fastRenderLabel(
                     VertexPerformance.fastRenderOn(VertexConfig.value("renderer", "arena")));
+                break;
+            case VideoMenuLayout.KIND_MIPMAP_TYPE:
+                label = VideoMenuLayout.mipmapTypeLabel(VertexConfig.value("mipmapType", "nearest"));
                 break;
             default:
                 label = slot.label;
@@ -497,7 +508,7 @@ public final class VertexVideoMenu
             "betterGrass", "randomEntities",
             "customColors", "naturalTextures", "customSky", "connectedTextures", "multicore",
             "sunMoon", "stars", "depthFog", "dynamicFov", "showFps", "lagometer", "debugProfiler",
-            "smoothFps", "dynamicUpdates", "fastMath"};
+            "smoothFps", "dynamicUpdates", "fastMath", "swampColors"};
         boolean remark = false;
 
         for (String key : vertexKeys)
@@ -525,6 +536,8 @@ public final class VertexVideoMenu
         VertexConfig.setAndSaveValue("autosave", "45");
         VertexConfig.setAndSaveValue("timeOverride", "default");
         VertexConfig.setAndSaveValue("chunkUpdates", "4");
+        VertexConfig.setAndSaveValue("mipmapType", "nearest");
+        VertexQuality.applyMipmapType();
         // The renderer selector (Fast Render's backing key) stays outside Reset's
         // scope: a backend swap needs a restart and should remain an explicit choice.
         VertexGraphics.applyTrees(settings);

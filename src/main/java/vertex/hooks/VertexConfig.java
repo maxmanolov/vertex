@@ -39,6 +39,8 @@ public final class VertexConfig
         {"dynamicUpdates", "false", "Triple the chunk update budget while the player stands still"},
         {"smoothFps", "false", "Drain the GPU driver queue every frame to even out frame times"},
         {"fastMath", "false", "Use a small cache-resident trig table (restart required)"},
+        {"mipmapType", "nearest", "Terrain atlas minification: nearest (vanilla) or linear (smoother distant texel blend)"},
+        {"swampColors", "true", "Use the swamp biome's special grass and foliage tint instead of the standard colormap"},
         {"clouds", "true", "Render clouds"},
         {"weather", "true", "Render rain and snow, and spawn rain splash particles"},
         {"voidParticles", "true", "Spawn void fog depth particles"},

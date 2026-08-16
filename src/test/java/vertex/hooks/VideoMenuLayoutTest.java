@@ -148,10 +148,13 @@ public final class VideoMenuLayoutTest
         assertEquals("F", at(quality, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
         assertEquals("G", at(quality, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
         // better grass, custom sky, random mobs, custom colors, natural textures,
-        // connected textures - all live keys.
-        assertEquals(6, kindCount(quality, VideoMenuLayout.KIND_VERTEX));
+        // connected textures, swamp colors - all live keys.
+        assertEquals(7, kindCount(quality, VideoMenuLayout.KIND_VERTEX));
         assertEquals("connectedTextures",
             at(quality, LEFT, VideoMenuLayout.rowY(H, 6)).ref);
+        assertEquals("swampColors", at(quality, LEFT, VideoMenuLayout.rowY(H, 5)).ref);
+        assertEquals(1, kindCount(quality, VideoMenuLayout.KIND_MIPMAP_TYPE));
+        assertEquals("mipmapType", at(quality, RIGHT, VideoMenuLayout.rowY(H, 0)).ref);
     }
 
     @Test
@@ -161,6 +164,7 @@ public final class VideoMenuLayoutTest
         assertTrue(VideoMenuLayout.rebakesSections("betterGrass"));
         assertTrue(VideoMenuLayout.rebakesSections("naturalTextures"));
         assertTrue(VideoMenuLayout.rebakesSections("customColors"));
+        assertTrue(VideoMenuLayout.rebakesSections("swampColors"));
         // Overlay/entity/pass toggles apply per frame without touching section meshes.
         assertTrue(!VideoMenuLayout.rebakesSections("customSky"));
         assertTrue(!VideoMenuLayout.rebakesSections("randomEntities"));

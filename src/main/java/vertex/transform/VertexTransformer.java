@@ -167,6 +167,9 @@ public class VertexTransformer implements IClassTransformer
                 });
                 result = HeadInstanceCallPatch.apply(result, Mappings.TM_LOAD_ATLAS, Mappings.TM_LOAD_ATLAS_DESC,
                     "vertex/hooks/VertexCtm", "beforeStitch");
+                // Mipmap type: cache the terrain atlas id and apply the filter choice.
+                result = TailInstanceCallPatch.apply(result, Mappings.TM_LOAD_ATLAS, Mappings.TM_LOAD_ATLAS_DESC,
+                    "vertex/hooks/VertexQuality", "afterAtlasLoad");
             }
             else if (Mappings.MINECRAFT.equals(name))
             {
@@ -290,6 +293,16 @@ public class VertexTransformer implements IClassTransformer
                 // Autosave interval: the tick's single %900 site becomes configurable.
                 result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
                     900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
+            }
+            else if (Mappings.SWAMP_BIOME.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching BiomeGenSwamp (" + name + ")");
+                // Swamp colors off: both special-cased colors fall through to the base
+                // colormap path (which the custom-colors interception already covers).
+                result = SuperFallbackPatch.apply(result, Mappings.BIOME_GRASS_COLOR, Mappings.BIOME_COLOR_DESC,
+                    "vertex/hooks/VertexQuality", "swampColors");
+                result = SuperFallbackPatch.apply(result, Mappings.BIOME_FOLIAGE_COLOR, Mappings.BIOME_COLOR_DESC,
+                    "vertex/hooks/VertexQuality", "swampColors");
             }
             else if (Mappings.MATH_HELPER.equals(name))
             {
