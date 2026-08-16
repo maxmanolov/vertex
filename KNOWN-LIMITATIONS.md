@@ -45,8 +45,8 @@
   packs that ship CTM rules.
 - **A handful of video-menu slots are deliberately inert**: Redstone Animated, Vignette,
   Translucent Blocks, Load Far and Preloaded Chunks have no 1.7.10 behavior behind them;
-  Water/Grass fancy, Clear Water, Custom Fonts, Antialiasing, Better Snow, Smooth
-  Biomes, Fullscreen Mode and the integrated-server pacing pair (Smooth World, Lazy
+  Water/Grass fancy, Clear Water, Custom Fonts, Antialiasing, Smooth Biomes,
+  Fullscreen Mode and the integrated-server pacing pair (Smooth World, Lazy
   Chunk Loading) are real OptiFine features tracked as enhancement issues. Every inert
   slot renders disabled and is annotated with its reason in the layout source.
 - **Vanilla-profile only**: under Forge or deobfuscated environments Vertex deliberately
