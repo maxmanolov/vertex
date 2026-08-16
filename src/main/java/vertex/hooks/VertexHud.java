@@ -107,10 +107,16 @@ public final class VertexHud
     /**
      * One column per frame, oldest to newest, under the FPS readout: green under
      * 16.7ms, yellow under 33.3ms, red above, height 2px per ms (clamped to 40).
+     * All columns share one GL state block and one quad batch - per-column fillRect
+     * would cycle blend/texture state 240 times a frame.
      */
     private static void drawLagometer()
     {
         int baseY = 14;
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glBegin(GL11.GL_QUADS);
 
         for (int i = 0; i < LAG_COLUMNS; ++i)
         {
@@ -123,9 +129,25 @@ public final class VertexHud
 
             float ms = nanos / 1_000_000.0F;
             int height = Math.min(40, Math.max(1, (int)(ms * 2.0F)));
-            int color = ms < 16.7F ? 0x9000FF00 : ms < 33.4F ? 0x90FFFF00 : 0x90FF0000;
-            fillRect(2 + i, baseY, 3 + i, baseY + height, color);
+            int color = lagColor(ms);
+            GL11.glColor4f((color >> 16 & 255) / 255.0F, (color >> 8 & 255) / 255.0F,
+                (color & 255) / 255.0F, (color >> 24 & 255) / 255.0F);
+            GL11.glVertex2f(2 + i, baseY + height);
+            GL11.glVertex2f(3 + i, baseY + height);
+            GL11.glVertex2f(3 + i, baseY);
+            GL11.glVertex2f(2 + i, baseY);
         }
+
+        GL11.glEnd();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    /** Column color by frame cost: green under one vsync, yellow under two, red above. */
+    static int lagColor(float ms)
+    {
+        return ms < 16.7F ? 0x9000FF00 : ms < 33.4F ? 0x90FFFF00 : 0x90FF0000;
     }
 
     private static Object resolveOverlayHandles(Object gui) throws Exception
