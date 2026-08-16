@@ -44,6 +44,8 @@ public final class Mappings
     public static final String MINECRAFT = "bao";
     public static final String RENDER_GLOBAL = "bma";
     public static final String WORLD_RENDERER = "blo";
+    /** EntitySorter: captures negated camera X/Y/Z in a/b/c for renderer-array ordering. */
+    public static final String ENTITY_SORTER = "blq";
     public static final String RENDER_MANAGER = "bnn";
     public static final String ENTITY = "sa";
     public static final String BLOCK = "aji";
@@ -173,6 +175,10 @@ public final class Mappings
     public static final String WR_POS_X = "c";
     public static final String WR_POS_Y = "d";
     public static final String WR_POS_Z = "e";
+    /* WorldRenderer center X/Y/Z used by EntitySorter = n/o/p. */
+    public static final String WR_CENTER_X = "n";
+    public static final String WR_CENTER_Y = "o";
+    public static final String WR_CENTER_Z = "p";
     public static final String WR_SET_POSITION = "a";
     public static final String WR_SET_POSITION_DESC = "(III)V";
     public static final String WR_UPDATE_RENDERER = "a";
@@ -197,6 +203,9 @@ public final class Mappings
 
     /** Backend slot field added to WorldRenderer by the transformer (see MeshHost). */
     public static final String ADDED_MESH_FIELD = "vertex$mesh";
+
+    /** Primitive distance key added to WorldRenderer for allocation-free full-grid sorts. */
+    public static final String ADDED_SORT_KEY_FIELD = "vertex$sortKey";
 
     /*
      * Render-control targets (all void, patched with config-gated head skips):
