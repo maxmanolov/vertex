@@ -1,4 +1,4 @@
-# Known limitations - Vertex 0.4.0
+# Known limitations - Vertex 0.5.x
 
 - **Multi-core chunk building is now DEFAULT-ON** (`multicore=false` in
   vertex.properties opts out; restart to apply). The promotion gate closed 2026-08-06
@@ -38,7 +38,16 @@
   are documented follow-up scope.
 - **Custom colors** consume grass/foliage colormaps; other color.properties keys load but
   await per-key consumers (fog/sky/potions).
-- **Connected textures excluded** for this release with cause (docs/benchmarks/ctm-determination.md).
+- **Connected textures ship rule-driven** (`connectedTextures`, default on; the original
+  exclusion determination in docs/benchmarks/ctm-determination.md predates the
+  block-indexed rule engine that lifted it). Tiles stitch even when the key is off so
+  the menu toggle works live in both directions; the cost is a few atlas cells for
+  packs that ship CTM rules.
+- **A handful of video-menu slots are deliberately inert**: Redstone Animated, Vignette,
+  Translucent Blocks, Load Far and Preloaded Chunks have no 1.7.10 behavior behind them;
+  Water/Grass fancy, Clear Water, Custom Fonts, Antialiasing, Better Snow, Smooth
+  Biomes, Fullscreen Mode and the integrated-server pacing pair (Smooth World, Lazy
+  Chunk Loading) are real OptiFine features tracked as enhancement issues. Every inert
+  slot renders disabled and is annotated with its reason in the layout source.
 - **Vanilla-profile only**: under Forge or deobfuscated environments Vertex deliberately
   no-ops (names don't match); this is by design, not a defect.
-- **Better snow** not implemented (better grass ships, default off).
