@@ -400,13 +400,16 @@ public final class Mappings
     // (three idivs = the R/G/B averages): alh BlockGrass, ako and ane (tall-grass and
     // vine families) sample ahu.b(III)I (grass color), alt BlockLeavesBase samples
     // ahu.c(III)I (foliage color). Each loop obtains biomes via the ahl interface's
-    // a(II)Lahu;. The liquid blender (alw) and aoj use different shapes and stay on
-    // the vanilla path (issue #167 tracks them).
+    // a(II)Lahu;. The liquid blender (alw) uses the same access but reads the
+    // waterColorMultiplier field (ahu.aq:I) instead of calling a color method; aoj
+    // (lily pads) returns a constant and blends nothing.
     public static final String COLOR_BLEND = "d";
     public static final String COLOR_BLEND_DESC = "(Lahl;III)I";
     public static final String BIOME_BY_COORDS = "a";
     public static final String[] SMOOTH_GRASS_BLENDERS = {"alh", "ako", "ane"};
     public static final String[] SMOOTH_FOLIAGE_BLENDERS = {"alt"};
+    public static final String[] SMOOTH_WATER_BLENDERS = {"alw"};
+    public static final String BIOME_WATER_COLOR = "aq";
 
     // --- antialiasing surface (javap bao) ---------------------------------------------
     // Display initialization lives in bao.ag()V: new PixelFormat().withDepthBits(24)

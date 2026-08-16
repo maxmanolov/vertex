@@ -316,7 +316,7 @@ public class VertexTransformer implements IClassTransformer
                 // Smooth biomes off: the 3x3 blend collapses to the center sample.
                 result = CenterSampleOverridePatch.apply(result,
                     Mappings.COLOR_BLEND, Mappings.COLOR_BLEND_DESC,
-                    isFoliageBlender(name) ? 1 : 0,
+                    isWaterBlender(name) ? 2 : isFoliageBlender(name) ? 1 : 0,
                     "vertex/hooks/VertexSmoothBiomes", "fastPath", "centerSample");
             }
             else if (Mappings.SWAMP_BIOME.equals(name))
@@ -367,7 +367,20 @@ public class VertexTransformer implements IClassTransformer
 
     private static boolean isSmoothBlender(String name)
     {
-        return isFoliageBlender(name) || isGrassBlender(name);
+        return isFoliageBlender(name) || isGrassBlender(name) || isWaterBlender(name);
+    }
+
+    private static boolean isWaterBlender(String name)
+    {
+        for (String owner : Mappings.SMOOTH_WATER_BLENDERS)
+        {
+            if (owner.equals(name))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static boolean isGrassBlender(String name)

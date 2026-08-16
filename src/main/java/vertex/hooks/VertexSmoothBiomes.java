@@ -18,6 +18,7 @@ public final class VertexSmoothBiomes
 {
     static final int KIND_GRASS = 0;
     static final int KIND_FOLIAGE = 1;
+    static final int KIND_WATER = 2;
 
     private static volatile boolean ready = false;
     private static boolean disabled = false;
@@ -25,6 +26,7 @@ public final class VertexSmoothBiomes
     private static Method biomeByCoords;
     private static Method grassColor;
     private static Method foliageColor;
+    private static java.lang.reflect.Field waterColor;
 
     public static long centerSamples = 0L;
 
@@ -45,8 +47,14 @@ public final class VertexSmoothBiomes
             }
 
             Object biome = biomeByCoords.invoke(world, Integer.valueOf(x), Integer.valueOf(z));
-            Method sample = kind == KIND_FOLIAGE ? foliageColor : grassColor;
             ++centerSamples;
+
+            if (kind == KIND_WATER)
+            {
+                return waterColor.getInt(biome);
+            }
+
+            Method sample = kind == KIND_FOLIAGE ? foliageColor : grassColor;
             return ((Integer)sample.invoke(biome, Integer.valueOf(x), Integer.valueOf(y),
                 Integer.valueOf(z))).intValue();
         }
@@ -104,6 +112,8 @@ public final class VertexSmoothBiomes
         foliageColor = biomeRoot.getMethod(Mappings.BIOME_FOLIAGE_COLOR,
             int.class, int.class, int.class);
         foliageColor.setAccessible(true);
+        waterColor = biomeRoot.getDeclaredField(Mappings.BIOME_WATER_COLOR);
+        waterColor.setAccessible(true);
         ready = true;
         LogWrapper.info("[Vertex] Smooth biomes fast path armed");
     }
