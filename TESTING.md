@@ -83,6 +83,9 @@ self-disables down the ladder to the vanilla path and logs once.
   Items Animated off freezes the compass/clock; smoke/flame/portal/potion particle
   toggles stop their families while crits and block-break particles always spawn. All
   OFF then All ON round-trips every wired key.
+- Better snow: in a snowy biome set `betterSnow=true`, place a fence and a torch on
+  ground beside snow layers; a thin snow layer renders beneath both, and breaking the
+  neighboring snow clears it after the rebuild. Off restores bare ground.
 - Trees/Dropped Items: force Fast and Fancy against the opposite Graphics setting and
   confirm leaves/item entities follow the override, Default follows Graphics again.
 - Smooth Lighting Level: cycle 100% -> OFF -> 50% in a dark interior; corner shading

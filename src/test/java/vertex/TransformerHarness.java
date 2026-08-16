@@ -117,6 +117,25 @@ public final class TransformerHarness implements Opcodes
             return guardValue;
         }
 
+        public static boolean triGuardValue = false;
+        public static int triGuardCalls;
+        public static Object triGuardBlock;
+        public static int triGuardX;
+        public static int triGuardY;
+        public static int triGuardZ;
+
+        /** THIS_OBJECT_III head guard: records the arguments, true skips the body. */
+        public static boolean triGuard(Object instance, Object block, int x, int y, int z)
+        {
+            ++triGuardCalls;
+            received = instance;
+            triGuardBlock = block;
+            triGuardX = x;
+            triGuardY = y;
+            triGuardZ = z;
+            return triGuardValue;
+        }
+
         public static void reset()
         {
             headCalls = 0;
@@ -275,6 +294,33 @@ public final class TransformerHarness implements Opcodes
         }
 
         m.visitInsn(RETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    /** A class with public boolean m(Object,int,int,int) that counts calls, returns true. */
+    public static byte[] boolDispatchClass(String internalName)
+    {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_6, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+        cw.visitField(ACC_PUBLIC | ACC_STATIC, "calls", "I", null, null).visitEnd();
+        MethodVisitor ctor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        ctor.visitCode();
+        ctor.visitVarInsn(ALOAD, 0);
+        ctor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        ctor.visitInsn(RETURN);
+        ctor.visitMaxs(0, 0);
+        ctor.visitEnd();
+        MethodVisitor m = cw.visitMethod(ACC_PUBLIC, "m", "(Ljava/lang/Object;III)Z", null, null);
+        m.visitCode();
+        m.visitFieldInsn(GETSTATIC, internalName, "calls", "I");
+        m.visitInsn(ICONST_1);
+        m.visitInsn(IADD);
+        m.visitFieldInsn(PUTSTATIC, internalName, "calls", "I");
+        m.visitInsn(ICONST_1);
+        m.visitInsn(IRETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();
         cw.visitEnd();
