@@ -57,6 +57,21 @@ public final class GLStateTrackerTest
     }
 
     @Test
+    public void texgenCapsAreAlsoPerUnit()
+    {
+        int genS = 3168;
+        GLStateTracker tracker = new GLStateTracker();
+        tracker.redundantEnable(genS);
+        assertTrue(tracker.redundantEnable(genS));
+
+        tracker.setActiveUnit(1);
+        assertFalse("another unit's texgen enable must forward", tracker.redundantEnable(genS));
+
+        tracker.setActiveUnit(0);
+        assertTrue(tracker.redundantEnable(genS));
+    }
+
+    @Test
     public void popAttribInvalidatesEverything()
     {
         GLStateTracker tracker = new GLStateTracker();

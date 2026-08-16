@@ -16,14 +16,13 @@ import java.util.HashMap;
 final class GLStateTracker
 {
     private static final int CAP_TRACK = 65536;
-    private static final int GL_TEXTURE_2D_CAP = 3553;
     private static final byte UNKNOWN = 0;
     private static final byte ENABLED = 1;
     private static final byte DISABLED = 2;
 
     private final byte[] capState = new byte[CAP_TRACK];
     private final HashMap<Long, Integer> lastBound = new HashMap<Long, Integer>();
-    private final HashMap<Integer, Byte> textureCapByUnit = new HashMap<Integer, Byte>();
+    private final HashMap<Long, Byte> capByUnit = new HashMap<Long, Byte>();
     private int activeUnit = 0;
 
     void setActiveUnit(int unit)
@@ -31,13 +30,23 @@ final class GLStateTracker
         this.activeUnit = unit;
     }
 
+    /**
+     * Capabilities that are per texture unit in fixed-function GL: the sampler enables
+     * (1D/2D/3D/cube) and the texgen coordinates (vanilla's end-portal effect enables
+     * GEN_S..Q). Tracking these globally would let one unit's enable mask another's.
+     */
+    private static boolean perUnitCap(int cap)
+    {
+        return cap == 3552 || cap == 3553 || cap == 32879 || cap == 34067
+            || (cap >= 3168 && cap <= 3171);
+    }
+
     /** Records an enable; true when the capability was already known enabled. */
     boolean redundantEnable(int cap)
     {
-        if (cap == GL_TEXTURE_2D_CAP)
+        if (perUnitCap(cap))
         {
-            Byte previous = this.textureCapByUnit.put(Integer.valueOf(this.activeUnit),
-                Byte.valueOf(ENABLED));
+            Byte previous = this.capByUnit.put(unitKey(cap), Byte.valueOf(ENABLED));
             return previous != null && previous.byteValue() == ENABLED;
         }
 
@@ -54,10 +63,9 @@ final class GLStateTracker
     /** Records a disable; true when the capability was already known disabled. */
     boolean redundantDisable(int cap)
     {
-        if (cap == GL_TEXTURE_2D_CAP)
+        if (perUnitCap(cap))
         {
-            Byte previous = this.textureCapByUnit.put(Integer.valueOf(this.activeUnit),
-                Byte.valueOf(DISABLED));
+            Byte previous = this.capByUnit.put(unitKey(cap), Byte.valueOf(DISABLED));
             return previous != null && previous.byteValue() == DISABLED;
         }
 
@@ -69,6 +77,11 @@ final class GLStateTracker
         }
 
         return false;
+    }
+
+    private Long unitKey(int cap)
+    {
+        return Long.valueOf((long)this.activeUnit << 32 | (cap & 0xFFFFFFFFL));
     }
 
     /** Records a bind; true when this (unit, target) already held the same texture. */
@@ -84,7 +97,7 @@ final class GLStateTracker
     {
         java.util.Arrays.fill(this.capState, UNKNOWN);
         this.lastBound.clear();
-        this.textureCapByUnit.clear();
+        this.capByUnit.clear();
     }
 
     /** A deleted texture id may be reissued: the next bind of it must forward. */
