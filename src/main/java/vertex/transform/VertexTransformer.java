@@ -182,6 +182,12 @@ public class VertexTransformer implements IClassTransformer
                 // Smooth FPS: drain the driver queue at the frame tail when enabled.
                 result = TailInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC,
                     "vertex/hooks/VertexPerformance", "afterFrame");
+                // Antialiasing: the display-create reroute asks for a sampled context
+                // first and falls back through vanilla's own ladder.
+                result = RerouteStaticInMethodPatch.apply(result,
+                    Mappings.MC_INIT_DISPLAY, Mappings.MC_INIT_DISPLAY_DESC,
+                    "org/lwjgl/opengl/Display", "create", "(Lorg/lwjgl/opengl/PixelFormat;)V",
+                    "vertex/hooks/VertexAntialias", "createDisplay");
                 // Debug profiler: every showDebugProfilerChart read gates on the key,
                 // so vanilla's own conjunction stops profiler collection when off.
                 result = FieldReadReroutePatch.apply(result,

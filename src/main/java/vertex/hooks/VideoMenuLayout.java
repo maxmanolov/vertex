@@ -67,6 +67,8 @@ final class VideoMenuLayout
 
     static final int KIND_MIPMAP_TYPE = 21;
 
+    static final int KIND_ANTIALIAS = 22;
+
     static final int ID_DONE = 200;
     static final int ID_NAV_BASE = 300;
     static final int ID_SLOT_BASE = 400;
@@ -293,7 +295,7 @@ final class VideoMenuLayout
                 left.add(vertex("Connected Textures", "connectedTextures"));
                 left.add(vertex("Custom Sky", "customSky"));
                 right.add(new Slot(KIND_MIPMAP_TYPE, "Mipmap Type", "mipmapType"));
-                right.add(fixed("Antialiasing: §cOFF"));                 // tracked enhancement
+                right.add(new Slot(KIND_ANTIALIAS, "Antialiasing", "antialiasing"));
                 right.add(vertex("Random Mobs", "randomEntities"));
                 right.add(vertex("Better Snow", "betterSnow"));
                 right.add(vertex("Custom Colors", "customColors"));
@@ -422,6 +424,21 @@ final class VideoMenuLayout
     static String fastRenderLabel(boolean on)
     {
         return "Fast Render: " + (on ? "§aON" : "§cOFF");
+    }
+
+    /** Antialiasing cycle: OFF -> 2x -> 4x -> 8x -> OFF (restart applies it). */
+    static String nextAntialias(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        return trimmed.equals("0") || trimmed.isEmpty() ? "2" : trimmed.equals("2") ? "4"
+            : trimmed.equals("4") ? "8" : "0";
+    }
+
+    static String antialiasLabel(String current)
+    {
+        String trimmed = current == null ? "" : current.trim();
+        boolean on = trimmed.equals("2") || trimmed.equals("4") || trimmed.equals("8");
+        return "Antialiasing: " + (on ? trimmed + "x" : "§cOFF");
     }
 
     /** Mipmap Type cycle: Nearest <-> Linear. */

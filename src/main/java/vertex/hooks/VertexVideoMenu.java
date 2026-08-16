@@ -235,6 +235,13 @@ public final class VertexVideoMenu
                     // Sampler state, not mesh data: applies live to the cached atlas.
                     VertexQuality.applyMipmapType();
                     return true;
+                case VideoMenuLayout.KIND_ANTIALIAS:
+                    // Context creation option; a restart applies it, like Chunk Loading.
+                    VertexConfig.setAndSaveValue("antialiasing",
+                        VideoMenuLayout.nextAntialias(VertexConfig.value("antialiasing", "0")));
+                    buttonDisplayField.set(button,
+                        VideoMenuLayout.antialiasLabel(VertexConfig.value("antialiasing", "0")));
+                    return true;
                 case VideoMenuLayout.KIND_ALL_ON:
                 case VideoMenuLayout.KIND_ALL_OFF:
                     boolean on = slot.kind == VideoMenuLayout.KIND_ALL_ON;
@@ -380,6 +387,9 @@ public final class VertexVideoMenu
                 break;
             case VideoMenuLayout.KIND_MIPMAP_TYPE:
                 label = VideoMenuLayout.mipmapTypeLabel(VertexConfig.value("mipmapType", "nearest"));
+                break;
+            case VideoMenuLayout.KIND_ANTIALIAS:
+                label = VideoMenuLayout.antialiasLabel(VertexConfig.value("antialiasing", "0"));
                 break;
             default:
                 label = slot.label;
@@ -544,6 +554,7 @@ public final class VertexVideoMenu
             VertexConfig.setAndSaveValue("timeOverride", "default");
             VertexConfig.setAndSaveValue("chunkUpdates", "4");
             VertexConfig.setAndSaveValue("mipmapType", "nearest");
+            VertexConfig.setAndSaveValue("antialiasing", "0");
         }
         finally
         {
