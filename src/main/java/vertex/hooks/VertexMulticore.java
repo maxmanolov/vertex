@@ -475,7 +475,7 @@ public final class VertexMulticore
             return;
         }
 
-        queue.drain(SINK, 4);
+        queue.drain(SINK, VertexPerformance.drainBudget());
     }
 
     /**

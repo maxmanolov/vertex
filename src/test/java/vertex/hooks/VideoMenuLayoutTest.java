@@ -98,18 +98,24 @@ public final class VideoMenuLayoutTest
     }
 
     @Test
-    public void performancePageIsAllReferenceGeometryNoFakeBehavior()
+    public void performancePageWiresTheRealKnobsAndKeepsHonestStatics()
     {
         List<VideoMenuLayout.Placed> page =
             VideoMenuLayout.layout(VideoMenuLayout.PAGE_PERFORMANCE, W, H);
         assertEquals(5 + 4 + 1, page.size());
 
-        for (VideoMenuLayout.Placed slot : page)
-        {
-            assertTrue("performance slots have no real backing and must be inert",
-                slot.kind == VideoMenuLayout.KIND_STATIC
-                    || slot.kind == VideoMenuLayout.KIND_DONE);
-        }
+        // Live: smooth FPS, fast math, dynamic updates (Vertex keys), the chunk
+        // updates budget cycle, and the Fast Render backend alias.
+        assertEquals(3, kindCount(page, VideoMenuLayout.KIND_VERTEX));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_CHUNK_UPDATES));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_FAST_RENDER));
+        assertEquals("smoothFps", at(page, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
+        assertEquals("chunkUpdates", at(page, LEFT, VideoMenuLayout.rowY(H, 2)).ref);
+        assertEquals("fastMath", at(page, LEFT, VideoMenuLayout.rowY(H, 3)).ref);
+        assertEquals("dynamicUpdates", at(page, RIGHT, VideoMenuLayout.rowY(H, 2)).ref);
+        // Honest statics: Load Far and Preloaded Chunks (no 1.7.10 behavior exists),
+        // Smooth World and Lazy Chunk Loading (integrated-server pacing, tracked).
+        assertEquals(4, kindCount(page, VideoMenuLayout.KIND_STATIC));
     }
 
     @Test

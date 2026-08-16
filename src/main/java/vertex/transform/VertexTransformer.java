@@ -176,6 +176,9 @@ public class VertexTransformer implements IClassTransformer
                 result = TailInstanceCallPatch.apply(result, Mappings.MC_LOAD_WORLD, Mappings.MC_LOAD_WORLD_DESC,
                     "vertex/hooks/VertexTessellator", "sanitizeOnWorldChange");
                 result = HeadInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC, "vertex/hooks/VertexTestHarness", "tick");
+                // Smooth FPS: drain the driver queue at the frame tail when enabled.
+                result = TailInstanceCallPatch.apply(result, Mappings.MC_RUN_GAME_LOOP, Mappings.MC_RUN_GAME_LOOP_DESC,
+                    "vertex/hooks/VertexPerformance", "afterFrame");
                 // Debug profiler: every showDebugProfilerChart read gates on the key,
                 // so vanilla's own conjunction stops profiler collection when off.
                 result = FieldReadReroutePatch.apply(result,
@@ -287,6 +290,16 @@ public class VertexTransformer implements IClassTransformer
                 // Autosave interval: the tick's single %900 site becomes configurable.
                 result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
                     900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
+            }
+            else if (Mappings.MATH_HELPER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching MathHelper (" + name + ")");
+                // Fast math: table-backed sin/cos (mode fixed at class load; the
+                // vanilla-mode table is bit-exact, so this is always safe to weave).
+                result = MethodBodyReplacePatch.apply(result, Mappings.MATH_SIN, Mappings.MATH_TRIG_DESC,
+                    "vertex/hooks/VertexFastMath", "sin");
+                result = MethodBodyReplacePatch.apply(result, Mappings.MATH_COS, Mappings.MATH_TRIG_DESC,
+                    "vertex/hooks/VertexFastMath", "cos");
             }
             else if (Mappings.WORLD_PROVIDER.equals(name))
             {
