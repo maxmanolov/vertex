@@ -100,6 +100,10 @@ self-disables down the ladder to the vanilla path and logs once.
   "Fullscreen mode 1280x720 applied" and the fullscreen resolution matches; Default
   restores the vanilla desktop-mode path (no log line). A value from a disconnected
   monitor falls back to desktop with a one-time log note.
+- Custom Fonts: enable a resource pack shipping mcpatcher/font/ascii.png - all text
+  switches to the pack font (log: "Custom font loaded from mcpatcher/font/ascii.png")
+  with widths derived from the pack image; toggling Custom Fonts OFF restores the
+  vanilla font immediately, ON brings the pack font back without a reload.
 - Trees/Dropped Items: force Fast and Fancy against the opposite Graphics setting and
   confirm leaves/item entities follow the override, Default follows Graphics again.
 - Smooth Lighting Level: cycle 100% -> OFF -> 50% in a dark interior; corner shading
