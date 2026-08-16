@@ -164,8 +164,10 @@ public final class Mappings
     public static final String RG_GL_RENDER_LISTS = "af";
     public static final String RG_MC = "A";
     /* RenderGlobal.cloudTickCounter=field_72773_u=E drives the built-in cloud drift.
-     * The 1.7.10 Entity interpolation used by renderClouds is lastTickPos (p/q/r) to
-     * pos (s/t/u), not the prevPos (S/T/U) quartet used by terrain sorting. */
+     * Both cloud paths interpolate the camera fold X from lastTickPosX p (b(F)V offs
+     * 255-275, c(F)V offs 72-92) and Z from lastTickPosZ r (offs 299-319 / 120-140),
+     * but Y from prevPosY T (offs 49-69 / 13-33), NOT lastTickPosY q. The drift factor
+     * at both sites is the widened float 0.03F (ldc2_w 0.029999999329447746). */
     public static final String RG_CLOUD_TICK_COUNTER = "E";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
@@ -191,7 +193,6 @@ public final class Mappings
     public static final String ENTITY_POS_Y = "t";
     public static final String ENTITY_POS_Z = "u";
     public static final String ENTITY_LAST_TICK_POS_X = "p";
-    public static final String ENTITY_LAST_TICK_POS_Y = "q";
     public static final String ENTITY_LAST_TICK_POS_Z = "r";
     /* Entity.prevPosX/Y/Z = field_70142_S / field_70137_T / field_70136_U - the
      * interpolation anchors renderSortedRenderers uses for the camera position. */

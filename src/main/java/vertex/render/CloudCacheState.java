@@ -8,7 +8,8 @@ package vertex.render;
 public final class CloudCacheState
 {
     public static final int REBUILD_INTERVAL_TICKS = 20;
-    public static final double CLOUD_DRIFT_PER_TICK = 0.03D;
+    /** Vanilla multiplies by the float literal 0.03F widened to double; match it bit-exact. */
+    public static final double CLOUD_DRIFT_PER_TICK = (double)0.03F;
 
     private boolean valid;
     private Object owner;

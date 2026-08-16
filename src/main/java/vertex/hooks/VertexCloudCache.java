@@ -188,7 +188,9 @@ public final class VertexCloudCache
     private static void resolveCamera(Class<?> type) throws Exception
     {
         cameraLastX = accessibleHierarchy(type, Mappings.ENTITY_LAST_TICK_POS_X);
-        cameraLastY = accessibleHierarchy(type, Mappings.ENTITY_LAST_TICK_POS_Y);
+        // Vanilla's cloud fold interpolates Y from prevPosY (T), unlike X/Z which use
+        // the lastTickPos pair - see the RG_CLOUD_TICK_COUNTER mapping evidence.
+        cameraLastY = accessibleHierarchy(type, Mappings.ENTITY_PREV_POS_Y);
         cameraLastZ = accessibleHierarchy(type, Mappings.ENTITY_LAST_TICK_POS_Z);
         cameraX = accessibleHierarchy(type, Mappings.ENTITY_POS_X);
         cameraY = accessibleHierarchy(type, Mappings.ENTITY_POS_Y);
