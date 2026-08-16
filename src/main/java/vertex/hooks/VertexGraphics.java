@@ -101,6 +101,44 @@ public final class VertexGraphics
             : overrideFancy(VertexConfig.value("droppedItems", "default"), vanilla);
     }
 
+    // ---- grass sides ---------------------------------------------------------------------
+
+    private static java.lang.reflect.Field fancyGrassField;
+    private static boolean grassOverrideLogged = false;
+
+    /**
+     * Reroute of the per-frame RenderBlocks.fancyGrass derivation: the tri-state
+     * override lands in the static gate instead of the raw fancyGraphics value. Runs
+     * once per frame, so menu flips apply on the next frame with no captured state.
+     */
+    public static void applyFancyGrass(boolean vanillaFancy)
+    {
+        try
+        {
+            if (fancyGrassField == null)
+            {
+                Class<?> renderBlocks = net.minecraft.launchwrapper.Launch.classLoader
+                    .loadClass(Mappings.RENDER_BLOCKS);
+                fancyGrassField = renderBlocks.getDeclaredField(Mappings.RB_FANCY_GRASS);
+                fancyGrassField.setAccessible(true);
+            }
+
+            boolean value = overrideFancy(VertexConfig.value("grass", "default"), vanillaFancy);
+            fancyGrassField.setBoolean(null, value);
+
+            if (!grassOverrideLogged && value != vanillaFancy)
+            {
+                grassOverrideLogged = true;
+                LogWrapper.info("[Vertex] Grass override active: "
+                    + (value ? "fancy" : "fast") + " against Graphics " + (vanillaFancy ? "fancy" : "fast"));
+            }
+        }
+        catch (Throwable t)
+        {
+            disable("applyFancyGrass", t);
+        }
+    }
+
     // ---- smooth lighting level / dynamic FOV -------------------------------------------
 
     /** Return adjuster on Block.getAmbientOcclusionLightValue. */

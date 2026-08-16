@@ -193,6 +193,12 @@ public final class VertexVideoMenu
                         VertexGraphics.applyTrees(settings);
                         VertexRenderer.requestSettingsRemark();
                     }
+                    else if ("grass".equals(slot.ref))
+                    {
+                        // The per-frame derivation picks the flag up next frame; the
+                        // overlay itself is baked into section meshes.
+                        VertexRenderer.requestSettingsRemark();
+                    }
 
                     return true;
                 case VideoMenuLayout.KIND_AO_LEVEL:
@@ -549,6 +555,7 @@ public final class VertexVideoMenu
             VertexConfig.setAndSaveValue("cloudHeight", "0");
             VertexConfig.setAndSaveValue("trees", "default");
             VertexConfig.setAndSaveValue("droppedItems", "default");
+            VertexConfig.setAndSaveValue("grass", "default");
             VertexConfig.setAndSaveValue("aoLevel", "100");
             VertexConfig.setAndSaveValue("autosave", "45");
             VertexConfig.setAndSaveValue("timeOverride", "default");

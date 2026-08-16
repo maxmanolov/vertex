@@ -134,9 +134,10 @@ public final class VideoMenuLayoutTest
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_FOG_START));
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_CLOUD_HEIGHT));
         assertEquals("cloudHeight", at(details, RIGHT, VideoMenuLayout.rowY(H, 0)).ref);
-        // Trees and Dropped Items are tri-state (default follows Graphics).
-        assertEquals(2, kindCount(details, VideoMenuLayout.KIND_TRISTATE));
+        // Trees, Grass and Dropped Items are tri-state (default follows Graphics).
+        assertEquals(3, kindCount(details, VideoMenuLayout.KIND_TRISTATE));
         assertEquals("trees", at(details, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
+        assertEquals("grass", at(details, RIGHT, VideoMenuLayout.rowY(H, 1)).ref);
         assertEquals("droppedItems", at(details, RIGHT, VideoMenuLayout.rowY(H, 7)).ref);
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_VANILLA)); // capes
         assertEquals(1, kindCount(details, VideoMenuLayout.KIND_HELD_TOOLTIPS));
@@ -171,6 +172,7 @@ public final class VideoMenuLayoutTest
         assertTrue(VideoMenuLayout.rebakesSections("swampColors"));
         assertTrue(VideoMenuLayout.rebakesSections("betterSnow"));
         assertTrue(VideoMenuLayout.rebakesSections("smoothBiomes"));
+        assertTrue(VideoMenuLayout.rebakesSections("grass"));
         // Overlay/entity/pass toggles apply per frame without touching section meshes.
         assertTrue(!VideoMenuLayout.rebakesSections("customSky"));
         assertTrue(!VideoMenuLayout.rebakesSections("randomEntities"));
