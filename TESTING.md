@@ -83,6 +83,12 @@ self-disables down the ladder to the vanilla path and logs once.
   Items Animated off freezes the compass/clock; smoke/flame/portal/potion particle
   toggles stop their families while crits and block-break particles always spawn. All
   OFF then All ON round-trips every wired key.
+- Grass quality: with Graphics Fast, set Grass to Fancy - hillside grass sides gain
+  the biome-tinted overlay within a rebuild (log: "Grass override active"); Fast under
+  fancy Graphics removes it. Antialiasing: set 4x, restart, and confirm the log line
+  "Antialiasing active ... GL_SAMPLES=4"; block edges at a distance smooth visibly.
+  Smooth Biomes: stand on a biome border - OFF snaps the grass/foliage/water color at
+  the border line, ON restores the blended band; the world re-marks on each flip.
 - Better snow: in a snowy biome set `betterSnow=true`, place a fence and a torch on
   ground beside snow layers; a thin snow layer renders beneath both, and breaking the
   neighboring snow clears it after the rebuild. Off restores bare ground.
