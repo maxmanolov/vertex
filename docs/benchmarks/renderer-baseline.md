@@ -7,7 +7,7 @@ the yardstick every later backend is benchmarked against.
 
 ## Method
 
-`-Dvertex.profileRender=true` (see ARCHITECTURE.md) brackets the four client-thread
+`-Dvertex.profileRender=true` (see ARCHITECTURE.md) brackets the five client-thread
 renderer phases with nanosecond timers woven at class load:
 
 - **clip** - `RenderGlobal.clipRenderersByFrustum`: per-frame frustum visibility.

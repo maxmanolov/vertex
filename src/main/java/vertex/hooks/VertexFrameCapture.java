@@ -19,6 +19,8 @@ import vertex.Mappings;
  * a fixed position and camera, world time is pinned every frame, the GUI is hidden, and
  * three angles are captured from the front buffer (the last fully presented frame) as
  * both PNG (for humans) and raw RGB (for exact byte comparison between runs).
+ * For cloud-cache comparisons, -Dvertex.test.pinCloudTickBase=N pins the three angles at
+ * N, N+5 and N+10, all inside one rebuild interval.
  *
  * Two runs of the same world and config that differ only in -Dvertex.multicore therefore
  * produce comparable images: geometry differences between the vanilla and worker build
@@ -41,6 +43,7 @@ public final class VertexFrameCapture
     // scene - noon under open sky is lightmap-max everywhere and shows no delta - so
     // -Dvertex.test.pinTime=18000 shoots the same fixture at midnight.
     private static final long PIN_TIME = Long.getLong("vertex.test.pinTime", 6000L).longValue();
+    private static final Integer PIN_CLOUD_TICK_BASE = Integer.getInteger("vertex.test.pinCloudTickBase");
     private static final long SETTLE_MS = 45000L;
     private static final int FRAMES_PER_ANGLE = 120;
     private static final float[] YAWS = {0.0F, 120.0F, 240.0F};
@@ -79,6 +82,7 @@ public final class VertexFrameCapture
     private static boolean savedHideGui;
     private static Object savedDifficulty;
     private static Field renderGlobalField;
+    private static Field cloudTickCounter;
     private static Field renderDistanceField;
     private static int drainedFrames = 0;
     private static int pinDebugTicks = 0;
@@ -89,6 +93,7 @@ public final class VertexFrameCapture
     private static Field serverHandler;
     private static Method serverTeleport;
     private static boolean gateTimeoutLogged = false;
+    private static boolean cloudCacheResetForCapture = false;
 
     /**
      * Position must be pinned on the SERVER player, exactly like invulnerability: the
@@ -194,6 +199,12 @@ public final class VertexFrameCapture
             {
                 initialize(minecraft, world, player);
                 LogWrapper.info("[Vertex] Frame capture armed: " + SHOT_DIR);
+            }
+
+            if (PIN_CLOUD_TICK_BASE != null)
+            {
+                cloudTickCounter.setInt(renderGlobalField.get(minecraft),
+                    PIN_CLOUD_TICK_BASE.intValue() + angleIndex * 5);
             }
 
             if (worldSeenMs == 0L)
@@ -400,6 +411,15 @@ public final class VertexFrameCapture
             if (now - worldSeenMs < SETTLE_MS)
             {
                 return;
+            }
+
+            // A pinned cloud tick deliberately prevents expiry. Reset once after the
+            // long world-settle phase so the comparison covers ages 0/5/10 without
+            // also freezing the capture-time cloud color for the preceding 45 seconds.
+            if (PIN_CLOUD_TICK_BASE != null && !cloudCacheResetForCapture)
+            {
+                VertexCloudCache.reset();
+                cloudCacheResetForCapture = true;
             }
 
             if (MOTION)
@@ -696,6 +716,8 @@ public final class VertexFrameCapture
         posYField.setAccessible(true);
         renderGlobalField = minecraft.getClass().getDeclaredField(Mappings.MC_RENDER_GLOBAL);
         renderGlobalField.setAccessible(true);
+        cloudTickCounter = renderGlobalField.getType().getDeclaredField(Mappings.RG_CLOUD_TICK_COUNTER);
+        cloudTickCounter.setAccessible(true);
         renderDistanceField = gameSettings.get(minecraft).getClass().getDeclaredField(Mappings.GS_RENDER_DISTANCE);
         renderDistanceField.setAccessible(true);
         initialized = true;

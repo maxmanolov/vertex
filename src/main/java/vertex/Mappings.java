@@ -165,6 +165,12 @@ public final class Mappings
     public static final String RG_DBG_SKIPPED_PASS = "ac";
     public static final String RG_GL_RENDER_LISTS = "af";
     public static final String RG_MC = "A";
+    /* RenderGlobal.cloudTickCounter=field_72773_u=E drives the built-in cloud drift.
+     * Both cloud paths interpolate the camera fold X from lastTickPosX p (b(F)V offs
+     * 255-275, c(F)V offs 72-92) and Z from lastTickPosZ r (offs 299-319 / 120-140),
+     * but Y from prevPosY T (offs 49-69 / 13-33), NOT lastTickPosY q. The drift factor
+     * at both sites is the widened float 0.03F (ldc2_w 0.029999999329447746). */
+    public static final String RG_CLOUD_TICK_COUNTER = "E";
     public static final String RG_WORLD_RENDERERS = "v";
     public static final String RG_WORLD_RENDERERS_TO_UPDATE = "t";
     public static final String RG_RENDER_CHUNKS_WIDE = "w";
@@ -192,6 +198,8 @@ public final class Mappings
     public static final String ENTITY_POS_X = "s";
     public static final String ENTITY_POS_Y = "t";
     public static final String ENTITY_POS_Z = "u";
+    public static final String ENTITY_LAST_TICK_POS_X = "p";
+    public static final String ENTITY_LAST_TICK_POS_Z = "r";
     /* Entity.prevPosX/Y/Z = field_70142_S / field_70137_T / field_70136_U - the
      * interpolation anchors renderSortedRenderers uses for the camera position. */
     public static final String ENTITY_PREV_POS_X = "S";
@@ -333,6 +341,7 @@ public final class Mappings
     public static final String LEAVES_SET_GRAPHICS = "b";
     public static final String LEAVES_SET_GRAPHICS_DESC = "(Z)V";
     public static final String GS_FANCY_GRAPHICS = "i";
+    public static final String GS_ANAGLYPH = "e";
     public static final String RENDER_ITEM = "bny";
     public static final String BLOCK_AO_VALUE = "I";
     public static final String BLOCK_AO_VALUE_DESC = "()F";
