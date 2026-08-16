@@ -334,6 +334,16 @@ public class VertexTransformer implements IClassTransformer
                 result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
                     900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
             }
+            else if (Mappings.WORLD_SERVER.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching WorldServer (" + name + ")");
+                result = WorldServerTickPatch.apply(result);
+            }
+            else if (Mappings.SCHEDULED_TICK.equals(name))
+            {
+                LogWrapper.info("[Vertex] Patching NextTickListEntry (" + name + ")");
+                result = ScheduledTickEntryPatch.apply(result);
+            }
             else if (isSmoothBlender(name))
             {
                 LogWrapper.info("[Vertex] Patching biome color blender (" + name + ")");

@@ -352,6 +352,26 @@ public final class Mappings
     public static final String MC_SERVER = "net.minecraft.server.MinecraftServer";
     public static final String MC_SERVER_TICK = "u";
     public static final String MC_SERVER_TICK_DESC = "()V";
+    /* Integrated-server scheduled-block-tick surface (javap of the official 1.7.10
+     * client jar, cross-checked against joined.srg): WorldServer=mt stores the
+     * membership Set at M and the time-ordered TreeSet at N. Its chunk query
+     * getPendingBlockUpdates=a(Lapx;Z)Ljava/util/List; obtains the first iterator from
+     * N. NextTickListEntry=ahs exposes block x/z in public fields a/c; Chunk=apx exposes
+     * chunk x/z in public final fields g/h. WorldServer.initialize=a(Lahj;)V can recreate
+     * the membership set after construction, so both lifecycle points install it. */
+    public static final String WORLD_SERVER = "mt";
+    public static final String WS_PENDING_TICK_SET = "M";
+    public static final String WS_PENDING_TICK_TREE = "N";
+    public static final String WS_PENDING_TICK_LIST = "V";
+    public static final String WS_INITIALIZE = "a";
+    public static final String WS_INITIALIZE_DESC = "(Lahj;)V";
+    public static final String WS_GET_PENDING_TICKS = "a";
+    public static final String WS_GET_PENDING_TICKS_DESC = "(Lapx;Z)Ljava/util/List;";
+    public static final String SCHEDULED_TICK = "ahs";
+    public static final String SCHEDULED_TICK_X = "a";
+    public static final String SCHEDULED_TICK_Z = "c";
+    public static final String CHUNK_X = "g";
+    public static final String CHUNK_Z = "h";
     public static final String WORLD_CLASS = "ahb";
     public static final String WORLD_CELESTIAL_ANGLE_DESC = "(F)F";
 
