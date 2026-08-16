@@ -200,13 +200,14 @@ public final class VideoMenuLayoutTest
         assertEquals(reset.y + 32, done.y);
 
         // Real backing: fullscreen + 3D anaglyph (vanilla); lagometer, show FPS,
-        // weather and debug profiler (Vertex keys); autosave and time cycles. The
-        // only inert slot left is Fullscreen Mode.
+        // weather and debug profiler (Vertex keys); autosave, time and fullscreen
+        // mode cycles. No inert slots remain on this page.
         assertEquals(2, kindCount(page, VideoMenuLayout.KIND_VANILLA));
         assertEquals(4, kindCount(page, VideoMenuLayout.KIND_VERTEX));
         assertEquals(1, kindCount(page, VideoMenuLayout.KIND_AUTOSAVE));
         assertEquals(1, kindCount(page, VideoMenuLayout.KIND_TIME));
-        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_STATIC));
+        assertEquals(1, kindCount(page, VideoMenuLayout.KIND_FULLSCREEN_MODE));
+        assertEquals(0, kindCount(page, VideoMenuLayout.KIND_STATIC));
         assertEquals("lagometer", at(page, LEFT, VideoMenuLayout.rowY(H, 0)).ref);
         assertEquals("showFps", at(page, LEFT, VideoMenuLayout.rowY(H, 1)).ref);
         assertEquals("debugProfiler", at(page, RIGHT, VideoMenuLayout.rowY(H, 0)).ref);

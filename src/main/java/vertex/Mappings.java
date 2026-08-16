@@ -460,6 +460,16 @@ public final class Mappings
     public static final String TM_ANIMATED_SPRITES = "e";
     public static final String TEXTURE_UTIL = "bqi";
     public static final String TEX_UPLOAD = "a";
+    // Fullscreen Mode: bao.ai()V is the only fullscreen display-mode chooser. It
+    // collects Display.getAvailableDisplayModes() (off 9), takes getDesktopDisplayMode()
+    // (off 16), swaps in the half-resolution entry from static list H when the desktop
+    // mode is not fullscreen-capable on macOS (offs 30-233, OS gate u.a()==v.d at
+    // 30-36), then Display.setDisplayMode (off 237) with displayWidth/Height putfields
+    // d/e (offs 245/253). Its single caller o()V (toggleFullscreen, invokespecial off
+    // 24) re-reads the live mode into d/e right after (offs 27-44), so a head guard
+    // that sets its own mode needs no field writes at all.
+    public static final String MC_FULLSCREEN_MODE = "ai";
+    public static final String MC_FULLSCREEN_MODE_DESC = "()V";
     public static final String WC_DO_VOID_FOG_PARTICLES = "C";
     public static final String WC_DO_VOID_FOG_PARTICLES_DESC = "(III)V";
 
