@@ -92,6 +92,14 @@ self-disables down the ladder to the vanilla path and logs once.
 - Better snow: in a snowy biome set `betterSnow=true`, place a fence and a torch on
   ground beside snow layers; a thin snow layer renders beneath both, and breaking the
   neighboring snow clears it after the rebuild. Off restores bare ground.
+- Chunk-save paths (#195): run with `-Dvertex.test.blockChurn=20 -Dvertex.test.saveEvery=30`
+  and confirm `[Vertex] Test save #N complete` lines plus a fresh mtime on
+  `saves/<world>/region/*.mca`. The fixture's SIGTERM shutdown cannot save (log4j closes
+  its appenders first, so the vanilla stop path throws before `saveAllWorlds`), so this
+  is the only way to exercise chunk serialization, the scheduled-tick index and
+  `getPendingBlockUpdates` in-game. NOTE: `blockChurn` writes real blocks (a toggling
+  8x8 column at y=200) - it mutates the world, so never combine it with capture gates;
+  use a scratch copy of the fixture world.
 - Clear Water: stand over deep water and flip Clear Water ON - the bottom becomes
   visible within a tick (log: "Clear water armed (2 sprites)"); OFF restores vanilla
   opacity bit-exact. Flip once with Water Animated OFF to confirm the immediate
