@@ -33,20 +33,19 @@ RD16 arena soak, macOS on Apple Silicon, redundant-call skipping on versus off:
 **Four and a half million skipped calls per minute moved the frame-time distribution by
 nothing measurable.** Not "a small win inside noise" - the percentiles were identical.
 
-## Why this is plausible rather than surprising
+## What the result establishes
 
-Apple's GL implementation sits behind a translation layer that already coalesces
-redundant state changes before anything reaches the GPU. A redundant `glEnable` costs a
-function call and a compare on the driver side; the work Vertex hoped to avoid was
-already not being done. The measurement says the deduplication is happening somewhere
-below us either way.
+The A/B result does not identify where the redundant calls become cheap; it only shows
+that removing them did not change the measured frame-time distribution on this client
+and driver. Driver-side coalescing is one possible explanation, but the experiment did
+not instrument the driver and therefore cannot establish that mechanism.
 
 ## Consequences
 
 - The skipping logic was **removed**, not merely disabled. Dead caching around GL state
   is a correctness liability (every path that changes state behind the tracker must
   remember to invalidate) with, on this platform, no upside to justify it.
-- The **counters stayed**. They cost a increment per call, they are what priced this
+- The **counters stayed**. They cost an increment per call, they are what quantified this
   question, and they are what will price it on another platform without rebuilding the
   tracker.
 - Visual gating was not the deciding factor. The capture comparison for this change was
@@ -55,9 +54,9 @@ below us either way.
 
 ## If someone revisits this on Windows or Linux
 
-Do not restore the skipping first. Run the counting build, read `glCalls` and
-`glRedundant` off the diagnostics line, and multiply the redundant count by a measured
-per-call cost on that driver. Only if that product is a meaningful fraction of frame
-time is the skip worth reintroducing - and then it needs the tracker's invalidation
-paths re-audited, because they are the part that can produce wrong pixels rather than
-merely slow ones.
+Do not infer the result from call counts or an isolated per-call microbenchmark. Repeat
+the same controlled frame-time A/B on the target driver, alternating pre-built jars and
+holding the scene and machine load fixed. The counters establish that skipping engaged;
+the end-to-end frame-time distribution decides whether it helped. If it does, re-audit
+the tracker's invalidation paths before restoring the optimization, because those paths
+can produce wrong pixels rather than merely slow ones.

@@ -50,8 +50,9 @@
   slot renders disabled and is annotated with its reason in the layout source.
 - **GL state-call skipping is a measured dead end on macOS** (#175): a tracker that
   skipped ~4.5M redundant GL calls per minute moved frame times by nothing (ftP50 0.7ms,
-  ftP99 1.7ms, identical both ways) - Apple's driver already coalesces them. The skipping
-  was removed; the counters stayed so the same question can be priced on another driver
-  without rebuilding the tracker. Full write-up: docs/benchmarks/gl-state-cache.md.
+  ftP99 1.7ms, identical both ways). The experiment did not establish where that cost
+  disappears, only that skipping did not help on the tested client and driver. The
+  skipping was removed; the counters stayed so the same controlled A/B can verify that
+  it engaged on another platform. Full write-up: docs/benchmarks/gl-state-cache.md.
 - **Vanilla-profile only**: under Forge or deobfuscated environments Vertex deliberately
   no-ops (names don't match); this is by design, not a defect.
