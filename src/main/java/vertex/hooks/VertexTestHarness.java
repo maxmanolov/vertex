@@ -12,6 +12,10 @@ import vertex.Mappings;
  *   -Dvertex.test.autoJoin=WORLDNAME   join the named singleplayer world once the menu is up
  *   -Dvertex.test.churn=N              force-promote ~N chunk sections per second near the
  *                                      player, generating sustained rebuild load
+ *   -Dvertex.test.blockChurn=N         write ~N blocks per second into the integrated
+ *                                      server's world, so chunks actually go dirty
+ *   -Dvertex.test.saveEvery=S          save all worlds every S seconds from the client
+ *                                      tick (see {@link VertexServerChurn})
  *
  * Together these turn the merge gates' mechanical half ("survives X minutes in-world with
  * zero self-disables under rebuild load") into a scriptable soak test: launch with both
