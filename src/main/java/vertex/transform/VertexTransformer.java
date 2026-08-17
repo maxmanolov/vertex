@@ -371,6 +371,15 @@ public class VertexTransformer implements IClassTransformer
                 // Autosave interval: the tick's single %900 site becomes configurable.
                 result = ReplaceIntConstPatch.apply(result, Mappings.MC_SERVER_TICK, Mappings.MC_SERVER_TICK_DESC,
                     900, 1, "vertex/hooks/VertexWorldVisuals", "autosaveTicks");
+
+                if (vertex.hooks.VertexServerChurn.ACTIVE)
+                {
+                    // The mutation and save fixture must run on the integrated-server
+                    // thread. Calling World.setBlock or saveAllWorlds from the client
+                    // thread races the tick and chunk collections it is meant to test.
+                    result = TailInstanceCallPatch.apply(result, Mappings.MC_SERVER_TICK,
+                        Mappings.MC_SERVER_TICK_DESC, "vertex/hooks/VertexServerChurn", "tick");
+                }
             }
             else if (Mappings.WORLD_SERVER.equals(name))
             {

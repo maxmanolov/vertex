@@ -54,7 +54,6 @@ public final class VertexTestHarness
     public static void tick(Object minecraft)
     {
         VertexDynamicLightsCollector.tick(minecraft);
-        VertexServerChurn.tick(minecraft);
         VertexPackLoader.tick(minecraft);
         VertexFullbright.tick(minecraft);
         VertexFreelook.tick(minecraft);

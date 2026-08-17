@@ -397,14 +397,15 @@ public final class Mappings
      * the chunk (invokevirtual e:(II)Lapx; off 48) and writes through
      * apx.a(IIILaji;I)Z (off 94), which is what marks the chunk dirty. Blocks.air/stone
      * are ajn.a / ajn.b (clinit: ldc "air" -> putstatic a, ldc "stone" -> putstatic b).
-     * Minecraft.getIntegratedServer=H()Lnet/minecraft/server/MinecraftServer;;
      * MinecraftServer.worldServers=c:[Lmt; and saveAllWorlds=a(Z)V. */
     public static final String WORLD_SET_BLOCK = "d";
     public static final String BLOCKS_AIR = "a";
     public static final String BLOCKS_STONE = "b";
-    public static final String MC_GET_INTEGRATED_SERVER = "H";
     public static final String MS_WORLD_SERVERS = "c";
     public static final String MS_SAVE_ALL_WORLDS = "a";
+    public static final String WORLD_GET_SPAWN_POINT = "K";
+    public static final String COORD_X = "a";
+    public static final String COORD_Z = "c";
     public static final String WORLD_CELESTIAL_ANGLE_DESC = "(F)F";
 
     // --- fast math surface (javap qh) -------------------------------------------------

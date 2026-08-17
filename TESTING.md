@@ -97,8 +97,10 @@ self-disables down the ladder to the vanilla path and logs once.
   `saves/<world>/region/*.mca`. The fixture's SIGTERM shutdown cannot save (log4j closes
   its appenders first, so the vanilla stop path throws before `saveAllWorlds`), so this
   is the only way to exercise chunk serialization, the scheduled-tick index and
-  `getPendingBlockUpdates` in-game. NOTE: `blockChurn` writes real blocks (a toggling
-  8x8 column at y=200) - it mutates the world, so never combine it with capture gates;
+  `getPendingBlockUpdates` in-game. Both operations run at the server-tick tail; invoking
+  world mutation or save APIs from the client thread would race the server. NOTE:
+  `blockChurn` writes real blocks (a toggling
+  8x8 plane at y=200) - it mutates the world, so never combine it with capture gates;
   use a scratch copy of the fixture world.
 - Clear Water: stand over deep water and flip Clear Water ON - the bottom becomes
   visible within a tick (log: "Clear water armed (2 sprites)"); OFF restores vanilla
