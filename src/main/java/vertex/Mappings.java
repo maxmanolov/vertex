@@ -405,6 +405,7 @@ public final class Mappings
     public static final String MS_SAVE_ALL_WORLDS = "a";
     public static final String WORLD_GET_SPAWN_POINT = "K";
     public static final String COORD_X = "a";
+    public static final String COORD_Y = "b";
     public static final String COORD_Z = "c";
     public static final String WORLD_CELESTIAL_ANGLE_DESC = "(F)F";
 

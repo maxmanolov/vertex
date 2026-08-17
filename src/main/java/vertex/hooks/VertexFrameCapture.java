@@ -60,7 +60,6 @@ public final class VertexFrameCapture
 
     private static Method setPosition;
     private static Method setWorldTime;
-    private static Method getHeightValue;
     private static Method getSpawnPoint;
     private static Method displayGuiScreen;
     private static Method getIntegratedServer;
@@ -356,30 +355,28 @@ public final class VertexFrameCapture
             // what earlier captures actually photographed; keep every screen closed.
             displayGuiScreen.invoke(minecraft, new Object[] {null});
 
-            // Anchor at the WORLD's fixed spawn point: player respawn positions scatter
-            // by several blocks between runs (three runs anchored at three different
-            // columns when the player's own position was used), but getSpawnPoint is a
-            // world constant and its chunks are always loaded.
+            // Anchor at the world's fixed spawn point: player positions can differ
+            // between saved-world copies. Read all three coordinates from the spawn
+            // object itself instead of querying client-side terrain height. A player
+            // saved away from spawn may never cause the client to receive that chunk,
+            // so the height query can stay zero and prevent capture from ever anchoring.
             if (!anchored)
             {
                 Object spawn = getSpawnPoint.invoke(world);
                 Class<?> coords = spawn.getClass();
-                java.lang.reflect.Field cx = coords.getDeclaredField("a");
-                java.lang.reflect.Field cz = coords.getDeclaredField("c");
+                java.lang.reflect.Field cx = coords.getDeclaredField(Mappings.COORD_X);
+                java.lang.reflect.Field cy = coords.getDeclaredField(Mappings.COORD_Y);
+                java.lang.reflect.Field cz = coords.getDeclaredField(Mappings.COORD_Z);
                 cx.setAccessible(true);
+                cy.setAccessible(true);
                 cz.setAccessible(true);
                 anchorX = cx.getInt(spawn) + 0.5D;
                 anchorZ = cz.getInt(spawn) + 0.5D;
-                int height = ((Integer)getHeightValue.invoke(world, Integer.valueOf(cx.getInt(spawn)), Integer.valueOf(cz.getInt(spawn)))).intValue();
-
-                if (height <= 0)
-                {
-                    return;
-                }
-
-                groundY = height + 1.62D;
+                int spawnY = cy.getInt(spawn);
+                groundY = spawnY + 1.62D;
                 anchored = true;
-                LogWrapper.info("[Vertex] Frame capture anchored at " + (int)anchorX + "," + height + "," + (int)anchorZ);
+                LogWrapper.info("[Vertex] Frame capture anchored at " + (int)anchorX + ","
+                    + spawnY + "," + (int)anchorZ);
             }
 
             if (MOTION)
@@ -674,8 +671,7 @@ public final class VertexFrameCapture
         }
 
         setWorldTime = declared(worldBase, Mappings.WORLD_SET_TIME, long.class);
-        getHeightValue = declared(worldBase, "f", int.class, int.class);
-        getSpawnPoint = declared(worldBase, "K");
+        getSpawnPoint = declared(worldBase, Mappings.WORLD_GET_SPAWN_POINT);
         getIntegratedServer = minecraft.getClass().getMethod("H");
         Class<?> serverClass = getIntegratedServer.getReturnType();
 
