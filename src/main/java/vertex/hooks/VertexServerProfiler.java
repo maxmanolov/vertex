@@ -1,6 +1,8 @@
 package vertex.hooks;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.Locale;
 import net.minecraft.launchwrapper.LogWrapper;
 
 /**
@@ -32,7 +34,8 @@ public final class VertexServerProfiler
 
     private static final long[] samples = new long[CAPACITY];
     private static int count = 0;
-    private static Object currentServer;
+    // Do not keep an exited integrated server and its worlds alive from the main menu.
+    private static WeakReference<Object> currentServer = new WeakReference<Object>(null);
     private static long windowStart = 0L;
     private static long tickStart = 0L;
     private static long overBudget = 0L;
@@ -43,9 +46,9 @@ public final class VertexServerProfiler
     {
         long now = System.nanoTime();
 
-        if (server != currentServer)
+        if (server != currentServer.get())
         {
-            currentServer = server;
+            currentServer = new WeakReference<Object>(server);
             resetWindow(now);
         }
 
@@ -57,7 +60,7 @@ public final class VertexServerProfiler
     {
         long now = System.nanoTime();
 
-        if (server != currentServer || tickStart == 0L)
+        if (server != currentServer.get() || tickStart == 0L)
         {
             return;
         }
@@ -96,8 +99,9 @@ public final class VertexServerProfiler
         long[] sorted = Arrays.copyOf(samples, count);
         Arrays.sort(sorted);
         StringBuilder line = new StringBuilder("[VertexSrv] window=");
-        line.append(String.format("%.1fs ticks=%d", windowNanos / 1_000_000_000.0D, count));
-        line.append(String.format(" p50=%.2fms p95=%.2fms p99=%.2fms max=%.2fms",
+        line.append(String.format(Locale.ROOT, "%.1fs ticks=%d",
+            windowNanos / 1_000_000_000.0D, count));
+        line.append(String.format(Locale.ROOT, " p50=%.2fms p95=%.2fms p99=%.2fms max=%.2fms",
             ms(percentile(sorted, 50)), ms(percentile(sorted, 95)),
             ms(percentile(sorted, 99)), ms(sorted[sorted.length - 1])));
         line.append(" overBudget=").append(overBudget);

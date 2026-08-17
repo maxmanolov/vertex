@@ -1,6 +1,7 @@
 package vertex.hooks;
 
 import java.lang.reflect.Field;
+import java.lang.ref.WeakReference;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,7 @@ public final class VertexServerProfilerTest
 
             VertexServerProfiler.begin(second);
 
-            assertSame(second, objectField("currentServer"));
+            assertSame(second, ((WeakReference<?>)objectField("currentServer")).get());
             assertEquals(0, intField("count"));
             assertEquals(0L, longField("overBudget"));
             assertEquals(0L, longField("dropped"));
@@ -79,7 +80,7 @@ public final class VertexServerProfilerTest
 
     private static void resetState() throws Exception
     {
-        setField("currentServer", null);
+        setField("currentServer", new WeakReference<Object>(null));
         setField("count", Integer.valueOf(0));
         setField("windowStart", Long.valueOf(0L));
         setField("tickStart", Long.valueOf(0L));
