@@ -32,6 +32,7 @@ public final class VertexServerProfiler
 
     private static final long[] samples = new long[CAPACITY];
     private static int count = 0;
+    private static Object currentServer;
     private static long windowStart = 0L;
     private static long tickStart = 0L;
     private static long overBudget = 0L;
@@ -40,7 +41,15 @@ public final class VertexServerProfiler
     /** Head of MinecraftServer.tick. */
     public static void begin(Object server)
     {
-        tickStart = System.nanoTime();
+        long now = System.nanoTime();
+
+        if (server != currentServer)
+        {
+            currentServer = server;
+            resetWindow(now);
+        }
+
+        tickStart = now;
     }
 
     /** Tail of MinecraftServer.tick. */
@@ -48,29 +57,26 @@ public final class VertexServerProfiler
     {
         long now = System.nanoTime();
 
-        if (tickStart != 0L)
+        if (server != currentServer || tickStart == 0L)
         {
-            long elapsed = now - tickStart;
-
-            if (count < CAPACITY)
-            {
-                samples[count++] = elapsed;
-            }
-            else
-            {
-                ++dropped;
-            }
-
-            if (elapsed > BUDGET_NANOS)
-            {
-                ++overBudget;
-            }
+            return;
         }
 
-        if (windowStart == 0L)
+        long elapsed = now - tickStart;
+        tickStart = 0L;
+
+        if (count < CAPACITY)
         {
-            windowStart = now;
-            return;
+            samples[count++] = elapsed;
+        }
+        else
+        {
+            ++dropped;
+        }
+
+        if (elapsed > BUDGET_NANOS)
+        {
+            ++overBudget;
         }
 
         if (now - windowStart >= REPORT_NANOS)
@@ -103,6 +109,15 @@ public final class VertexServerProfiler
 
         LogWrapper.info(line.toString());
         count = 0;
+        overBudget = 0L;
+        dropped = 0L;
+    }
+
+    private static void resetWindow(long now)
+    {
+        count = 0;
+        windowStart = now;
+        tickStart = 0L;
         overBudget = 0L;
         dropped = 0L;
     }
