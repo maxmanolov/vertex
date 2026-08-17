@@ -380,6 +380,17 @@ public class VertexTransformer implements IClassTransformer
                     result = TailInstanceCallPatch.apply(result, Mappings.MC_SERVER_TICK,
                         Mappings.MC_SERVER_TICK_DESC, "vertex/hooks/VertexServerChurn", "tick");
                 }
+
+                if (vertex.hooks.VertexServerProfiler.ACTIVE)
+                {
+                    // #168 prerequisite: server tick-time distribution. Pacing claims are
+                    // about the tail, and nothing in Vertex could measure the server tick
+                    // before this. Off = not woven.
+                    result = HeadInstanceCallPatch.apply(result, Mappings.MC_SERVER_TICK,
+                        Mappings.MC_SERVER_TICK_DESC, "vertex/hooks/VertexServerProfiler", "begin");
+                    result = TailInstanceCallPatch.apply(result, Mappings.MC_SERVER_TICK,
+                        Mappings.MC_SERVER_TICK_DESC, "vertex/hooks/VertexServerProfiler", "end");
+                }
             }
             else if (Mappings.WORLD_SERVER.equals(name))
             {
